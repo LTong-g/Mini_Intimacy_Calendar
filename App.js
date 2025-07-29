@@ -1,29 +1,31 @@
-import React, { useState, useCallback } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
-import moment from 'moment';
+import React, { useState, useCallback } from "react";
+import { View, StyleSheet } from "react-native";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { StatusBar } from "expo-status-bar";
+import moment from "moment";
 
 // 你的视图和组件
-import DayView from './src/screens/DayView';
-import MonthView from './src/screens/MonthView';
-import YearView from './src/screens/YearView';
-import CustomTabBar from './src/components/CustomTabBar';
-import SettingsScreen from './src/screens/SettingsScreen'; // ⬅️ 确保存在
+import DayView from "./src/screens/DayView";
+import MonthView from "./src/screens/MonthView";
+import YearView from "./src/screens/YearView";
+import CustomTabBar from "./src/components/CustomTabBar";
+import SettingsScreen from "./src/screens/SettingsScreen"; // ⬅️ 确保存在
+import StatisticsScreen from "./src/screens/StatisticsScreen";
+import DatePickerScreen from "./src/screens/DatePickerScreen";
 
 const Stack = createNativeStackNavigator();
 
 // 日历主页面，管理三种视图状态
 const CalendarScreen = () => {
-  const [currentView, setCurrentView] = useState('Day');
+  const [currentView, setCurrentView] = useState("Day");
   const [selectedDate, setSelectedDate] = useState(moment());
   const [refreshKey, setRefreshKey] = useState(0);
 
   const renderCurrentView = () => {
     switch (currentView) {
-      case 'Day':
+      case "Day":
         return (
           <DayView
             selectedDate={selectedDate}
@@ -31,7 +33,7 @@ const CalendarScreen = () => {
             onViewChange={setCurrentView}
           />
         );
-      case 'Month':
+      case "Month":
         return (
           <MonthView
             selectedDate={selectedDate}
@@ -40,7 +42,7 @@ const CalendarScreen = () => {
             refreshKey={refreshKey}
           />
         );
-      case 'Year':
+      case "Year":
         return (
           <YearView
             selectedDate={selectedDate}
@@ -59,12 +61,12 @@ const CalendarScreen = () => {
   };
 
   const handleCycleViews = () => {
-    if (currentView === 'Month') {
-      setCurrentView('Year');
-    } else if (currentView === 'Year') {
-      setCurrentView('Month');
+    if (currentView === "Month") {
+      setCurrentView("Year");
+    } else if (currentView === "Year") {
+      setCurrentView("Month");
     } else {
-      setCurrentView('Month');
+      setCurrentView("Month");
     }
   };
 
@@ -94,6 +96,8 @@ export default function App() {
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           <Stack.Screen name="Calendar" component={CalendarScreen} />
           <Stack.Screen name="Settings" component={SettingsScreen} />
+          <Stack.Screen name="Statistics" component={StatisticsScreen} />
+          <Stack.Screen name="DatePicker" component={DatePickerScreen} />
         </Stack.Navigator>
         <StatusBar style="auto" />
       </NavigationContainer>
@@ -104,6 +108,6 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
 });

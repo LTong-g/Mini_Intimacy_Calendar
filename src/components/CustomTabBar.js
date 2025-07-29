@@ -85,7 +85,7 @@ const CustomTabBar = ({ currentView, onViewChange, onCycleViews, selectedDate, o
           </TouchableOpacity>
           <TouchableOpacity style={styles.menuItem} onPress={() => {
             setShowMoreMenu(false);
-            Alert.alert('统计', '打开统计界面');
+            navigation.navigate('Statistics');
           }}>
             <Ionicons name="pie-chart-outline" size={20} color="#333" style={{ marginRight: 6 }} />
             <Text style={styles.menuText}>统计</Text>
