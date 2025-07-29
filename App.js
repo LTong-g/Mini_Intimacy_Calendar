@@ -5,6 +5,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import moment from "moment";
+import { Provider as PaperProvider } from "react-native-paper";
 
 // 你的视图和组件
 import DayView from "./src/screens/DayView";
@@ -91,17 +92,19 @@ const CalendarScreen = () => {
 // 主 App，负责导航结构
 export default function App() {
   return (
-    <SafeAreaProvider>
-      <NavigationContainer>
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="Calendar" component={CalendarScreen} />
-          <Stack.Screen name="Settings" component={SettingsScreen} />
-          <Stack.Screen name="Statistics" component={StatisticsScreen} />
-          <Stack.Screen name="DatePicker" component={DatePickerScreen} />
-        </Stack.Navigator>
-        <StatusBar style="auto" />
-      </NavigationContainer>
-    </SafeAreaProvider>
+    <PaperProvider>
+      <SafeAreaProvider>
+        <NavigationContainer>
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="Calendar" component={CalendarScreen} />
+            <Stack.Screen name="Settings" component={SettingsScreen} />
+            <Stack.Screen name="Statistics" component={StatisticsScreen} />
+            <Stack.Screen name="DatePicker" component={DatePickerScreen} />
+          </Stack.Navigator>
+          <StatusBar style="auto" />
+        </NavigationContainer>
+      </SafeAreaProvider>
+    </PaperProvider>
   );
 }
 
