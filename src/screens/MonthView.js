@@ -278,128 +278,165 @@ const describeArc = (x, y, radius, startAngle, endAngle) => {
 };
 
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create({ 
+  // 容器样式，整个页面占满全屏，背景为浅灰色
   container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  monthText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  weekDaysContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  weekDayText: {
-    fontSize: 14,
-    color: '#666',
-    fontWeight: 'bold',
-    width: `${100/7}%`,
-    textAlign: 'center',
-  },
-  dayContainer: {
-    width: `${100/7}%`,
-    aspectRatio: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginVertical: 2,
-  },
-  dayText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  inactiveDay: {
-    opacity: 0.3,
-  },
-  inactiveText: {
-    color: '#999',
-  },
-  todayContainer: {
-    backgroundColor: '#007AFF',
-    borderRadius: 1000,
-  },
-  todayText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  selectedDay: {
-    borderRadius: 1000,
-    borderWidth: 2,
-    borderColor: '#007AFF',
-    backgroundColor: 'rgba(0,122,255,0)',
+    flex: 1, // 占据所有可用空间
+    backgroundColor: '#f5f5f5', // 背景浅灰色
   },
 
+  // 月份文字样式
+  monthText: {
+    fontSize: 20, // 字体大小
+    fontWeight: 'bold', // 粗体
+    color: '#333', // 深灰色字体
+  },
+
+  // 星期标题栏容器（如“日一二三四五六”）
+  weekDaysContainer: {
+    flexDirection: 'row', // 子元素横向排列
+    justifyContent: 'space-around', // 子元素均匀分布
+    paddingVertical: 10, // 上下内边距
+    borderBottomWidth: 1, // 下边框线宽度
+    borderBottomColor: '#e0e0e0', // 下边框颜色
+  },
+
+  // 单个星期文字样式（如“日”）
+  weekDayText: {
+    fontSize: 14, // 字体大小
+    color: '#666', // 中灰色
+    fontWeight: 'bold', // 粗体
+    width: `${100/7}%`, // 平均分配一周七天宽度
+    textAlign: 'center', // 居中对齐
+  },
+
+  // 每天格子的容器样式
+  dayContainer: {
+    width: `${100/7}%`, // 每列宽度占 1/7
+    aspectRatio: 1, // 保持正方形比例（宽高相等）
+    justifyContent: 'center', // 垂直居中
+    alignItems: 'center', // 水平居中
+    marginVertical: 2, // 上下间距
+  },
+
+  // 每天数字的样式
+  dayText: {
+    fontSize: 16, // 字号
+    color: '#333', // 字体颜色为深灰
+  },
+
+  // 非当前月份的日期格子样式（变暗）
+  inactiveDay: {
+    opacity: 0.3, // 透明度降低，视觉上淡化
+  },
+
+  // 非当前月份的日期文字样式
+  inactiveText: {
+    color: '#999', // 更浅的灰色字体
+  },
+
+  // 今天日期的容器样式（圆形背景色）
+  todayContainer: {
+    backgroundColor: '#007AFF', // 蓝色背景
+    borderRadius: 1000, // 大圆角，形成圆形
+  },
+
+  // 今天的文字样式
+  todayText: {
+    color: '#fff', // 白色文字
+    fontWeight: 'bold', // 粗体
+  },
+
+  // 被选中的日期样式
+  selectedDay: {
+    borderRadius: 1000, // 圆形边框
+    borderWidth: 2, // 边框宽度
+    borderColor: '#007AFF', // 边框为蓝色
+    backgroundColor: 'rgba(0,122,255,0)', // 背景透明但保留结构
+  },
+
+  // 打卡背景容器（用于实现彩色底色圆）
   checkInBackground: {
-    position: 'absolute',
+    position: 'absolute', // 绝对定位覆盖在格子上
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    borderRadius: 1000, // Large value to make it circular
-    overflow: 'hidden',
+    borderRadius: 1000, // 圆形
+    overflow: 'hidden', // 限制子元素超出
   },
+
+  // 半圆颜色块样式（打卡底色之一）
   halfColor: {
-    position: 'absolute',
+    position: 'absolute', // 绝对定位
     top: 0,
     bottom: 0,
-    width: '50%',
+    width: '50%', // 一半宽度（左或右半圆）
   },
+
+  // 打卡日期文字样式（通常为白色）
   checkInText: {
-    color: '#fff',
+    color: '#fff', // 白色文字
   },
+
+  // 被选中日期的文字样式
   selectedText: {
-    color: '#000',
-    fontWeight: 'bold',
+    color: '#000', // 黑色文字
+    fontWeight: 'bold', // 加粗
   },
+
+  // “返回今天”按钮的容器样式（右下角浮动按钮）
   todayButton: {
-    position: 'absolute',
+    position: 'absolute', // 绝对定位
     bottom: 20,
     right: 20,
     width: 56,
     height: 56,
-    borderRadius: 28,
-    backgroundColor: '#FFFFFF',
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderRadius: 28, // 圆形按钮
+    backgroundColor: '#FFFFFF', // 白底
+    elevation: 8, // 安卓投影高度
+    shadowColor: '#000', // iOS 阴影颜色
+    shadowOffset: { width: 0, height: 4 }, // iOS 阴影偏移
+    shadowOpacity: 0.3, // iOS 阴影透明度
+    shadowRadius: 8, // iOS 阴影半径
+    justifyContent: 'center', // 垂直居中
+    alignItems: 'center', // 水平居中
   },
+
+  // “返回今天”按钮内部图标样式
   todayIcon: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 28,
+    justifyContent: 'center', // 垂直居中
+    alignItems: 'center', // 水平居中
+    backgroundColor: '#fff', // 白底
+    borderRadius: 28, // 圆形
     width: 56,
     height: 56,
-    elevation: 8,
+    elevation: 8, // 安卓阴影
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 2 }, // iOS 阴影偏移
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
   },
+
+  // 日历中某个特殊显示格子的边框样式（如小正方框）
   calendarBox: {
     width: 36,
     height: 32,
-    borderWidth: 1.5,
-    borderColor: '#007AFF',
-    borderRadius: 6,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5, // 边框宽度
+    borderColor: '#007AFF', // 蓝色边框
+    borderRadius: 6, // 圆角矩形
+    justifyContent: 'center', // 垂直居中
+    alignItems: 'center', // 水平居中
+    backgroundColor: '#FFFFFF', // 白色背景
   },
+
+  // 今日数字样式（用于强调当天）
   todayNumber: {
-    color: '#007AFF',
+    color: '#007AFF', // 蓝色
     fontSize: 14,
     fontWeight: 'bold',
   },
 });
+
 
 export default MonthView;
