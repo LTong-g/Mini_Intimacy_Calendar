@@ -1,8 +1,19 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, Alert, ToastAndroid, Platform } from "react-native";
+import {
+  View,
+  ScrollView,
+  Text,
+  StyleSheet,
+  Alert,
+  ToastAndroid,
+  Platform,
+} from "react-native";
 import StatisticsHeader from "../components/StatisticsHeader";
 import moment from "moment";
 import DatePickerModal from "../components/DatePickerModal";
+import TotalStatsTable from "../components/TotalStatsTable";
+import YearStatsTable from "../components/YearStatsTable";
+import YearLineChart from "../components/YearLineChart";
 
 const StatisticsScreen = ({ navigation }) => {
   const [mode, setMode] = useState("总"); // “总” | “年” | “自”
@@ -59,12 +70,18 @@ const StatisticsScreen = ({ navigation }) => {
         endDate={endDate}
         onPickDate={handlePickDate}
       />
+      <ScrollView style={styles.content}>
+        {mode === "总" && <TotalStatsTable />}
 
-      <View style={styles.content}>
-        {mode === "总" && <Text>这里显示总统计</Text>}
-        {mode === "年" && <Text>{currentYear} 年统计内容</Text>}
+        {mode === "年" && (
+          <>
+            <YearStatsTable year={currentYear} />
+            <YearLineChart year={currentYear} />
+          </>
+        )}
+
         {mode === "自" && <Text>自定义范围统计</Text>}
-      </View>
+      </ScrollView>
 
       <DatePickerModal
         visible={showPicker}
@@ -79,8 +96,6 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff" },
   content: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
   },
 });
 
