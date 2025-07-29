@@ -137,9 +137,9 @@ const MonthView = ({ selectedDate, onDateChange, onViewChange, refreshKey = 0 })
       if (totalTypes === 0) return null;
       
       const colors = [];
-      if (hasType1) colors.push('#FFD54F');  // 略微加深的工作类型颜色
-      if (hasType2) colors.push('#81D4FA');  // 略微加深的出行类型颜色
-      if (hasType3) colors.push('#F48FB1');  // 略微加深的健康类型颜色
+      if (hasType1) colors.push('#FFD54F');  // 略微加深的观看教程类型颜色
+      if (hasType2) colors.push('#81D4FA');  // 略微加深的武器强化类型颜色
+      if (hasType3) colors.push('#F48FB1');  // 略微加深的双人练习类型颜色
       
       if (totalTypes === 1) {
         return <View style={[styles.checkInBackground, { backgroundColor: colors[0] }]} />;
@@ -173,8 +173,8 @@ const MonthView = ({ selectedDate, onDateChange, onViewChange, refreshKey = 0 })
         style={[
           styles.dayContainer,
           !item.isCurrentMonth && styles.inactiveDay,
-          item.isToday && styles.todayContainer,
           item.date.isSame(selectedDate, 'day') && styles.selectedDay,
+          item.isToday && styles.todayContainer,
         ]}
         onPress={() => handleDatePress(item.date)}
       >
@@ -183,8 +183,8 @@ const MonthView = ({ selectedDate, onDateChange, onViewChange, refreshKey = 0 })
           style={[
             styles.dayText,
             !item.isCurrentMonth && styles.inactiveText,
-            item.isToday && styles.todayText,
             item.date.isSame(selectedDate, 'day') && styles.selectedText,
+            item.isToday && styles.todayText,
             totalTypes > 0 && styles.checkInText,
           ]}
         >
@@ -328,9 +328,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   selectedDay: {
-    backgroundColor: '#34C759',
     borderRadius: 1000,
+    borderWidth: 2,
+    borderColor: '#007AFF',
+    backgroundColor: 'rgba(0,122,255,0)',
   },
+
   checkInBackground: {
     position: 'absolute',
     top: 0,
@@ -346,26 +349,11 @@ const styles = StyleSheet.create({
     bottom: 0,
     width: '50%',
   },
-  triangleShape: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderRadius: 20,
-  },
-  segmentShape: {
-    position: 'absolute',
-  },
-  colorSegment: {
-    position: 'absolute',
-  },
   checkInText: {
     color: '#fff',
-    fontWeight: 'bold',
   },
   selectedText: {
-    color: '#fff',
+    color: '#000',
     fontWeight: 'bold',
   },
   todayButton: {

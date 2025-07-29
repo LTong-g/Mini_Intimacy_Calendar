@@ -8,11 +8,17 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, PanResponder } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, PanResponder, Dimensions } from 'react-native';
 import moment from 'moment';
 import Header from '../components/Header';
-import { Svg, Path } from 'react-native-svg';
+import { Svg, Path } from 'react-native-svg'; 
 import { getCheckInStatus, CheckInTypes } from '../utils/checkInStorage';
+
+const screenWidth = Dimensions.get('window').width;
+const screenHeight = Dimensions.get('window').height;
+const monthWidth = (screenWidth - 3 * 2 * 8 - 2 * 10) / 3; // 3列 + 3个间距 + 2个10px间距
+const dayDotSize = (monthWidth - 2 * 6 - 2 * 4) / 7 - 2;  // 每行7个点，减去间距
+const monthHeight = monthWidth;
 
 const YearView = ({ onDateChange, onViewChange, selectedDate }) => {
   const [currentYear, setCurrentYear] = useState(moment().year());
@@ -92,7 +98,7 @@ const YearView = ({ onDateChange, onViewChange, selectedDate }) => {
     if (total === 0) return <View style={[styles.dayDot, styles.realDay]} />;
     if (total === 1) return <View style={[styles.dayDot, { backgroundColor: colors[0] }]} />;
     return (
-      <Svg width={9} height={9} viewBox="0 0 36 36">
+      <Svg width={dayDotSize} height={dayDotSize} viewBox="0 0 36 36">
         {colors.map((color, index) => (
           <Path
             key={index}
@@ -136,11 +142,21 @@ const YearView = ({ onDateChange, onViewChange, selectedDate }) => {
     onViewChange('Month');
   };
 
+  // 辅助函数：将数组按 size 切块为二维数组
+  const chunkArray = (array, size) => {
+    const result = [];
+    for (let i = 0; i < array.length; i += size) {
+      result.push(array.slice(i, i + size));
+    }
+    return result;
+  };
+
+  // 月份渲染函数
   const renderMonth = ({ item }) => {
     const monthPreview = generateMonthPreview(item.month);
     const currentDate = moment();
     const isFutureMonth = currentYear > currentDate.year() || 
-                         (currentYear === currentDate.year() && item.month > currentDate.month());
+                        (currentYear === currentDate.year() && item.month > currentDate.month());
 
     return (
       <TouchableOpacity 
@@ -151,19 +167,24 @@ const YearView = ({ onDateChange, onViewChange, selectedDate }) => {
         <Text style={[styles.monthName, isFutureMonth && styles.disabledMonthText]}>
           {item.name}
         </Text>
+
         <View style={styles.monthGrid}>
-          {monthPreview.map((cell) => (
-            <View
-              key={cell.key}
-              style={styles.dayDotWrapper}
-            >
-              {cell.type === 'day' ? renderCheckInDot(cell) : <View style={[styles.dayDot, styles.emptyDot]} />}
+          {chunkArray(monthPreview, 7).map((weekRow, rowIdx) => (
+            <View key={rowIdx} style={styles.weekRow}>
+              {weekRow.map((cell) => (
+                <View key={cell.key} style={styles.dayDotWrapper}>
+                  {cell.type === 'day'
+                    ? renderCheckInDot(cell)
+                    : <View style={[styles.dayDot, styles.emptyDot]} />}
+                </View>
+              ))}
             </View>
           ))}
         </View>
       </TouchableOpacity>
     );
   };
+
 
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => true,
@@ -193,7 +214,6 @@ const YearView = ({ onDateChange, onViewChange, selectedDate }) => {
         data={months}
         renderItem={renderMonth}
         keyExtractor={item => `${currentYear}-${item.month}`}
-        numColumns={3}
         contentContainerStyle={styles.monthsContainer}
       />
     </View>
@@ -202,7 +222,11 @@ const YearView = ({ onDateChange, onViewChange, selectedDate }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f5f5' },
-  monthsContainer: { padding: 10 },
+  monthsContainer: { 
+    padding: 10,
+    flexDirection: 'row', 
+    flexWrap: 'wrap',
+  },
   monthContainer: {
     flex: 1,
     margin: 8,
@@ -214,7 +238,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    height: 110,
+    width: monthWidth,
+    height: monthHeight,
   },
   disabledMonth: { backgroundColor: '#f5f5f5', elevation: 0, shadowOpacity: 0 },
   monthName: {
@@ -226,27 +251,31 @@ const styles = StyleSheet.create({
   },
   disabledMonthText: { color: '#999' },
   monthGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: 'column', // 原来是 'row'
+    flexWrap: 'nowrap',      // 原来是 'wrap'
     justifyContent: 'space-between',
     width: '100%',
     paddingHorizontal: 4,
   },
+  realDay: { backgroundColor: '#ddd' },
+  emptyDot: { backgroundColor: 'transparent' },
+  weekRow: {
+    flexDirection: 'row',
+    marginBottom: 2,
+  },
   dayDotWrapper: {
-    width: 9,
-    height: 9,
+    width: dayDotSize,  
+    height: dayDotSize,
     marginHorizontal: 1,
-    marginVertical: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
   dayDot: {
-    width: 9,
-    height: 9,
-    borderRadius: 1000,
+    width: dayDotSize,
+    height: dayDotSize,
+    borderRadius: 100,
   },
-  realDay: { backgroundColor: '#ddd' },
-  emptyDot: { backgroundColor: 'transparent' },
+
 });
 
 export default YearView;
