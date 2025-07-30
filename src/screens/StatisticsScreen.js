@@ -12,6 +12,7 @@ import StatisticsHeader from "../components/StatisticsHeader";
 import moment from "moment";
 import DatePickerModal from "../components/DatePickerModal";
 import TotalStatsTable from "../components/TotalStatsTable";
+import TotalLineChart from "../components/TotalLineChart";
 import YearStatsTable from "../components/YearStatsTable";
 import YearLineChart from "../components/YearLineChart";
 import CustomStatsTable from "../components/CustomStatsTable"; // 自定义时间范围统计表
@@ -73,7 +74,12 @@ const StatisticsScreen = ({ navigation }) => {
         onPickDate={handlePickDate}
       />
       <ScrollView style={styles.content}>
-        {mode === "总" && <TotalStatsTable />}
+        {mode === "总" && (
+          <>
+            <TotalStatsTable />
+            <TotalLineChart />
+          </>
+        )}
 
         {mode === "年" && (
           <>
