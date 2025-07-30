@@ -1,172 +1,261 @@
 // src/utils/statsUtils.js
 
-// 1. 总览统计
+// —— 辅助：把位掩码解析成三项打卡（0/1）
+function parseStatus(flag) {
+  const f = typeof flag === "number" ? flag : parseInt(flag, 10) || 0;
+  return {
+    tutorial: f & 1 ? 1 : 0,
+    weapon: f & 2 ? 1 : 0,
+    duo: f & 4 ? 1 : 0,
+  };
+}
+
+// 1. 总览统计：总计、年均、各年
 export function computeTotalStats(data) {
-  let totalTutorial = 0, totalWeapon = 0, totalDuo = 0;
+  let totalTutorial = 0,
+    totalWeapon = 0,
+    totalDuo = 0;
   const yearsSet = new Set();
 
-  Object.entries(data).forEach(([dateStr, counts]) => {
-    const d = new Date(dateStr);
-    yearsSet.add(d.getFullYear());
-    totalTutorial += counts.tutorial || 0;
-    totalWeapon  += counts.weapon  || 0;
-    totalDuo     += counts.duo     || 0;
+  Object.entries(data).forEach(([dateStr, flag]) => {
+    const { tutorial, weapon, duo } = parseStatus(flag);
+    totalTutorial += tutorial;
+    totalWeapon += weapon;
+    totalDuo += duo;
+    yearsSet.add(new Date(dateStr).getFullYear());
   });
 
   const years = Array.from(yearsSet).sort((a, b) => b - a);
-  const numYears = years.length || 1;
-  const avgTut = totalTutorial / numYears;
-  const avgW   = totalWeapon  / numYears;
-  const avgD   = totalDuo     / numYears;
+  const nYears = years.length || 1;
+  const avgTut = totalTutorial / nYears;
+  const avgWea = totalWeapon / nYears;
+  const avgDuo = totalDuo / nYears;
 
   const rows = [
-    { label: '总计', tutorial: totalTutorial, weapon: totalWeapon, duo: totalDuo },
-    { label: '年均', tutorial: avgTut.toFixed(2),    weapon: avgW.toFixed(2),    duo: avgD.toFixed(2) }
+    {
+      label: "总计",
+      tutorial: totalTutorial,
+      weapon: totalWeapon,
+      duo: totalDuo,
+    },
+    {
+      label: "年均",
+      tutorial: avgTut.toFixed(2),
+      weapon: avgWea.toFixed(2),
+      duo: avgDuo.toFixed(2),
+    },
   ];
 
-  years.forEach(year => {
-    let yt = 0, yw = 0, yd = 0;
-    Object.entries(data).forEach(([dateStr, counts]) => {
+  years.forEach((year) => {
+    let yTut = 0,
+      yWea = 0,
+      yD = 0;
+    Object.entries(data).forEach(([dateStr, flag]) => {
       if (new Date(dateStr).getFullYear() === year) {
-        yt += counts.tutorial || 0;
-        yw += counts.weapon  || 0;
-        yd += counts.duo     || 0;
+        const st = parseStatus(flag);
+        yTut += st.tutorial;
+        yWea += st.weapon;
+        yD += st.duo; // ← 这里必须用 yD，而不是未定义的 y
       }
     });
-    rows.push({ label: `${year}`, tutorial: yt, weapon: yw, duo: yd });
+    rows.push({ label: `${year}`, tutorial: yTut, weapon: yWea, duo: yD });
   });
 
   return rows;
 }
 
-// 2. 指定年份统计
+// 2. 年度统计：总计、月均、12个月
 export function computeYearStats(data, year) {
-  let totalTutorial = 0, totalWeapon = 0, totalDuo = 0;
+  let totalTutorial = 0,
+    totalWeapon = 0,
+    totalDuo = 0;
   const monthMap = {};
 
-  Object.entries(data).forEach(([dateStr, counts]) => {
+  Object.entries(data).forEach(([dateStr, flag]) => {
     const d = new Date(dateStr);
     if (d.getFullYear() === year) {
-      totalTutorial += counts.tutorial || 0;
-      totalWeapon  += counts.weapon  || 0;
-      totalDuo     += counts.duo     || 0;
+      const { tutorial, weapon, duo } = parseStatus(flag);
+      totalTutorial += tutorial;
+      totalWeapon += weapon;
+      totalDuo += duo;
       const m = d.getMonth() + 1;
       if (!monthMap[m]) monthMap[m] = { tutorial: 0, weapon: 0, duo: 0 };
-      monthMap[m].tutorial += counts.tutorial || 0;
-      monthMap[m].weapon   += counts.weapon  || 0;
-      monthMap[m].duo      += counts.duo     || 0;
+      monthMap[m].tutorial += tutorial;
+      monthMap[m].weapon += weapon;
+      monthMap[m].duo += duo;
     }
   });
 
   const avgTut = totalTutorial / 12;
-  const avgW   = totalWeapon  / 12;
-  const avgD   = totalDuo     / 12;
+  const avgWea = totalWeapon / 12;
+  const avgDuo = totalDuo / 12;
 
   const rows = [
-    { label: '总计', tutorial: totalTutorial, weapon: totalWeapon, duo: totalDuo },
-    { label: '月均', tutorial: avgTut.toFixed(2),    weapon: avgW.toFixed(2),    duo: avgD.toFixed(2) }
+    {
+      label: "总计",
+      tutorial: totalTutorial,
+      weapon: totalWeapon,
+      duo: totalDuo,
+    },
+    {
+      label: "月均",
+      tutorial: avgTut.toFixed(2),
+      weapon: avgWea.toFixed(2),
+      duo: avgDuo.toFixed(2),
+    },
   ];
 
   for (let m = 12; m >= 1; m--) {
     const c = monthMap[m] || { tutorial: 0, weapon: 0, duo: 0 };
-    rows.push({ label: `${m}月`, tutorial: c.tutorial, weapon: c.weapon, duo: c.duo });
+    rows.push({
+      label: `${m}月`,
+      tutorial: c.tutorial,
+      weapon: c.weapon,
+      duo: c.duo,
+    });
   }
 
   return rows;
 }
 
-// 3. 自定义区间统计
+// 3. 自定义区间统计（日 / 月 / 年）
 export function computeCustomStats(data, startDateStr, endDateStr) {
   const start = new Date(startDateStr);
-  const end   = new Date(endDateStr);
-  const spanMs   = end.getTime() - start.getTime();
-  const spanDays = Math.ceil(spanMs / (1000 * 3600 * 24)) + 1;
+  const end = new Date(endDateStr);
+  const msPerDay = 1000 * 3600 * 24;
+  // 间隔天数
+  const spanDays = Math.floor((end.getTime() - start.getTime()) / msPerDay) + 1;
 
-  // 日统计
+  // 累加总数
+  let totalT = 0,
+    totalW = 0,
+    totalD = 0;
+  const monthMap = {};
+  const yearMap = {};
+
+  Object.entries(data).forEach(([dateStr, flag]) => {
+    const dt = new Date(dateStr);
+    if (dt < start || dt > end) return;
+    // 解析位掩码
+    const f = typeof flag === "number" ? flag : parseInt(flag, 10) || 0;
+    const tut = f & 1 ? 1 : 0;
+    const wea = f & 2 ? 1 : 0;
+    const duo = f & 4 ? 1 : 0;
+
+    totalT += tut;
+    totalW += wea;
+    totalD += duo;
+
+    // 按月聚合
+    const m = dt.getMonth() + 1;
+    if (!monthMap[m]) monthMap[m] = { tutorial: 0, weapon: 0, duo: 0 };
+    monthMap[m].tutorial += tut;
+    monthMap[m].weapon += wea;
+    monthMap[m].duo += duo;
+
+    // 按年聚合
+    const y = dt.getFullYear();
+    if (!yearMap[y]) yearMap[y] = { tutorial: 0, weapon: 0, duo: 0 };
+    yearMap[y].tutorial += tut;
+    yearMap[y].weapon += wea;
+    yearMap[y].duo += duo;
+  });
+
+  // 日均
+  const dailyAvgT = totalT / spanDays;
+  const dailyAvgW = totalW / spanDays;
+  const dailyAvgD = totalD / spanDays;
+
+  // 1) <=31天：日统计
   if (spanDays <= 31) {
-    let t = 0, w = 0, d = 0;
-    Object.entries(data).forEach(([dateStr, counts]) => {
-      const dt = new Date(dateStr);
-      if (dt >= start && dt <= end) {
-        t += counts.tutorial || 0;
-        w += counts.weapon  || 0;
-        d += counts.duo     || 0;
-      }
-    });
     return [
-      { label: '总计', tutorial: t, weapon: w, duo: d },
-      { label: '日均', tutorial: (t / spanDays).toFixed(2), weapon: (w / spanDays).toFixed(2), duo: (d / spanDays).toFixed(2) }
+      { label: "总计", tutorial: totalT, weapon: totalW, duo: totalD },
+      {
+        label: "日均",
+        tutorial: dailyAvgT.toFixed(2),
+        weapon: dailyAvgW.toFixed(2),
+        duo: dailyAvgD.toFixed(2),
+      },
     ];
   }
-  // 月统计
+  // 2) 32～366天：月统计，用日均×30 作为月均
   else if (spanDays <= 366) {
-    let t = 0, w = 0, d = 0;
-    const monthMap = {};
+    const monthlyAvgT = dailyAvgT * 30;
+    const monthlyAvgW = dailyAvgW * 30;
+    const monthlyAvgD = dailyAvgD * 30;
 
-    Object.entries(data).forEach(([dateStr, counts]) => {
-      const dt = new Date(dateStr);
-      if (dt >= start && dt <= end) {
-        const m = dt.getMonth() + 1;
-        if (!monthMap[m]) monthMap[m] = { tutorial: 0, weapon: 0, duo: 0 };
-        monthMap[m].tutorial += counts.tutorial || 0;
-        monthMap[m].weapon   += counts.weapon  || 0;
-        monthMap[m].duo      += counts.duo     || 0;
-        t += counts.tutorial || 0;
-        w += counts.weapon  || 0;
-        d += counts.duo     || 0;
-      }
-    });
-
-    const months = Object.keys(monthMap)
-      .map(m => Number(m))
-      .sort((a, b) => b - a);
-    const avgTut = t / months.length;
-    const avgW   = w / months.length;
-    const avgD   = d / months.length;
-
+    const months = Array.from({ length: 12 }, (_, i) => i + 1);
     const rows = [
-      { label: '总计', tutorial: t, weapon: w, duo: d },
-      { label: '月均', tutorial: avgTut.toFixed(2), weapon: avgW.toFixed(2), duo: avgD.toFixed(2) }
+      { label: "总计", tutorial: totalT, weapon: totalW, duo: totalD },
+      {
+        label: "日均",
+        tutorial: dailyAvgT.toFixed(2),
+        weapon: dailyAvgW.toFixed(2),
+        duo: dailyAvgD.toFixed(2),
+      },
+      {
+        label: "月均",
+        tutorial: monthlyAvgT.toFixed(2),
+        weapon: monthlyAvgW.toFixed(2),
+        duo: monthlyAvgD.toFixed(2),
+      },
     ];
-    months.forEach(m => {
-      const c = monthMap[m];
-      rows.push({ label: `${m}月`, tutorial: c.tutorial, weapon: c.weapon, duo: c.duo });
-    });
+    // 仅显示有记录的月份，按月份从大到小排序
+    Object.keys(monthMap)
+      .map((m) => Number(m))
+      .sort((a, b) => b - a)
+      .forEach((m) => {
+        const c = monthMap[m];
+        rows.push({
+          label: `${m}月`,
+          tutorial: c.tutorial,
+          weapon: c.weapon,
+          duo: c.duo,
+        });
+      });
     return rows;
   }
-  // 年统计
+  // 3) >366天：年统计，用日均×365 作为年均
   else {
-    let t = 0, w = 0, d = 0;
-    const yearMap = {};
-
-    Object.entries(data).forEach(([dateStr, counts]) => {
-      const dt = new Date(dateStr);
-      if (dt >= start && dt <= end) {
-        const y = dt.getFullYear();
-        if (!yearMap[y]) yearMap[y] = { tutorial: 0, weapon: 0, duo: 0 };
-        yearMap[y].tutorial += counts.tutorial || 0;
-        yearMap[y].weapon   += counts.weapon  || 0;
-        yearMap[y].duo      += counts.duo     || 0;
-        t += counts.tutorial || 0;
-        w += counts.weapon  || 0;
-        d += counts.duo     || 0;
-      }
-    });
+    const monthlyAvgT = dailyAvgT * 30;
+    const monthlyAvgW = dailyAvgW * 30;
+    const monthlyAvgD = dailyAvgD * 30;
+    const yearlyAvgT = dailyAvgT * 365;
+    const yearlyAvgW = dailyAvgW * 365;
+    const yearlyAvgD = dailyAvgD * 365;
 
     const years = Object.keys(yearMap)
-      .map(y => Number(y))
+      .map((y) => Number(y))
       .sort((a, b) => b - a);
-    const avgTut = t / years.length;
-    const avgW   = w / years.length;
-    const avgD   = d / years.length;
-
     const rows = [
-      { label: '总计', tutorial: t, weapon: w, duo: d },
-      { label: '年均', tutorial: avgTut.toFixed(2), weapon: avgW.toFixed(2), duo: avgD.toFixed(2) }
+      { label: "总计", tutorial: totalT, weapon: totalW, duo: totalD },
+      {
+        label: "日均",
+        tutorial: dailyAvgT.toFixed(2),
+        weapon: dailyAvgW.toFixed(2),
+        duo: dailyAvgD.toFixed(2),
+      },
+      {
+        label: "月均",
+        tutorial: monthlyAvgT.toFixed(2),
+        weapon: monthlyAvgW.toFixed(2),
+        duo: monthlyAvgD.toFixed(2),
+      },
+      {
+        label: "年均",
+        tutorial: yearlyAvgT.toFixed(2),
+        weapon: yearlyAvgW.toFixed(2),
+        duo: yearlyAvgD.toFixed(2),
+      },
     ];
-    years.forEach(y => {
+    years.forEach((y) => {
       const c = yearMap[y];
-      rows.push({ label: `${y}`, tutorial: c.tutorial, weapon: c.weapon, duo: c.duo });
+      rows.push({
+        label: `${y}`,
+        tutorial: c.tutorial,
+        weapon: c.weapon,
+        duo: c.duo,
+      });
     });
     return rows;
   }
