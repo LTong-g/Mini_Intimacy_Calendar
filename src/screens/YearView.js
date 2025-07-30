@@ -28,7 +28,7 @@ const dayDotSize = (monthWidth - 2 * 6 - 2 * 4) / 7 - 2; // 每行7个点，减�
 const monthHeight = monthWidth;
 
 const YearView = ({ onDateChange, onViewChange, selectedDate }) => {
-  const [currentYear, setCurrentYear] = useState(moment().year());
+  const [currentYear, setCurrentYear] = useState(selectedDate.year());
   const [checkInData, setCheckInData] = useState({});
 
   const months = [
@@ -220,6 +220,7 @@ const YearView = ({ onDateChange, onViewChange, selectedDate }) => {
   });
 
   const isNextYearDisabled = currentYear >= moment().year();
+  const isNotCurrentYear = currentYear !== moment().year();
 
   return (
     <View style={styles.container} {...panResponder.panHandlers}>
@@ -235,6 +236,22 @@ const YearView = ({ onDateChange, onViewChange, selectedDate }) => {
         keyExtractor={(item) => `${currentYear}-${item.month}`}
         contentContainerStyle={styles.monthsContainer}
       />
+
+      {isNotCurrentYear && (
+        <TouchableOpacity
+          style={styles.todayButton}
+          onPress={() => {
+            // 切回今天
+            const today = moment().startOf("day");
+            onDateChange(today);
+            setCurrentYear(today.year());
+          }}
+        >
+          <View style={styles.calendarBox}>
+            <Text style={styles.todayNumber}>{moment().date()}</Text>
+          </View>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
@@ -273,7 +290,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#333",
     marginBottom: 3,
-    paddingLeft: 3
+    paddingLeft: 3,
   },
   disabledMonthText: {
     color: "#999",
@@ -306,6 +323,37 @@ const styles = StyleSheet.create({
     width: dayDotSize,
     height: dayDotSize,
     borderRadius: 100,
+  },
+  todayButton: {
+    position: "absolute",
+    bottom: 20,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "#FFFFFF",
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  calendarBox: {
+    width: 36,
+    height: 32,
+    borderWidth: 1.5,
+    borderColor: "#007AFF",
+    borderRadius: 6,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+  },
+  todayNumber: {
+    color: "#007AFF",
+    fontSize: 14,
+    fontWeight: "bold",
   },
 });
 
