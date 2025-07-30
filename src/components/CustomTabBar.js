@@ -55,11 +55,11 @@ const CustomTabBar = ({
 
   const getCurrentViewText = () => {
     const viewMap = {
-      Day: "日视图",
-      Month: "月视图",
-      Year: "年视图",
+      Day: "月视图",
+      Month: "年视图",
+      Year: "月视图",
     };
-    return viewMap[currentView] || "日视图";
+    return viewMap[currentView];
   };
 
   return (
