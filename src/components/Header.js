@@ -91,8 +91,8 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',           // 水平布局
     alignItems: 'center',           // 垂直居中
-    justifyContent: 'space-between',// 两端对齐，中间留空
-    padding: 15,                    // 四周内边距
+    justifyContent: 'center',// 两端对齐，中间留空
+    padding: 8,                    // 四周内边距
     paddingTop: 44,                 // 顶部安全区（状态栏高度）
     backgroundColor: '#fff',        // 背景白色
     borderBottomWidth: 1,           // 底部边框
@@ -108,7 +108,6 @@ const styles = StyleSheet.create({
   },
   /** 标题容器：占据剩余空间并水平居中 */
   titleContainer: {
-    flex: 1,
     alignItems: 'center',
   },
   /** 标题文本：字体大小、加粗及颜色 */

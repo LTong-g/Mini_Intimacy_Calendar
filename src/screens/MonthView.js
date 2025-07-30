@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
   // 容器样式，整个页面占满全屏，背景为浅灰色
   container: {
     flex: 1, // 占据所有可用空间
-    backgroundColor: '#f5f5f5', // 背景浅灰色
+    backgroundColor: '#fff',
   },
 
   // 月份文字样式
@@ -294,6 +294,7 @@ const styles = StyleSheet.create({
 
   // 星期标题栏容器（如“日一二三四五六”）
   weekDaysContainer: {
+    backgroundColor: '#fff',
     flexDirection: 'row', // 子元素横向排列
     justifyContent: 'space-around', // 子元素均匀分布
     paddingVertical: 10, // 上下内边距

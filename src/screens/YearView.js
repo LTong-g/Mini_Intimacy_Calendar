@@ -1,4 +1,3 @@
-
 /**
  * 极简武器强化日历 - 年份视图组件（底色整合自月视图）
  * 显示年度概览，包含12个月份的迷你日历，支持三种打卡类型底色（svg三等分圆）
@@ -7,17 +6,25 @@
  * @date 2025.7.25
  */
 
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, PanResponder, Dimensions } from 'react-native';
-import moment from 'moment';
-import Header from '../components/Header';
-import { Svg, Path } from 'react-native-svg'; 
-import { getCheckInStatus, CheckInTypes } from '../utils/checkInStorage';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  PanResponder,
+  Dimensions,
+} from "react-native";
+import moment from "moment";
+import Header from "../components/Header";
+import { Svg, Path } from "react-native-svg";
+import { getCheckInStatus, CheckInTypes } from "../utils/checkInStorage";
 
-const screenWidth = Dimensions.get('window').width;
-const screenHeight = Dimensions.get('window').height;
+const screenWidth = Dimensions.get("window").width;
+const screenHeight = Dimensions.get("window").height;
 const monthWidth = (screenWidth - 3 * 2 * 8 - 2 * 10) / 3; // 3列 + 3个间距 + 2个10px间距
-const dayDotSize = (monthWidth - 2 * 6 - 2 * 4) / 7 - 2;  // 每行7个点，减去间距
+const dayDotSize = (monthWidth - 2 * 6 - 2 * 4) / 7 - 2; // 每行7个点，减去间距
 const monthHeight = monthWidth;
 
 const YearView = ({ onDateChange, onViewChange, selectedDate }) => {
@@ -25,18 +32,18 @@ const YearView = ({ onDateChange, onViewChange, selectedDate }) => {
   const [checkInData, setCheckInData] = useState({});
 
   const months = [
-    { name: '一月', month: 0 },
-    { name: '二月', month: 1 },
-    { name: '三月', month: 2 },
-    { name: '四月', month: 3 },
-    { name: '五月', month: 4 },
-    { name: '六月', month: 5 },
-    { name: '七月', month: 6 },
-    { name: '八月', month: 7 },
-    { name: '九月', month: 8 },
-    { name: '十月', month: 9 },
-    { name: '十一月', month: 10 },
-    { name: '十二月', month: 11 },
+    { name: "一月", month: 0 },
+    { name: "二月", month: 1 },
+    { name: "三月", month: 2 },
+    { name: "四月", month: 3 },
+    { name: "五月", month: 4 },
+    { name: "六月", month: 5 },
+    { name: "七月", month: 6 },
+    { name: "八月", month: 7 },
+    { name: "九月", month: 8 },
+    { name: "十月", month: 9 },
+    { name: "十一月", month: 10 },
+    { name: "十二月", month: 11 },
   ];
 
   useEffect(() => {
@@ -44,14 +51,14 @@ const YearView = ({ onDateChange, onViewChange, selectedDate }) => {
   }, [currentYear]);
 
   const loadYearCheckInData = async () => {
-    const start = moment().year(currentYear).startOf('year');
-    const end = moment().year(currentYear).endOf('year');
+    const start = moment().year(currentYear).startOf("year");
+    const end = moment().year(currentYear).endOf("year");
     const data = {};
     let current = start.clone();
-    while (current.isSameOrBefore(end, 'day')) {
+    while (current.isSameOrBefore(end, "day")) {
       const status = await getCheckInStatus(current);
-      data[current.format('YYYY-MM-DD')] = status;
-      current.add(1, 'day');
+      data[current.format("YYYY-MM-DD")] = status;
+      current.add(1, "day");
     }
     setCheckInData(data);
   };
@@ -62,25 +69,26 @@ const YearView = ({ onDateChange, onViewChange, selectedDate }) => {
     const daysInMonth = month.daysInMonth();
     const preview = [];
     for (let i = 0; i < firstDay; i++) {
-      preview.push({ key: `empty-${i}`, type: 'empty' });
+      preview.push({ key: `empty-${i}`, type: "empty" });
     }
     for (let day = 1; day <= daysInMonth; day++) {
       const date = month.clone().date(day);
-      const status = checkInData[date.format('YYYY-MM-DD')] || CheckInTypes.NONE;
+      const status =
+        checkInData[date.format("YYYY-MM-DD")] || CheckInTypes.NONE;
       preview.push({
         key: `day-${day}`,
-        type: 'day',
+        type: "day",
         day,
         date,
         checkInStatus: status,
-        isToday: date.isSame(moment(), 'day'),
-        isSelected: date.isSame(selectedDate, 'day'),
+        isToday: date.isSame(moment(), "day"),
+        isSelected: date.isSame(selectedDate, "day"),
       });
     }
     const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
     const remainingCells = totalCells - preview.length;
     for (let i = 0; i < remainingCells; i++) {
-      preview.push({ key: `trailing-${i}`, type: 'empty' });
+      preview.push({ key: `trailing-${i}`, type: "empty" });
     }
     return preview;
   };
@@ -91,18 +99,25 @@ const YearView = ({ onDateChange, onViewChange, selectedDate }) => {
     const hasType2 = status & CheckInTypes.TYPE2;
     const hasType3 = status & CheckInTypes.TYPE3;
     const colors = [];
-    if (hasType2) colors.push('#81D4FA');
-    if (hasType3) colors.push('#F48FB1');
-    if (hasType1) colors.push('#FFD54F');
+    if (hasType2) colors.push("#81D4FA");
+    if (hasType3) colors.push("#F48FB1");
+    if (hasType1) colors.push("#FFD54F");
     const total = colors.length;
     if (total === 0) return <View style={[styles.dayDot, styles.realDay]} />;
-    if (total === 1) return <View style={[styles.dayDot, { backgroundColor: colors[0] }]} />;
+    if (total === 1)
+      return <View style={[styles.dayDot, { backgroundColor: colors[0] }]} />;
     return (
       <Svg width={dayDotSize} height={dayDotSize} viewBox="0 0 36 36">
         {colors.map((color, index) => (
           <Path
             key={index}
-            d={describeArc(18, 18, 18, index * 360 / total, (index + 1) * 360 / total)}
+            d={describeArc(
+              18,
+              18,
+              18,
+              (index * 360) / total,
+              ((index + 1) * 360) / total
+            )}
             fill={color}
           />
         ))}
@@ -111,23 +126,23 @@ const YearView = ({ onDateChange, onViewChange, selectedDate }) => {
   };
 
   const polarToCartesian = (cx, cy, r, angleDeg) => {
-    const rad = (angleDeg - 90) * Math.PI / 180.0;
+    const rad = ((angleDeg - 90) * Math.PI) / 180.0;
     return {
       x: cx + r * Math.cos(rad),
-      y: cy + r * Math.sin(rad)
+      y: cy + r * Math.sin(rad),
     };
   };
 
   const describeArc = (x, y, r, startAngle, endAngle) => {
     const start = polarToCartesian(x, y, r, endAngle);
     const end = polarToCartesian(x, y, r, startAngle);
-    const largeArcFlag = endAngle - startAngle <= 180 ? '0' : '1';
+    const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
     return [
       `M ${x} ${y}`,
       `L ${start.x} ${start.y}`,
       `A ${r} ${r} 0 ${largeArcFlag} 0 ${end.x} ${end.y}`,
-      'Z'
-    ].join(' ');
+      "Z",
+    ].join(" ");
   };
 
   const handlePreviousYear = () => setCurrentYear(currentYear - 1);
@@ -137,9 +152,9 @@ const YearView = ({ onDateChange, onViewChange, selectedDate }) => {
 
   const handleMonthPress = (monthIndex) => {
     const newDate = moment(selectedDate).year(currentYear).month(monthIndex);
-    if (newDate.isAfter(moment(), 'month')) return;
+    if (newDate.isAfter(moment(), "month")) return;
     onDateChange(newDate);
-    onViewChange('Month');
+    onViewChange("Month");
   };
 
   // 辅助函数：将数组按 size 切块为二维数组
@@ -155,16 +170,19 @@ const YearView = ({ onDateChange, onViewChange, selectedDate }) => {
   const renderMonth = ({ item }) => {
     const monthPreview = generateMonthPreview(item.month);
     const currentDate = moment();
-    const isFutureMonth = currentYear > currentDate.year() || 
-                        (currentYear === currentDate.year() && item.month > currentDate.month());
+    const isFutureMonth =
+      currentYear > currentDate.year() ||
+      (currentYear === currentDate.year() && item.month > currentDate.month());
 
     return (
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[styles.monthContainer, isFutureMonth && styles.disabledMonth]}
         onPress={() => !isFutureMonth && handleMonthPress(item.month)}
         disabled={isFutureMonth}
       >
-        <Text style={[styles.monthName, isFutureMonth && styles.disabledMonthText]}>
+        <Text
+          style={[styles.monthName, isFutureMonth && styles.disabledMonthText]}
+        >
           {item.name}
         </Text>
 
@@ -173,9 +191,11 @@ const YearView = ({ onDateChange, onViewChange, selectedDate }) => {
             <View key={rowIdx} style={styles.weekRow}>
               {weekRow.map((cell) => (
                 <View key={cell.key} style={styles.dayDotWrapper}>
-                  {cell.type === 'day'
-                    ? renderCheckInDot(cell)
-                    : <View style={[styles.dayDot, styles.emptyDot]} />}
+                  {cell.type === "day" ? (
+                    renderCheckInDot(cell)
+                  ) : (
+                    <View style={[styles.dayDot, styles.emptyDot]} />
+                  )}
                 </View>
               ))}
             </View>
@@ -184,7 +204,6 @@ const YearView = ({ onDateChange, onViewChange, selectedDate }) => {
       </TouchableOpacity>
     );
   };
-
 
   const panResponder = PanResponder.create({
     onStartShouldSetPanResponder: () => true,
@@ -213,7 +232,7 @@ const YearView = ({ onDateChange, onViewChange, selectedDate }) => {
       <FlatList
         data={months}
         renderItem={renderMonth}
-        keyExtractor={item => `${currentYear}-${item.month}`}
+        keyExtractor={(item) => `${currentYear}-${item.month}`}
         contentContainerStyle={styles.monthsContainer}
       />
     </View>
@@ -221,61 +240,73 @@ const YearView = ({ onDateChange, onViewChange, selectedDate }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
-  monthsContainer: { 
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+  monthsContainer: {
     padding: 10,
-    flexDirection: 'row', 
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
   },
   monthContainer: {
     flex: 1,
     margin: 8,
     padding: 6,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 8,
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     width: monthWidth,
     height: monthHeight,
   },
-  disabledMonth: { backgroundColor: '#f5f5f5', elevation: 0, shadowOpacity: 0 },
+  disabledMonth: {
+    backgroundColor: "#f5f5f5",
+    elevation: 0,
+    shadowOpacity: 0,
+  },
   monthName: {
     fontSize: 14,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 5,
-    textAlign: 'center',
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 3,
+    paddingLeft: 3
   },
-  disabledMonthText: { color: '#999' },
+  disabledMonthText: {
+    color: "#999",
+  },
   monthGrid: {
-    flexDirection: 'column', // 原来是 'row'
-    flexWrap: 'nowrap',      // 原来是 'wrap'
-    justifyContent: 'space-between',
-    width: '100%',
+    flexDirection: "column", // 原来是 'row'
+    flexWrap: "nowrap", // 原来是 'wrap'
+    justifyContent: "space-between",
+    width: "100%",
     paddingHorizontal: 4,
   },
-  realDay: { backgroundColor: '#ddd' },
-  emptyDot: { backgroundColor: 'transparent' },
+  realDay: {
+    backgroundColor: "#ddd",
+  },
+  emptyDot: {
+    backgroundColor: "transparent",
+  },
   weekRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginBottom: 2,
   },
   dayDotWrapper: {
-    width: dayDotSize,  
+    width: dayDotSize,
     height: dayDotSize,
     marginHorizontal: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   dayDot: {
     width: dayDotSize,
     height: dayDotSize,
     borderRadius: 100,
   },
-
 });
 
 export default YearView;

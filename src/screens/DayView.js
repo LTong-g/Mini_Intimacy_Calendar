@@ -234,11 +234,11 @@ const DayView = ({ selectedDate, onDateChange, onViewChange }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#fff',
   },
   dateInfo: {
     backgroundColor: '#fff',
-    padding: 15,
+    padding: 10,
     alignItems: 'center',
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
