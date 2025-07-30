@@ -234,6 +234,7 @@ const YearView = ({ onDateChange, onViewChange, selectedDate }) => {
         data={months}
         renderItem={renderMonth}
         keyExtractor={(item) => `${currentYear}-${item.month}`}
+        numColumns={3}
         contentContainerStyle={styles.monthsContainer}
       />
 
@@ -263,8 +264,8 @@ const styles = StyleSheet.create({
   },
   monthsContainer: {
     padding: 10,
-    flexDirection: "row",
-    flexWrap: "wrap",
+    // flexDirection: "row",
+    // flexWrap: "wrap",
   },
   monthContainer: {
     flex: 1,

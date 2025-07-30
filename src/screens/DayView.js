@@ -18,6 +18,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, PanResponder, Pressable, Vibration } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import moment from 'moment';
+import 'moment/locale/zh-cn';    // 引入中文
 import Header from '../components/Header';
 import { getCheckInStatus, getCheckInIcons } from '../utils/checkInStorage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -170,7 +171,7 @@ const DayView = ({ selectedDate, onDateChange, onViewChange }) => {
       />
       
       <View style={styles.dateInfo}>
-        <Text style={styles.weekdayText}>{selectedDate.format('dddd')}</Text>
+        <Text style={styles.weekdayText}>{selectedDate.locale('zh-cn').format('dddd')}</Text>
       </View>
       
       <View style={styles.content}>
