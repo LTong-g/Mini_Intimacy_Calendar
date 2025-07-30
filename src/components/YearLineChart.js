@@ -18,8 +18,7 @@ const { width: screenWidth } = Dimensions.get("window");
 const chartHeight = 200;
 const margin = { top: 16, bottom: 32, left: 16, right: 40 };
 const innerWidth = screenWidth - margin.left - margin.right;
-const innerHeight =
-  chartHeight - margin.top - margin.bottom;
+const innerHeight = chartHeight - margin.top - margin.bottom;
 
 const colors = {
   tutorial: "#F57F17",
@@ -110,7 +109,7 @@ export default function YearLineChart({ year }) {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>
-        {year} 年记录变化趋势
+        {year}年 记录变化趋势
       </Text>
       <View {...pan.panHandlers}>
         <Svg

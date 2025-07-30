@@ -14,6 +14,8 @@ import DatePickerModal from "../components/DatePickerModal";
 import TotalStatsTable from "../components/TotalStatsTable";
 import YearStatsTable from "../components/YearStatsTable";
 import YearLineChart from "../components/YearLineChart";
+import CustomStatsTable from "../components/CustomStatsTable"; // 自定义时间范围统计表
+import CustomLineChart from "../components/CustomLineChart"; // 自定义时间范围折线图
 
 const StatisticsScreen = ({ navigation }) => {
   const [mode, setMode] = useState("总"); // “总” | “年” | “自”
@@ -80,7 +82,14 @@ const StatisticsScreen = ({ navigation }) => {
           </>
         )}
 
-        {mode === "自" && <Text>自定义范围统计</Text>}
+        {mode === "自" &&
+          startDate !== "开始日期" &&
+          endDate !== "结束日期" && (
+            <>
+              <CustomStatsTable startDate={startDate} endDate={endDate} />
+              <CustomLineChart startDate={startDate} endDate={endDate} />
+            </>
+          )}
       </ScrollView>
 
       <DatePickerModal
