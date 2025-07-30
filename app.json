@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "MinimalistWeaponEnhancementCalendar",
+    "name": "极简武器强化日历",
     "slug": "MinimalistWeaponEnhancementCalendar",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
