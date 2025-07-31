@@ -13,7 +13,10 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "runtimeVersion": {
+        "policy": "appVersion"
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -21,7 +24,8 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.ltongg.MinimalistWeaponEnhancementCalendar"
+      "package": "com.ltongg.MinimalistWeaponEnhancementCalendar",
+      "runtimeVersion": "1.1.0"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -30,6 +34,9 @@
       "eas": {
         "projectId": "361cc19a-607e-4d45-b4e1-9936914358d9"
       }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/361cc19a-607e-4d45-b4e1-9936914358d9"
     }
   }
 }
