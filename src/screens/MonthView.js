@@ -56,8 +56,10 @@ const MonthView = ({ selectedDate, onDateChange, onViewChange, refreshKey = 0 })
   const generateCalendarDays = () => {
     const startOfMonth = currentMonth.clone().startOf('month');
     const endOfMonth = currentMonth.clone().endOf('month');
-    const startDate = startOfMonth.clone().startOf('week');
-    const endDate = endOfMonth.clone().endOf('week');
+    // const startDate = startOfMonth.clone().startOf('week');
+    // const endDate = endOfMonth.clone().endOf('week');
+    const startDate = startOfMonth.clone().startOf('day').subtract(startOfMonth.day(), 'days');
+    const endDate = endOfMonth.clone().endOf('day').add(6 - endOfMonth.day(), 'days');
 
     const days = [];
     let current = startDate.clone();

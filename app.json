@@ -2,7 +2,7 @@
   "expo": {
     "name": "极简武器强化日历",
     "slug": "MinimalistWeaponEnhancementCalendar",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -25,7 +25,7 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.ltongg.MinimalistWeaponEnhancementCalendar",
-      "runtimeVersion": "1.1.0"
+      "runtimeVersion": "1.1.1"
     },
     "web": {
       "favicon": "./assets/favicon.png"
