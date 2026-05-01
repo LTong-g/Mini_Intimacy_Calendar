@@ -6,7 +6,8 @@
     "start": "expo start --dev-client",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "release:sync-version": "eas build:version:sync"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",

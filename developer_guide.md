@@ -107,3 +107,34 @@ npm run android
 - 打卡切换正确性
 - 月/年视图着色与状态显示
 - 统计表与折线图数据一致性
+
+## 8. 发布版本管理与统一工作流
+### 8.1 版本定义位置
+- 语义版本（`appVersion`）定义在：
+- `package.json` -> `version`
+- `app.json` -> `expo.version`
+- 当前语义版本（截至 `2026-05-01`）：`1.1.1`。
+
+### 8.2 统一策略
+- `runtimeVersion` 统一使用 `policy: appVersion`（iOS/Android 一致）。
+- 构建号统一由 EAS 远端管理：
+- `eas.json` -> `cli.appVersionSource: remote`
+- `eas.json` -> `build.production.autoIncrement: true`
+- 发布前通过脚本同步远端版本状态到本地：
+- `npm run release:sync-version`（执行 `eas build:version:sync`）。
+
+### 8.3 版本更新时在哪里改
+- 仅在发布新业务版本时修改语义版本：
+- `package.json` 的 `version`
+- `app.json` 的 `expo.version`
+- 不手工维护 Android `versionCode`（由 EAS 递增与同步）。
+
+### 8.4 推荐发布流程（Android）
+1. 修改语义版本（示例：`1.1.1 -> 1.1.2`）。
+2. 执行 `npm run release:sync-version`。
+3. 执行 `eas build --platform android --profile production`。
+4. 归档产物时带上语义版本与构建号（示例：`MinimalistWeaponEnhancementCalendar-v1.1.2+42-android.apk`）。
+
+### 8.5 约束说明
+- `expo run:android` 用于开发调试，不作为发布产物来源。
+- 发布产物统一来自 EAS `production` profile（云构建或 `--local`）。

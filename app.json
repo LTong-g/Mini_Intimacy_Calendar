@@ -25,7 +25,9 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.ltongg.MinimalistWeaponEnhancementCalendar",
-      "runtimeVersion": "1.1.1"
+      "runtimeVersion": {
+        "policy": "appVersion"
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"
