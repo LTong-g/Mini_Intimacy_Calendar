@@ -41,3 +41,23 @@
   - 低位每次修复漏洞时增加
   - 较高一位增加时低于其的版本号归零。
 - 版本更新单独拥有一条时间戳，单独记录一条开发日志。
+
+## 用户已明确偏好（持久）
+- 当前项目基于 Expo 开发，用户希望减少“仅依赖 Expo Go 扫码”带来的设备尺寸测试限制。
+- 用户希望构建流程尽量在项目仓库内产出安装包/发布物，以便后续 release 管理与分发。
+- 当前阶段开发与测试仅考虑 Android，不纳入 iOS。
+- 在 Windows 本机进行 Android 构建时，采用“构建前临时 `subst` 映射短路径、构建后无论成功失败都取消映射”的流程；每次构建重新映射，避免 `M:` 长驻和与原始长路径混用导致 Kotlin/Gradle 缓存根路径冲突及 native 编译路径过深问题。
+
+## Windows Android 构建执行流程（强约束）
+- 适用范围：所有本机 Android Gradle 构建与安装流程。
+- 禁止事项：禁止直接在原始长路径 `D:\B0Projects\my_tools\MinimalistWeaponEnhancementCalendar\android` 执行 `gradlew` 系列命令。
+- 标准命令（仓库根目录）：
+  - 构建 Debug APK：`npm run android:build:debug:tempmap`
+  - 构建并安装到模拟器/设备：`npm run android:install:debug:tempmap`
+- 执行语义（必须满足）：
+  - 步骤 1：每次构建前先创建临时映射（默认 `M:`）。
+  - 步骤 2：仅在映射路径内执行 Gradle 任务（`M:\android`）。
+  - 步骤 3：构建结束后无论成功或失败都执行取消映射（`subst M: /D`）。
+  - 步骤 4：构建结束后校验 `subst` 输出不包含 `M:`。
+  - 步骤 5：下一次构建必须重新映射，不复用旧映射。
+- 实现载体：`scripts/android-build-tempmap.ps1`（`try/finally` 保证清理）。

@@ -102,6 +102,28 @@ npm run start
 npm run android
 ```
 
+### 6.1 Windows 本地构建（临时短路径映射）
+- 目的：避免 React Native native 模块在 Windows 下因工程路径过深导致的 CMake/Ninja 构建失败。
+- 约束：每次构建前创建 `subst` 映射，每次构建后无论成功失败都取消映射，不让 `M:` 长驻。
+
+推荐命令（仓库根目录执行）：
+```powershell
+npm run android:build:debug:tempmap
+```
+
+安装到已连接设备（仓库根目录执行）：
+```powershell
+npm run android:install:debug:tempmap
+```
+
+脚本位置：
+- `scripts/android-build-tempmap.ps1`
+
+可选参数示例（直接运行脚本）：
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\android-build-tempmap.ps1 -DriveLetter M -GradleTask assembleDebug -NodeEnv development
+```
+
 ## 7. 开发回归建议
 - 改动打卡逻辑后至少验证：
 - 打卡切换正确性
