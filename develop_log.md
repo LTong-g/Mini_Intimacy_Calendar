@@ -161,3 +161,27 @@
 - 已新增 scripts/append-develop-log.ps1，用于按“当日时间戳 + 新的三级标题 + 事实列表”结构追加开发日志。
 - 已在 AGENTS.md 新增硬约束：日志追加必须通过 append-develop-log 脚本执行，禁止使用“延续上个话题”标题。
 - 已确认本次机制加固用于避免不同事件被续写到同一三级标题下的混写问题。
+
+### 每日多次记录功能改造范围分析与方案澄清
+- 已完成对现有“每日一次（位掩码0/1）”模型的代码定位，确认核心约束位于 `src/utils/checkInStorage.js` 的 `getCheckInStatus`/`setCheckInStatus`/`toggleCheckInType`/`getCheckInIcons`。
+- 打卡交互入口在 `src/components/CustomTabBar.js` 中通过 `toggleCheckInType` 执行异或开关，当前行为为同类型当日只能开/关，无法累计次数。
+- 日视图 `src/screens/DayView.js` 当前以单个整型状态渲染图标与撤销逻辑（按位清除），不支持同类型多次记录的数量展示与按条回退。
+- 月/年视图 `src/screens/MonthView.js`、`src/screens/YearView.js` 使用位判断仅区分“当日是否出现该类型”，若改为次数模型需调整读取后的“出现判定”和可选的“强度展示”策略。
+- 统计链路 `src/utils/statsUtils.js` 与 `src/hooks/useCheckinAggregation.js` 当前将每天每类型计为0/1；改造后需改为按次数累计，否则统计会低估。
+- 导入导出 `src/screens/SettingsScreen.js` 的 JSON 校验当前仅允许值为 `number`，若引入对象/数组结构需同步放宽并做兼容迁移校验。
+- 数据迁移风险：历史 `{date: number}` 旧格式与新格式并存时，读取层需统一归一化，避免视图与统计出现 NaN 或漏计。
+- 最小可行兼容策略：读取时兼容旧位掩码并映射为新结构；写入统一新结构；导出默认新结构。
+- 已根据“软件内统一改成新的数据格式，导入兼容旧格式并自动转新格式”的要求，进一步明确数据层方案。
+- 新格式建议为 `{ "YYYY-MM-DD": { "tutorial": number, "weapon": number, "duo": number } }`，三项均为非负整数，三项均为 `0` 的日期不落库。
+- 旧格式 `{ "YYYY-MM-DD": number }` 的兼容转换规则为：位 `1/2/4` 分别转换为对应字段 `1`，未出现字段转换为 `0`。
+- `src/utils/checkInStorage.js` 应作为统一数据边界，新增全量读取、归一化、校验、导入转换、导出读取、单日增减/设置等函数，减少页面直接读写 `AsyncStorage`。
+- `src/hooks/useCheckinData.js` 与 `src/hooks/useCheckinAggregation.js` 当前直接读取原始 JSON，后续应改为使用统一读取函数获取新格式数据。
+- `src/screens/SettingsScreen.js` 的导入应接受旧格式与新格式，导入落库前统一转换为新格式；导出应通过统一读取函数输出新格式 JSON。
+- `src/screens/DayView.js` 当前直接读取和写入 `checkin_status` 用于坚持天数与取消记录，后续应改为调用统一存储工具，避免旧格式判断残留。
+- 已重新明确完整兼容口径：软件内部统一使用新格式；旧格式兼容只存在于存量迁移与导入边界；导出只输出新格式。
+- 本机存量数据迁移场景：用户更新应用前 `AsyncStorage` 中已有旧格式数据时，首次通过统一读取函数读取 `checkin_status` 应自动归一化为新格式，并写回同一个存储键。
+- 导入旧备份兼容场景：用户未来手动导入旧格式 JSON 时，导入流程应接受旧格式，校验后转换为新格式再落库。
+- 旧格式迁移损失边界：旧位掩码只能表示某类型当天是否发生，无法还原同类型多次次数；转换后每个出现过的类型次数只能记为 `1`。
+- 软件内部读取链路应避免在页面、hook、统计工具中各自实现兼容逻辑，统一由 `src/utils/checkInStorage.js` 提供格式识别、校验、归一化、自动迁移写回能力。
+- 建议统一 API 边界为：`getAllCheckInData` 负责读取并迁移存量数据，`normalizeCheckInData` 负责旧/新格式归一化，`importCheckInData` 负责导入兼容并落库，`exportCheckInData` 负责导出新格式，单日增减/设置函数负责业务写入。
+- `src/hooks/useCheckinData.js`、`src/hooks/useCheckinAggregation.js`、`src/utils/statsUtils.js`、`src/screens/DayView.js`、`src/screens/MonthView.js`、`src/screens/YearView.js`、`src/components/CustomTabBar.js` 后续均应消费新格式或统一 API，不再直接依赖位掩码。
