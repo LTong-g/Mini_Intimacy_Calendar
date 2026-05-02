@@ -4,7 +4,9 @@
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client",
-    "android": "expo run:android",
+    "android": "expo run:android --device AVD_2640x1200",
+    "android:phone": "expo run:android --device AVD_2640x1200",
+    "android:tablet": "expo run:android --device AVD_2560x1600",
     "android:build:debug:tempmap": "powershell -ExecutionPolicy Bypass -File .\\scripts\\android-build-tempmap.ps1 -GradleTask assembleDebug",
     "android:install:debug:tempmap": "powershell -ExecutionPolicy Bypass -File .\\scripts\\android-build-tempmap.ps1 -GradleTask installDebug",
     "ios": "expo run:ios",
