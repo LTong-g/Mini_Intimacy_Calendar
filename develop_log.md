@@ -149,3 +149,7 @@
 ### 手机 AVD 竖屏修正
 - 已按用户要求直接修改 `AVD_2640x1200` 配置为竖屏手机尺寸：`hw.lcd.width=1200`、`hw.lcd.height=2640`、`hw.initialOrientation=portrait`。
 - 已在修改前备份 `AVD_2640x1200.avd\config.ini` 为 `config.ini.bak_20260502_202047_portrait_fix`。
+
+### 双模拟器安装验证
+- 已在两个在线 Android 模拟器 `emulator-5554` 与 `emulator-5556` 执行 `npm run android:install:debug:tempmap`，安装 `com.ltongg.MinimalistWeaponEnhancementCalendar` 成功。
+- 已通过 `adb -s <serial> shell pm list packages` 分别验证两个模拟器均存在目标应用包名。
