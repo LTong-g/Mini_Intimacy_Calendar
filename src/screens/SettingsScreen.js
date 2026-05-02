@@ -10,10 +10,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Sharing from 'expo-sharing';
-
-const CHECKIN_KEY = 'checkin_status';
+import { exportCheckInData, importCheckInData } from '../utils/checkInStorage';
 
 const SettingsScreen = () => {
   const navigation = useNavigation();
@@ -21,14 +19,14 @@ const SettingsScreen = () => {
   // 导出打卡记录为 JSON
   const handleExport = async () => {
     try {
-      const data = await AsyncStorage.getItem(CHECKIN_KEY);
-      if (!data || data === '{}') {
+      const data = await exportCheckInData();
+      if (Object.keys(data).length === 0) {
         Alert.alert('导出失败', '没有可导出的数据');
         return;
       }
 
       const uri = FileSystem.documentDirectory + 'EnhancementRecords.json';
-      await FileSystem.writeAsStringAsync(uri, data, { encoding: FileSystem.EncodingType.UTF8 });
+      await FileSystem.writeAsStringAsync(uri, JSON.stringify(data), { encoding: FileSystem.EncodingType.UTF8 });
 
       await Sharing.shareAsync(uri, {
         dialogTitle: '导出记录文件',
@@ -54,18 +52,7 @@ const SettingsScreen = () => {
 
       const parsed = JSON.parse(content);
 
-      if (typeof parsed !== 'object' || Array.isArray(parsed)) {
-        throw new Error('格式无效');
-      }
-
-      // 检查每个 key 是否为日期格式，值为数字
-      for (const [key, value] of Object.entries(parsed)) {
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(key) || typeof value !== 'number') {
-          throw new Error('数据格式不符合要求');
-        }
-      }
-
-      await AsyncStorage.setItem(CHECKIN_KEY, JSON.stringify(parsed));
+      await importCheckInData(parsed);
       Alert.alert('导入成功', '记录已导入');
     } catch (error) {
       Alert.alert('导入失败', error.message || '无法解析文件内容');

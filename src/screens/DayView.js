@@ -20,8 +20,16 @@ import { Ionicons } from '@expo/vector-icons';
 import moment from 'moment';
 import 'moment/locale/zh-cn';    // 引入中文
 import Header from '../components/Header';
-import { getCheckInStatus, getCheckInIcons } from '../utils/checkInStorage';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import {
+  CheckInCountKeys,
+  getAllCheckInData,
+  getCheckInIcons,
+  getCheckInRecord,
+  getCheckInStatus,
+  hasAnyCheckIn,
+  normalizeCheckInRecord,
+  setCheckInRecord,
+} from '../utils/checkInStorage';
 
 /**
  * 日视图组件
@@ -52,11 +60,10 @@ const DayView = ({ selectedDate, onDateChange, onViewChange }) => {
       setCheckInIcons(getCheckInIcons(status));
       
       try {
-        const stored = await AsyncStorage.getItem('checkin_status');
-        const checkInData = stored ? JSON.parse(stored) : {};
+        const checkInData = await getAllCheckInData();
         
         const checkInDates = Object.keys(checkInData)
-          .filter(date => checkInData[date] && checkInData[date] > 0)
+          .filter(date => hasAnyCheckIn(normalizeCheckInRecord(checkInData[date])))
           .sort((a, b) => new Date(b) - new Date(a));
         
         if (checkInDates.length === 0) {
@@ -93,11 +100,11 @@ const DayView = ({ selectedDate, onDateChange, onViewChange }) => {
       }
     };
 
-  // 图标对应的状态位掩码
-  const iconMaskMap = {
-    desktop: 1,
-    airplane: 2,
-    heart: 4,
+  // 图标对应的新格式计数字段
+  const iconKeyMap = {
+    desktop: CheckInCountKeys.TYPE1,
+    airplane: CheckInCountKeys.TYPE2,
+    heart: CheckInCountKeys.TYPE3,
   };
 
   /**
@@ -107,19 +114,13 @@ const DayView = ({ selectedDate, onDateChange, onViewChange }) => {
   const handleCancelIcon = async (iconName) => {
     Vibration.vibrate(30);
     try {
-      const dateKey = selectedDate.format('YYYY-MM-DD');
-      const stored  = await AsyncStorage.getItem('checkin_status');
-      const data    = stored ? JSON.parse(stored) : {};
-      const oldStatus = data[dateKey] || 0;
-      const mask      = iconMaskMap[iconName] || 0;
-      const newStatus = oldStatus & ~mask;
+      const oldRecord = await getCheckInRecord(selectedDate);
+      const key = iconKeyMap[iconName];
+      if (!key) return;
 
-      if (newStatus > 0) {
-        data[dateKey] = newStatus;
-      } else {
-        delete data[dateKey];
-      }
-      await AsyncStorage.setItem('checkin_status', JSON.stringify(data));
+      const newRecord = { ...oldRecord, [key]: 0 };
+
+      await setCheckInRecord(selectedDate, newRecord);
       loadCheckInStatus();
     } catch (error) {
       console.error('取消记录失败：', error);

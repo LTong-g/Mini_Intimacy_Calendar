@@ -185,3 +185,18 @@
 - 软件内部读取链路应避免在页面、hook、统计工具中各自实现兼容逻辑，统一由 `src/utils/checkInStorage.js` 提供格式识别、校验、归一化、自动迁移写回能力。
 - 建议统一 API 边界为：`getAllCheckInData` 负责读取并迁移存量数据，`normalizeCheckInData` 负责旧/新格式归一化，`importCheckInData` 负责导入兼容并落库，`exportCheckInData` 负责导出新格式，单日增减/设置函数负责业务写入。
 - `src/hooks/useCheckinData.js`、`src/hooks/useCheckinAggregation.js`、`src/utils/statsUtils.js`、`src/screens/DayView.js`、`src/screens/MonthView.js`、`src/screens/YearView.js`、`src/components/CustomTabBar.js` 后续均应消费新格式或统一 API，不再直接依赖位掩码。
+
+### 每日多次记录功能改造第一阶段实施
+- 已完成数据底层第一阶段实现，未调整打卡按钮、日/月/年视图的视觉布局与交互入口。
+- `src/utils/checkInStorage.js` 已改为统一数据边界：新增新格式记录对象、旧位掩码转换、全量读取自动迁移、导入转换、导出读取、单日记录读写、类型次数增减等 API。
+- `getCheckInStatus`、`setCheckInStatus`、`toggleCheckInType`、`getCheckInIcons` 保留旧接口语义，供现有表层继续以位掩码方式运行；底层落库已转为新格式。
+- `getAllCheckInData` 会在读取到旧格式或可清理数据时写回新格式到同一 `checkin_status` 键，用于覆盖应用更新前本机已有旧数据的迁移场景。
+- `importCheckInData` 会接受旧格式与新格式，严格校验后统一以新格式写入本地；`exportCheckInData` 会先走统一读取并导出新格式。
+- `src/hooks/useCheckinData.js` 与 `src/hooks/useCheckinAggregation.js` 已改为通过统一存储工具读取数据，不再直接读取 `AsyncStorage` 原始 JSON。
+- `src/utils/statsUtils.js` 已改为通过新格式记录对象统计次数，同时保留对旧位掩码输入的兼容解析。
+- `src/screens/SettingsScreen.js` 的导入/导出数据处理已改为调用统一导入导出 API，页面文案和布局未调整。
+- `src/screens/DayView.js` 中用于“坚持天数”和“长按取消记录”的直接 `AsyncStorage` 读写已改为统一存储 API，页面视觉与主交互未调整。
+- 已执行语法检查：`node --check` 覆盖 `checkInStorage.js`、`useCheckinData.js`、`useCheckinAggregation.js`、`statsUtils.js`、`SettingsScreen.js`、`DayView.js`，均通过。
+- 已执行 `git diff --check`，未发现空白错误。
+- 已记录新的功能范围约束：月视图和年视图暂不纳入“每日多次记录功能”的表层改动范围。
+- 基于该约束，后续多次记录表层改造范围缩小为打卡入口递增逻辑、打卡按钮关闭/连续点击体验、日视图次数展示、日视图撤销语义，以及开发文档/回归验证。

@@ -1,13 +1,9 @@
 // src/utils/statsUtils.js
+import { normalizeCheckInRecord } from "./checkInStorage";
 
-// —— 辅助：把位掩码解析成三项打卡（0/1）
-function parseStatus(flag) {
-  const f = typeof flag === "number" ? flag : parseInt(flag, 10) || 0;
-  return {
-    tutorial: f & 1 ? 1 : 0,
-    weapon: f & 2 ? 1 : 0,
-    duo: f & 4 ? 1 : 0,
-  };
+// —— 辅助：把记录解析成三项次数，兼容旧位掩码
+function parseStatus(value) {
+  return normalizeCheckInRecord(value);
 }
 
 // 1. 总览统计：总计、年均、各年
@@ -136,11 +132,7 @@ export function computeCustomStats(data, startDateStr, endDateStr) {
   Object.entries(data).forEach(([dateStr, flag]) => {
     const dt = new Date(dateStr);
     if (dt < start || dt > end) return;
-    // 解析位掩码
-    const f = typeof flag === "number" ? flag : parseInt(flag, 10) || 0;
-    const tut = f & 1 ? 1 : 0;
-    const wea = f & 2 ? 1 : 0;
-    const duo = f & 4 ? 1 : 0;
+    const { tutorial: tut, weapon: wea, duo } = parseStatus(flag);
 
     totalT += tut;
     totalW += wea;
