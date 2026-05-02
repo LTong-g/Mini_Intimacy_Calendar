@@ -200,3 +200,19 @@
 - 已执行 `git diff --check`，未发现空白错误。
 - 已记录新的功能范围约束：月视图和年视图暂不纳入“每日多次记录功能”的表层改动范围。
 - 基于该约束，后续多次记录表层改造范围缩小为打卡入口递增逻辑、打卡按钮关闭/连续点击体验、日视图次数展示、日视图撤销语义，以及开发文档/回归验证。
+
+### Android 导出保存到共享存储修复
+- 已在 src/screens/SettingsScreen.js 新增 Android 导出分支：优先通过 FileSystem.StorageAccessFramework 申请目录权限并创建 JSON 文件写入用户选择目录。
+- 导出文件名已改为带 ISO 时间戳的唯一命名，避免重复导出时文件名冲突。
+- 已保留分享兜底路径：当非 Android 或目录授权未授予时，写入临时文件并触发 Sharing.shareAsync。
+- 已执行 node --check src/screens/SettingsScreen.js，语法检查通过。
+
+### 导出取消后仍弹分享窗口修复
+- 已确认导出逻辑问题：Android 目录授权被取消时，代码继续执行分享兜底，导致返回界面后仍弹出分享窗口。
+- 已调整 src/screens/SettingsScreen.js：saveExportToAndroidSharedStorage 返回结构化结果 saved/reason，并区分 canceled 与 unavailable 场景。
+- 已在导出主流程新增 canceled 早返回分支：用户取消目录授权或选择后，直接结束本次导出，不再触发 Sharing.shareAsync。
+- 已保留 unavailable 场景的分享兜底，仅在共享存储能力不可用时继续走分享。
+- 已执行 node --check src/screens/SettingsScreen.js，语法检查通过。
+
+### 设置页三按钮布局与独立分享入口
+- SettingsScreen 中新增独立 handleShare 流程，分享不再由导出按钮兜底触发。,设置页按钮从导入/导出两按钮改为导入-导出-分享三按钮横排等宽布局，导出位于中间、分享位于右侧。,分享按钮图标已使用 Ionicons 的 share-social-outline，点击后执行系统分享流程。
