@@ -157,6 +157,17 @@ npm run android:install:debug:tempmap
 脚本位置：
 - `scripts/android-build-tempmap.ps1`
 
+准备发布或分发安装包时，将原始产物：
+- `android/app/build/outputs/apk/debug/app-debug.apk`
+
+复制归档到 `dist/`，并按以下格式重命名：
+- `MinimalistWeaponEnhancementCalendar-v<语义版本>-android-<yyyyMMdd>.apk`
+
+示例：
+- `dist/MinimalistWeaponEnhancementCalendar-v1.2.0-android-20260503.apk`
+
+普通本机构建不要求执行复制归档和重命名步骤。
+
 可选参数示例（直接运行脚本）：
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\android-build-tempmap.ps1 -DriveLetter M -GradleTask assembleDebug -NodeEnv development
@@ -180,7 +191,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\android-build-tempmap.ps1 -Dr
 - 语义版本（`appVersion`）定义在：
 - `package.json` -> `version`
 - `app.json` -> `expo.version`
-- 当前语义版本（截至 `2026-05-03`）：`1.1.1`。
+- 当前语义版本（截至 `2026-05-03`）：`1.2.0`。
 
 ### 8.2 统一策略
 - `runtimeVersion` 统一使用 `policy: appVersion`（iOS/Android 一致）。
@@ -197,10 +208,10 @@ powershell -ExecutionPolicy Bypass -File .\scripts\android-build-tempmap.ps1 -Dr
 - 不手工维护 Android `versionCode`（由 EAS 递增与同步）。
 
 ### 8.4 推荐发布流程（Android）
-1. 修改语义版本（示例：`1.1.1 -> 1.1.2`）。
+1. 修改语义版本（示例：`1.2.0 -> 1.2.1`）。
 2. 执行 `npm run release:sync-version`。
 3. 执行 `eas build --platform android --profile production`。
-4. 归档产物时带上语义版本与构建号（示例：`MinimalistWeaponEnhancementCalendar-v1.1.2+42-android.apk`）。
+4. 归档产物时带上语义版本与构建号（示例：`MinimalistWeaponEnhancementCalendar-v1.2.1+42-android.apk`）。
 
 ### 8.5 约束说明
 - `expo run:android` 用于开发调试，不作为发布产物来源。

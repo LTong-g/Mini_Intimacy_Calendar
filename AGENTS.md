@@ -45,6 +45,7 @@
 ## 提交规则
 - 提交时遵循提交规范：
 - summary里填写[性质] 内容概括。description里填写逐文件变化说明。
+  - [ver]：版本更新（版本号提升单独提交，使用该前缀）
   - [doc]：文档更新
   - [fix]：漏洞修复
   - [feat]：应用内用户可见的新功能实现，或应用底层用户不可见的新功能实现
@@ -67,6 +68,8 @@
 - 当前阶段开发与测试仅考虑 Android，不纳入 iOS。
 - 用户希望在 bare workflow 下保持 `expo.version` 与 `ios/android runtimeVersion` 自动统一，不采用手工分别维护。
 - 在 Windows 本机进行 Android 构建时，采用“构建前临时 `subst` 映射短路径、构建后无论成功失败都取消映射”的流程；每次构建重新映射，避免 `M:` 长驻和与原始长路径混用导致 Kotlin/Gradle 缓存根路径冲突及 native 编译路径过深问题。
+- Android 安装包只有准备发布或分发时才需要复制归档并重命名；普通构建不要求每次复制重命名。
+- Android 安装包发布/分发归档命名格式为 `MinimalistWeaponEnhancementCalendar-v<语义版本>-android-<yyyyMMdd>.apk`，归档位置为 `dist/`。
 - 设置页“关于”功能分两阶段实现：第一阶段只实现设置页“关于”按钮和“关于”页面；第二阶段再实现“关于”页内“软件介绍”“版本记录”两个按钮的点击事件和对应页面。
 
 ## Windows Android 构建执行流程（强约束）
@@ -82,5 +85,6 @@
   - 步骤 4：构建结束后校验 `subst` 输出不包含 `M:`。
   - 步骤 5：下一次构建必须重新映射，不复用旧映射。
 - 实现载体：`scripts/android-build-tempmap.ps1`（`try/finally` 保证清理）。
+- 发布/分发归档：仅在准备发布或分发安装包时，将 APK 复制到 `dist/` 并按 `MinimalistWeaponEnhancementCalendar-v<语义版本>-android-<yyyyMMdd>.apk` 命名；普通构建不执行该归档步骤。
 
 - 当前 AVD 尺寸语义约定：`AVD_2640x1200` 为手机尺寸默认机型，`AVD_2560x1600` 为平板尺寸机型。

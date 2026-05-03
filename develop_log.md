@@ -8,7 +8,6 @@
 - 若新增内容在事件性质上发生变化（如：分析决策 vs 代码实现、功能改造 vs 环境排障），即使属于同一功能，也必须新开 `###` 标题分段记录，不得混写。
 
 # 待开发功能：
-- 增加设置页-关于
 - 允许设置黑名单应用，根据黑名单应用自动记录
 - 图标有bug：1纵轴只能显示1位数，10会显示成0 2年视图的图标横轴是从0开始的 3自定义范围的图表自适应横轴会把自定义范围的末尾吞掉。
 - 自定义统计界面有bug：选择跨年的范围时当前判断是通过日期数判断，导致如果跨年但没超过365天，会按月显示表格，但没有标注哪年哪月，而是按1月开始排的。例如2025.8.1-2025.4.30，表格会从下往上排1月2月3月4月8月9月...应该改为2025年8月，2025年9月...2026年1月...
@@ -356,4 +355,27 @@
 - 版本记录时间轴已使用圆点表示版本节点，使用竖线连接相邻版本节点。
 - 当前版本节点使用更大的圆点和浅蓝描边突出显示。
 - 已执行 node --check src/screens/VersionHistoryScreen.js，语法检查通过。
+- 已执行 git diff --check，空白检查通过。
+
+### 版本更新至 1.2.0
+- package.json 的 version 已更新为 1.2.0。
+- package-lock.json 的项目根版本已更新为 1.2.0。
+- app.json 的 expo.version 已更新为 1.2.0。
+- android/app/build.gradle 的 versionName 已更新为 1.2.0。
+- android/app/src/main/res/values/strings.xml 的 expo_runtime_version 已更新为 1.2.0。
+- developer_guide.md 已同步当前语义版本和发布示例为 1.2.0 口径。
+- 已执行 package.json、package-lock.json、app.json JSON 解析检查，通过。
+- 已执行 node --check app.config.js，语法检查通过。
+- 已执行 git diff --check，空白检查通过。
+
+### Android 安装包构建与发布归档规则
+- 已执行 npm run android:build:debug:tempmap 构建 Android 安装包。
+- 首次构建因临时 subst 映射权限被拒失败。
+- 已在提升权限后重新执行 npm run android:build:debug:tempmap，构建成功。
+- 构建后 subst 输出为空，临时 M: 映射已清理。
+- 准备发布或分发时，已将 android/app/build/outputs/apk/debug/app-debug.apk 复制归档为 dist/MinimalistWeaponEnhancementCalendar-v1.2.0-android-20260503.apk。
+- AGENTS.md 已记录 Android 安装包只有准备发布或分发时才需要复制归档并重命名，普通构建不要求每次复制重命名。
+- AGENTS.md 已记录 Android 安装包发布/分发归档命名格式 MinimalistWeaponEnhancementCalendar-v<语义版本>-android-<yyyyMMdd>.apk，归档位置为 dist/。
+- developer_guide.md 已将安装包复制归档说明限定为准备发布或分发安装包时执行，并记录普通本机构建不要求执行复制归档和重命名步骤。
+- developer_guide.md 已记录安装包归档命名格式 MinimalistWeaponEnhancementCalendar-v<语义版本>-android-<yyyyMMdd>.apk 和示例 dist/MinimalistWeaponEnhancementCalendar-v1.2.0-android-20260503.apk。
 - 已执行 git diff --check，空白检查通过。
