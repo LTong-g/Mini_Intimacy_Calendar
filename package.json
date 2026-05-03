@@ -8,7 +8,9 @@
     "android:phone": "expo run:android --device AVD_2640x1200",
     "android:tablet": "expo run:android --device AVD_2560x1600",
     "android:build:debug:tempmap": "powershell -ExecutionPolicy Bypass -File .\\scripts\\android-build-tempmap.ps1 -GradleTask assembleDebug",
+    "android:build:release:tempmap": "powershell -ExecutionPolicy Bypass -File .\\scripts\\android-build-tempmap.ps1 -GradleTask assembleRelease -NodeEnv production",
     "android:install:debug:tempmap": "powershell -ExecutionPolicy Bypass -File .\\scripts\\android-build-tempmap.ps1 -GradleTask installDebug",
+    "android:archive:release": "powershell -ExecutionPolicy Bypass -File .\\scripts\\archive-android-release.ps1",
     "ios": "expo run:ios",
     "web": "expo start --web",
     "release:sync-version": "eas build:version:sync"

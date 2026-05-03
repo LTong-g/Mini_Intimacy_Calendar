@@ -379,3 +379,17 @@
 - developer_guide.md 已将安装包复制归档说明限定为准备发布或分发安装包时执行，并记录普通本机构建不要求执行复制归档和重命名步骤。
 - developer_guide.md 已记录安装包归档命名格式 MinimalistWeaponEnhancementCalendar-v<语义版本>-android-<yyyyMMdd>.apk 和示例 dist/MinimalistWeaponEnhancementCalendar-v1.2.0-android-20260503.apk。
 - 已执行 git diff --check，空白检查通过。
+
+### 1.2.0 Android 归档产物更正
+- 已确认 dist/MinimalistWeaponEnhancementCalendar-v1.2.0-android-20260503.apk 原为从 android/app/build/outputs/apk/debug/app-debug.apk 复制得到的归档产物。
+- 已确认 debug APK 大小为 190596253 bytes，约 181.77 MB。
+- 已确认 android/app/build/outputs/apk/release/app-release.apk 大小为 84490386 bytes，约 80.58 MB。
+- 已使用 release APK 覆盖归档 dist/MinimalistWeaponEnhancementCalendar-v1.2.0-android-20260503.apk。
+
+### Android Release 归档流程防呆
+- package.json 已新增 android:build:release:tempmap 脚本，执行 scripts/android-build-tempmap.ps1 的 assembleRelease 任务并使用 production 环境。
+- package.json 已新增 android:archive:release 脚本，执行 scripts/archive-android-release.ps1。
+- scripts/archive-android-release.ps1 已实现从 release APK 复制归档到 dist 并按 package.json 版本生成归档文件名。
+- scripts/archive-android-release.ps1 已在传入 debug/app-debug.apk 时拒绝归档。
+- developer_guide.md 已将发布或分发归档来源修正为 android/app/build/outputs/apk/release/app-release.apk。
+- AGENTS.md 已记录发布或分发归档来源必须是 Release APK，禁止将 debug/app-debug.apk 作为发布或分发归档来源。

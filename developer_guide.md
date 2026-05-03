@@ -149,6 +149,11 @@ npm run android
 npm run android:build:debug:tempmap
 ```
 
+构建本地 Release APK（仓库根目录执行）：
+```powershell
+npm run android:build:release:tempmap
+```
+
 安装到已连接设备（仓库根目录执行）：
 ```powershell
 npm run android:install:debug:tempmap
@@ -157,16 +162,21 @@ npm run android:install:debug:tempmap
 脚本位置：
 - `scripts/android-build-tempmap.ps1`
 
-准备发布或分发安装包时，将原始产物：
-- `android/app/build/outputs/apk/debug/app-debug.apk`
+准备发布或分发安装包时，先构建 Release APK，再将原始产物：
+- `android/app/build/outputs/apk/release/app-release.apk`
 
 复制归档到 `dist/`，并按以下格式重命名：
 - `MinimalistWeaponEnhancementCalendar-v<语义版本>-android-<yyyyMMdd>.apk`
 
+推荐归档命令（仓库根目录执行）：
+```powershell
+npm run android:archive:release
+```
+
 示例：
 - `dist/MinimalistWeaponEnhancementCalendar-v1.2.0-android-20260503.apk`
 
-普通本机构建不要求执行复制归档和重命名步骤。
+Debug APK 仅用于开发调试，不能作为发布或分发归档来源。普通本机构建不要求执行复制归档和重命名步骤。
 
 可选参数示例（直接运行脚本）：
 ```powershell
