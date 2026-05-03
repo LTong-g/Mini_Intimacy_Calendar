@@ -1,166 +1,304 @@
 /**
  * 极简武器强化日历 - 日视图页面
- * 
- * 功能描述：
- * - 显示单日的详细信息
- * - 展示记录状态和图标
- * - 计算并显示坚持天数
- * - 支持左右滑动切换日期
- * - 支持手势操作
- * 
- * @component
- * @author Lyu Jiongrui
- * @version 1.0.0
- * @date 2025.7.25
  */
 
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, PanResponder, Pressable, Vibration } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  PanResponder,
+  Pressable,
+  Vibration,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import moment from 'moment';
-import 'moment/locale/zh-cn';    // 引入中文
+import 'moment/locale/zh-cn';
 import Header from '../components/Header';
+import CountAdjustModal from '../components/CountAdjustModal';
 import {
   CheckInCountKeys,
   getAllCheckInData,
-  getCheckInIcons,
-  getCheckInRecord,
-  getCheckInStatus,
-  hasAnyCheckIn,
+  getCheckInRecordCount,
   normalizeCheckInRecord,
   setCheckInRecord,
 } from '../utils/checkInStorage';
 
-/**
- * 日视图组件
- * 
- * @param {moment} selectedDate - 当前选中的日期
- * @param {Function} onDateChange - 日期变更回调函数
- * @param {Function} onViewChange - 视图切换回调函数
- * @returns {React.Component} 日视图组件
- */
-const DayView = ({ selectedDate, onDateChange, onViewChange }) => {
-  const [checkInStatus, setCheckInStatus] = useState(0);
-  const [checkInIcons, setCheckInIcons]     = useState([]);
-  const [breakDays, setBreakDays]           = useState(0);
+const VIBRATION_MS = 30;
+const LONG_PRESS_TICK_MS = 1000;
+const LONG_PRESS_CONFIRM_TICKS = 3;
 
-  useEffect(() => {
-    loadCheckInStatus();
-    const interval = setInterval(loadCheckInStatus, 1000);
-    return () => clearInterval(interval);
-  }, [selectedDate]);
+const TYPE_META = [
+  {
+    key: CheckInCountKeys.TYPE1,
+    icon: 'desktop',
+    color: '#F57F17',
+    bgColor: '#FFE082',
+  },
+  {
+    key: CheckInCountKeys.TYPE2,
+    icon: 'airplane',
+    color: '#0277BD',
+    bgColor: '#B3E5FC',
+  },
+  {
+    key: CheckInCountKeys.TYPE3,
+    icon: 'heart',
+    color: '#C62828',
+    bgColor: '#FFCDD2',
+  },
+];
 
-  /**
-   * 加载记录状态和历史记录
-   * 获取当前日期的记录状态、图标和坚持天数
-   */
-  const loadCheckInStatus = async () => {
-      const status = await getCheckInStatus(selectedDate);
-      setCheckInStatus(status);
-      setCheckInIcons(getCheckInIcons(status));
-      
-      try {
-        const checkInData = await getAllCheckInData();
-        
-        const checkInDates = Object.keys(checkInData)
-          .filter(date => hasAnyCheckIn(normalizeCheckInRecord(checkInData[date])))
-          .sort((a, b) => new Date(b) - new Date(a));
-        
-        if (checkInDates.length === 0) {
-          setBreakDays('--');
-          return;
-        }
-        
-        const selectedDateStr = selectedDate.format('YYYY-MM-DD');
-        if (checkInDates.includes(selectedDateStr)) {
-          setBreakDays(0);
-        } else {
-          let lastCheckInDate = null;
-          for (const dateStr of checkInDates) {
-            if (new Date(dateStr) <= new Date(selectedDateStr)) {
-              lastCheckInDate = dateStr;
-              break;
-            }
-          }
-          
-          if (!lastCheckInDate) {
-            setBreakDays('--');
-          } else {
-            const d1 = new Date(selectedDateStr);
-            const d2 = new Date(lastCheckInDate);
-            d1.setHours(0, 0, 0, 0);
-            d2.setHours(0, 0, 0, 0);
-            const diffDays = Math.floor((d1 - d2) / (1000 * 60 * 60 * 24));
-            setBreakDays(diffDays);
-          }
-        }
-      } catch (error) {
-        console.error('Error loading check-in history:', error);
-        setBreakDays('∞');
-      }
-    };
+const clampInteger = (value) => {
+  if (value === '' || value === null || value === undefined) return 0;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return 0;
+  return Math.max(0, Math.floor(parsed));
+};
 
-  // 图标对应的新格式计数字段
-  const iconKeyMap = {
-    desktop: CheckInCountKeys.TYPE1,
-    airplane: CheckInCountKeys.TYPE2,
-    heart: CheckInCountKeys.TYPE3,
-  };
+const DayView = ({ selectedDate, onDateChange, refreshKey = 0 }) => {
+  const [record, setRecord] = useState({
+    tutorial: 0,
+    weapon: 0,
+    duo: 0,
+  });
+  const [breakDays, setBreakDays] = useState('--');
+  const [editingVisible, setEditingVisible] = useState(false);
+  const [editingType, setEditingType] = useState(null);
+  const [editingValue, setEditingValue] = useState('0');
+  const liveRecordRef = useRef({
+    tutorial: 0,
+    weapon: 0,
+    duo: 0,
+  });
 
-  /**
-   * 长按图标时震动并取消对应记录
-   * @param {string} iconName - 图标名称
-   */
-  const handleCancelIcon = async (iconName) => {
-    Vibration.vibrate(30);
+  const holdRef = useRef({
+    active: false,
+    typeKey: null,
+    direction: 0,
+    ticks: 0,
+    timer: null,
+    baseline: null,
+  });
+
+  const loadState = async () => {
     try {
-      const oldRecord = await getCheckInRecord(selectedDate);
-      const key = iconKeyMap[iconName];
-      if (!key) return;
+      const data = await getAllCheckInData();
+      const selectedDateStr = selectedDate.format('YYYY-MM-DD');
+      const currentRecord = normalizeCheckInRecord(data[selectedDateStr]);
+      setRecord(currentRecord);
+      liveRecordRef.current = currentRecord;
 
-      const newRecord = { ...oldRecord, [key]: 0 };
+      const checkInDates = Object.keys(data)
+        .filter((dateStr) => {
+          const item = normalizeCheckInRecord(data[dateStr]);
+          return item.tutorial > 0 || item.weapon > 0 || item.duo > 0;
+        })
+        .sort((a, b) => new Date(b) - new Date(a));
 
-      await setCheckInRecord(selectedDate, newRecord);
-      loadCheckInStatus();
+      if (checkInDates.length === 0) {
+        setBreakDays('--');
+        return;
+      }
+
+      if (checkInDates.includes(selectedDateStr)) {
+        setBreakDays(0);
+        return;
+      }
+
+      let lastCheckInDate = null;
+      for (const dateStr of checkInDates) {
+        if (new Date(dateStr) <= new Date(selectedDateStr)) {
+          lastCheckInDate = dateStr;
+          break;
+        }
+      }
+
+      if (!lastCheckInDate) {
+        setBreakDays('--');
+        return;
+      }
+
+      const d1 = new Date(selectedDateStr);
+      const d2 = new Date(lastCheckInDate);
+      d1.setHours(0, 0, 0, 0);
+      d2.setHours(0, 0, 0, 0);
+      setBreakDays(Math.floor((d1 - d2) / (1000 * 60 * 60 * 24)));
     } catch (error) {
-      console.error('取消记录失败：', error);
+      console.error('Error loading day view state:', error);
+      setBreakDays('∞');
     }
   };
 
-  /**
-   * 切换到前一天
-   */
+  useEffect(() => {
+    loadState();
+    return () => clearHoldTimer();
+  }, [selectedDate, refreshKey]);
+
+  const totalCount = record.tutorial + record.weapon + record.duo;
+
+  const clearHoldTimer = () => {
+    if (holdRef.current.timer) {
+      clearInterval(holdRef.current.timer);
+      holdRef.current.timer = null;
+    }
+  };
+
+  const resetHoldState = () => {
+    clearHoldTimer();
+    holdRef.current = {
+      active: false,
+      typeKey: null,
+      direction: 0,
+      ticks: 0,
+      timer: null,
+      baseline: null,
+    };
+  };
+
+  const finishHoldToModal = () => {
+    clearHoldTimer();
+    const typeKey = holdRef.current.typeKey;
+    if (!typeKey) {
+      resetHoldState();
+      return;
+    }
+
+    setEditingType(typeKey);
+    setEditingValue(String(getCheckInRecordCount(liveRecordRef.current, typeKey)));
+    setEditingVisible(true);
+    holdRef.current.active = false;
+  };
+
+  const runHoldStep = () => {
+    const { typeKey, direction } = holdRef.current;
+    if (!typeKey) return;
+
+    const current = clampInteger(liveRecordRef.current[typeKey]);
+    const next = {
+      ...liveRecordRef.current,
+      [typeKey]: Math.max(0, current + direction),
+    };
+    liveRecordRef.current = next;
+    setRecord(next);
+    const saveTask = setCheckInRecord(selectedDate, next);
+    Vibration.vibrate(VIBRATION_MS);
+
+    if (direction < 0 && next[typeKey] === 0) {
+      clearHoldTimer();
+      holdRef.current.active = false;
+      if (next.tutorial + next.weapon + next.duo === 0) {
+        void saveTask.then(loadState);
+      }
+      return;
+    }
+
+    holdRef.current.ticks += 1;
+    if (holdRef.current.ticks >= LONG_PRESS_CONFIRM_TICKS) {
+      finishHoldToModal();
+    }
+  };
+
+  const startHold = (typeKey, direction) => {
+    if (holdRef.current.active) return;
+
+    holdRef.current = {
+      active: true,
+      typeKey,
+      direction,
+      ticks: 0,
+      timer: null,
+      baseline: normalizeCheckInRecord(liveRecordRef.current),
+    };
+
+    runHoldStep();
+    if (!holdRef.current.active) return;
+
+    holdRef.current.timer = setInterval(runHoldStep, LONG_PRESS_TICK_MS);
+  };
+
+  const handleHoldPressOut = () => {
+    if (!holdRef.current.active || editingVisible) return;
+    clearHoldTimer();
+    holdRef.current.active = false;
+  };
+
+  const handleConfirmEdit = async () => {
+    if (!editingType) return;
+
+    const nextRecord = {
+      ...normalizeCheckInRecord(liveRecordRef.current),
+      [editingType]: clampInteger(editingValue),
+    };
+
+    await setCheckInRecord(selectedDate, nextRecord);
+    setEditingVisible(false);
+    setEditingType(null);
+    setEditingValue('0');
+    await loadState();
+    resetHoldState();
+  };
+
+  const handleCancelEdit = async () => {
+    setEditingVisible(false);
+    setEditingType(null);
+    setEditingValue('0');
+    await loadState();
+    resetHoldState();
+  };
+
   const handlePreviousDay = () => {
     onDateChange(selectedDate.clone().subtract(1, 'day'));
   };
 
-  /**
-   * 切换到后一天
-   */
   const handleNextDay = () => {
     const nextDay = selectedDate.clone().add(1, 'day').startOf('day');
     if (nextDay.isAfter(moment().startOf('day'))) return;
     onDateChange(nextDay);
   };
 
-  const panResponder = PanResponder.create({
-    onStartShouldSetPanResponder: () => true,
-    onMoveShouldSetPanResponder: (evt, gs) => {
-      const { dx, dy } = gs;
-      return Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10;
-    },
-    onPanResponderRelease: (evt, gs) => {
-      const { dx } = gs;
-      const threshold = 50;
-      if (dx > threshold) {
-        handlePreviousDay();
-      } else if (dx < -threshold) {
-        handleNextDay();
-      }
-    },
-  });
+  const panResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => false,
+        onMoveShouldSetPanResponder: (evt, gs) => {
+          const { dx, dy } = gs;
+          return Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10;
+        },
+        onPanResponderRelease: (evt, gs) => {
+          const { dx } = gs;
+          const threshold = 50;
+          if (dx > threshold) {
+            handlePreviousDay();
+          } else if (dx < -threshold) {
+            handleNextDay();
+          }
+        },
+      }),
+    [selectedDate]
+  );
 
-  const isNextDayDisabled = selectedDate.clone().add(1, 'day').isAfter(moment().startOf('day'));
+  const isNextDayDisabled = selectedDate
+    .clone()
+    .add(1, 'day')
+    .isAfter(moment().startOf('day'));
+
+  const activeTypes = TYPE_META.filter((item) => getCheckInRecordCount(record, item.key) > 0);
+
+  const getPositionStyle = (index, total) => {
+    if (total === 1) return styles.singlePosition;
+    if (total === 2) {
+      return index === 0 ? styles.leftPosition : styles.rightPosition;
+    }
+    return [
+      styles.trianglePosition,
+      index === 0
+        ? styles.topPosition
+        : index === 1
+          ? styles.leftBottom
+          : styles.rightBottom,
+    ];
+  };
 
   return (
     <View style={styles.container} {...panResponder.panHandlers}>
@@ -170,58 +308,44 @@ const DayView = ({ selectedDate, onDateChange, onViewChange }) => {
         onNext={handleNextDay}
         disableNext={isNextDayDisabled}
       />
-      
+
       <View style={styles.dateInfo}>
         <Text style={styles.weekdayText}>{selectedDate.locale('zh-cn').format('dddd')}</Text>
       </View>
-      
+
       <View style={styles.content}>
         <View style={styles.checkInContainer}>
           <Text style={styles.checkInTitle}>
-            {checkInStatus > 0 ? '今日记录' : '已经坚持'}
+            {totalCount > 0 ? '今日记录' : '已经坚持'}
           </Text>
-          {checkInIcons.length === 0 ? (
+          {totalCount === 0 ? (
             <View style={styles.breakContainer}>
               <Text style={styles.breakDaysText}>{breakDays}</Text>
               <Text style={styles.breakDaysUnit}>天</Text>
             </View>
           ) : (
             <View style={styles.circleContainer}>
-              {checkInIcons.map((item, index) => {
-                let positionStyle = {};
-                if (checkInIcons.length === 1) {
-                  positionStyle = styles.singlePosition;
-                } else if (checkInIcons.length === 2) {
-                  positionStyle = index === 0
-                    ? styles.leftPosition
-                    : styles.rightPosition;
-                } else {
-                  positionStyle = [
-                    styles.trianglePosition,
-                    index === 0
-                      ? styles.topPosition
-                      : index === 1
-                        ? styles.leftBottom
-                        : styles.rightBottom
-                  ];
-                }
-                const bgColors = {
-                  desktop: '#FFE082',
-                  airplane: '#B3E5FC',
-                  heart: '#FFCDD2'
-                };
+              {activeTypes.map((item, index) => {
+                const count = getCheckInRecordCount(record, item.key);
                 return (
                   <Pressable
-                    key={index}
-                    onLongPress={() => handleCancelIcon(item.icon)}
+                    key={item.key}
+                    onLongPress={() => startHold(item.key, -1)}
+                    onPressOut={handleHoldPressOut}
                     delayLongPress={500}
                     style={[
                       styles.checkInIconWrapper,
-                      positionStyle,
-                      { backgroundColor: bgColors[item.icon] }
+                      getPositionStyle(index, activeTypes.length),
+                      { backgroundColor: item.bgColor },
                     ]}
                   >
-                    <Ionicons name={item.icon} size={48} color={item.color} />
+                    {count <= 1 ? (
+                      <Ionicons name={item.icon} size={48} color={item.color} />
+                    ) : (
+                      <Text style={[styles.countText, { color: item.color }]}>
+                        {count}
+                      </Text>
+                    )}
                   </Pressable>
                 );
               })}
@@ -229,6 +353,23 @@ const DayView = ({ selectedDate, onDateChange, onViewChange }) => {
           )}
         </View>
       </View>
+
+      <CountAdjustModal
+        visible={editingVisible}
+        title="编辑次数"
+        value={editingValue}
+        onChangeValue={(text) => {
+          if (text === '') {
+            setEditingValue('');
+            return;
+          }
+          if (/^\d+$/.test(text)) {
+            setEditingValue(text);
+          }
+        }}
+        onConfirm={handleConfirmEdit}
+        onCancel={handleCancelEdit}
+      />
     </View>
   );
 };
@@ -295,7 +436,6 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 2,
@@ -303,6 +443,11 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 3,
+  },
+  countText: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    lineHeight: 40,
   },
   singlePosition: {
     position: 'absolute',

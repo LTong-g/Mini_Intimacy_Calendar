@@ -290,3 +290,10 @@ export const getCheckInIcons = (status) => {
   if (normalizedStatus & CheckInTypes.TYPE3) icons.push({ icon: 'heart', color: '#C62828' });
   return icons;
 };
+
+export const getCheckInRecordCount = (record, typeKey) => {
+  const normalized = normalizeCheckInRecord(record);
+  const key = resolveCheckInCountKey(typeKey);
+  if (!key) return 0;
+  return normalized[key] || 0;
+};

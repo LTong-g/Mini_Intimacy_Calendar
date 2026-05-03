@@ -32,6 +32,7 @@ const CalendarScreen = () => {
             selectedDate={selectedDate}
             onDateChange={setSelectedDate}
             onViewChange={setCurrentView}
+            refreshKey={refreshKey}
           />
         );
       case "Month":
@@ -84,6 +85,7 @@ const CalendarScreen = () => {
         onCycleViews={handleCycleViews}
         selectedDate={selectedDate}
         onRefreshMonthView={handleRefreshMonthView}
+        onCheckInChanged={handleRefreshMonthView}
       />
     </View>
   );

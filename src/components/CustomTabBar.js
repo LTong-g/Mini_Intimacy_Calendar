@@ -1,10 +1,8 @@
 /**
- * 极简武器强化日历 - 自定义底部导航栏组件（更多菜单等宽展开版）
- * 修改：右下“更多”按钮展开菜单宽度为底栏一半，贴合按钮右上方弹出
- * 增加“设置”点击跳转 Settings 页面功能
+ * 极简武器强化日历 - 自定义底部导航栏组件
  */
 
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   View,
   Text,
@@ -16,16 +14,31 @@ import {
   Platform,
   Dimensions,
   TouchableWithoutFeedback,
-  Keyboard,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import moment from "moment";
 import CheckInButtons from "./CheckInButtons";
-import { setCheckInStatus, toggleCheckInType } from "../utils/checkInStorage";
+import CountAdjustModal from "./CountAdjustModal";
+import {
+  checkInTypeToCountKey,
+  getCheckInRecord,
+  getCheckInRecordCount,
+  incrementCheckInType,
+  normalizeCheckInRecord,
+  setCheckInRecord,
+} from "../utils/checkInStorage";
 import { Portal } from "react-native-paper";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const VIBRATION_MS = 30;
+
+const clampInteger = (value) => {
+  if (value === "" || value === null || value === undefined) return 0;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return 0;
+  return Math.max(0, Math.floor(parsed));
+};
 
 const CustomTabBar = ({
   currentView,
@@ -33,13 +46,119 @@ const CustomTabBar = ({
   onCycleViews,
   selectedDate,
   onRefreshMonthView,
+  onCheckInChanged,
 }) => {
   const [showCheckInButtons, setShowCheckInButtons] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [editingVisible, setEditingVisible] = useState(false);
+  const [editingTypeKey, setEditingTypeKey] = useState(null);
+  const [editingValue, setEditingValue] = useState("0");
+  const holdBaselineRef = useRef(null);
   const navigation = useNavigation();
 
+  const selectedDay = selectedDate.clone().startOf("day");
+  const today = moment().startOf("day");
+  const canModifySelectedDate = !selectedDay.isAfter(today);
+
+  const notifyCheckInChanged = () => {
+    if (onCheckInChanged) {
+      onCheckInChanged();
+      return;
+    }
+
+    if (onRefreshMonthView) {
+      onRefreshMonthView();
+    }
+  };
+
+  const showFutureDateWarning = () => {
+    if (Platform.OS === "android") {
+      ToastAndroid.show("无法修改未来日期的记录", ToastAndroid.SHORT);
+    } else {
+      Alert.alert("提示", "无法修改未来日期的记录");
+    }
+  };
+
+  const commitTypeChange = async (type, amount = 1) => {
+    const typeKey = checkInTypeToCountKey(type);
+    if (!typeKey) return;
+
+    await incrementCheckInType(selectedDate, typeKey, amount);
+    notifyCheckInChanged();
+  };
+
+  const handleShortCheckIn = async (type) => {
+    if (!canModifySelectedDate) {
+      showFutureDateWarning();
+      setShowCheckInButtons(false);
+      return;
+    }
+
+    await commitTypeChange(type, 1);
+    setShowCheckInButtons(false);
+  };
+
+  const handleLongStart = async () => {
+    holdBaselineRef.current = normalizeCheckInRecord(
+      await getCheckInRecord(selectedDate)
+    );
+  };
+
+  const handleLongCheckIn = async (type) => {
+    await commitTypeChange(type, 1);
+    Vibration.vibrate(VIBRATION_MS);
+  };
+
+  const handleLongCommit = async (type) => {
+    const typeKey = checkInTypeToCountKey(type);
+    if (!typeKey) return;
+
+    const currentRecord = normalizeCheckInRecord(await getCheckInRecord(selectedDate));
+    setEditingTypeKey(typeKey);
+    setEditingValue(String(getCheckInRecordCount(currentRecord, typeKey)));
+    setShowCheckInButtons(false);
+    setEditingVisible(true);
+  };
+
+  const handleDirectLongEdit = async (type) => {
+    const typeKey = checkInTypeToCountKey(type);
+    if (!typeKey) return;
+
+    Vibration.vibrate(VIBRATION_MS);
+    const currentRecord = normalizeCheckInRecord(await getCheckInRecord(selectedDate));
+    setEditingTypeKey(typeKey);
+    setEditingValue(String(getCheckInRecordCount(currentRecord, typeKey)));
+    setShowCheckInButtons(false);
+    setEditingVisible(true);
+  };
+
+  const handleConfirmEdit = async () => {
+    if (!editingTypeKey) return;
+
+    const currentRecord = normalizeCheckInRecord(await getCheckInRecord(selectedDate));
+    const nextRecord = {
+      ...currentRecord,
+      [editingTypeKey]: clampInteger(editingValue),
+    };
+
+    await setCheckInRecord(selectedDate, nextRecord);
+    holdBaselineRef.current = null;
+    setEditingVisible(false);
+    setEditingTypeKey(null);
+    setEditingValue("0");
+    notifyCheckInChanged();
+  };
+
+  const handleCancelEdit = async () => {
+    holdBaselineRef.current = null;
+    setEditingVisible(false);
+    setEditingTypeKey(null);
+    setEditingValue("0");
+    notifyCheckInChanged();
+  };
+
   const handleCenterPress = () => {
-    if (currentView === "Day") {
+    if (currentView === "Day" || currentView === "Month") {
       setShowCheckInButtons(true);
     } else {
       onViewChange("Day", moment());
@@ -49,7 +168,7 @@ const CustomTabBar = ({
   const handleLongPress = () => {
     if (currentView === "Month") {
       Vibration.vibrate(30);
-      setShowCheckInButtons(true);
+      onViewChange("Day", moment());
     }
   };
 
@@ -138,30 +257,34 @@ const CustomTabBar = ({
 
       <CheckInButtons
         visible={showCheckInButtons}
-        onCheckIn={async (type) => {
-          const today = moment().startOf("day");
-          const selectedDay = selectedDate.clone().startOf("day");
-          if (selectedDay.isAfter(today)) {
-            if (Platform.OS === "android") {
-              ToastAndroid.show("无法修改未来日期的记录", ToastAndroid.SHORT);
-            } else {
-              Alert.alert("提示", "无法修改未来日期的记录");
-            }
-            setShowCheckInButtons(false);
-            return;
-          }
-          const currentStatus =
-            await require("../utils/checkInStorage").getCheckInStatus(
-              selectedDate
-            );
-          const newStatus = toggleCheckInType(currentStatus, type);
-          await setCheckInStatus(selectedDate, newStatus);
-          if (currentView === "Month" && onRefreshMonthView) {
-            onRefreshMonthView();
-          }
+        canCheckIn={canModifySelectedDate}
+        onBlockedCheckIn={() => {
+          showFutureDateWarning();
           setShowCheckInButtons(false);
         }}
+        onCheckIn={handleShortCheckIn}
+        onLongPressDirect={currentView === "Month" ? handleDirectLongEdit : undefined}
+        onLongStart={handleLongStart}
+        onLongCheckIn={handleLongCheckIn}
+        onLongCommit={handleLongCommit}
         onClose={() => setShowCheckInButtons(false)}
+      />
+
+      <CountAdjustModal
+        visible={editingVisible}
+        title="编辑次数"
+        value={editingValue}
+        onChangeValue={(text) => {
+          if (text === "") {
+            setEditingValue("");
+            return;
+          }
+          if (/^\d+$/.test(text)) {
+            setEditingValue(text);
+          }
+        }}
+        onConfirm={handleConfirmEdit}
+        onCancel={handleCancelEdit}
       />
     </View>
   );
