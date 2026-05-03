@@ -67,6 +67,7 @@
 - 当前阶段开发与测试仅考虑 Android，不纳入 iOS。
 - 用户希望在 bare workflow 下保持 `expo.version` 与 `ios/android runtimeVersion` 自动统一，不采用手工分别维护。
 - 在 Windows 本机进行 Android 构建时，采用“构建前临时 `subst` 映射短路径、构建后无论成功失败都取消映射”的流程；每次构建重新映射，避免 `M:` 长驻和与原始长路径混用导致 Kotlin/Gradle 缓存根路径冲突及 native 编译路径过深问题。
+- 设置页“关于”功能分两阶段实现：第一阶段只实现设置页“关于”按钮和“关于”页面；第二阶段再实现“关于”页内“软件介绍”“版本记录”两个按钮的点击事件和对应页面。
 
 ## Windows Android 构建执行流程（强约束）
 - 适用范围：所有本机 Android Gradle 构建与安装流程。
