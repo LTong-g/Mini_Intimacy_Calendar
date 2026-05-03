@@ -1,0 +1,188 @@
+/**
+ * 极简武器强化日历 - 版本记录界面
+ */
+
+import React from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+
+const versionHistory = [
+  {
+    version: '1.2.0',
+    title: '关于页面与多次记录更新',
+    date: '2026-05-03',
+    notes: [
+      '新增支持同一天同一类型记录多次，并在日视图中显示次数。',
+      '优化 Android 导出保存与分享流程。',
+      '新增设置页“关于”入口、关于页、软件介绍页和版本记录页。',
+    ],
+  },
+  {
+    version: '1.1.1',
+    title: '月视图修复',
+    date: '2025-11-03',
+    notes: [
+      '修复月视图日期与星期不匹配的问题。',
+    ],
+  },
+  {
+    version: '1.1.0',
+    title: '统计与界面更新',
+    date: '2025-07-30',
+    notes: [
+      '新增统计功能，包含总览、年度、自定义区间统计和折线图。',
+      '优化日历视图、顶部栏、底部菜单和年份视图快速回到今天的交互。',
+      '更新中文应用名、应用图标和自适应图标。',
+    ],
+  },
+  {
+    version: '1.0.0',
+    title: '初始版本',
+    date: '2025-07-28',
+    notes: [
+      '极简武器强化日历是一款基于日期的记录工具，用于帮助回顾三类需要自律管理的行为频率。',
+      '提供日历主流程，可在日视图中查看当天记录状态，在月视图中浏览整月记录分布，在年视图中查看全年记录概况。',
+      '支持按日期保存记录，让每一天的行为状态可以被持续追踪。',
+      '提供简洁的移动端界面，包含应用图标、启动图和基础导航结构。',
+    ],
+  },
+];
+
+const VersionHistoryScreen = () => {
+  const navigation = useNavigation();
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color="#007AFF" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>版本记录</Text>
+      </View>
+
+      <ScrollView contentContainerStyle={styles.content}>
+        {versionHistory.map((item, index) => (
+          <View key={item.version} style={styles.timelineItem}>
+            <View style={styles.timelineRail}>
+              {index > 0 && <View style={[styles.timelineLine, styles.timelineLineTop]} />}
+              <View style={[styles.timelineDot, index === 0 && styles.timelineDotCurrent]} />
+              {index < versionHistory.length - 1 && (
+                <View style={[styles.timelineLine, styles.timelineLineBottom]} />
+              )}
+            </View>
+
+            <View style={styles.versionBlock}>
+              <Text style={styles.versionTitle}>v{item.version}</Text>
+              <Text style={styles.versionSubtitle}>{item.title}</Text>
+              <Text style={styles.versionDate}>{item.date}</Text>
+              <View style={styles.list}>
+                {item.notes.map((note) => (
+                  <Text key={note} style={styles.listItem}>- {note}</Text>
+                ))}
+              </View>
+            </View>
+          </View>
+        ))}
+      </ScrollView>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingTop: 44,
+    backgroundColor: '#fff',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  backButton: {
+    marginRight: 12,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  content: {
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 32,
+  },
+  timelineItem: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+  },
+  timelineRail: {
+    width: 28,
+    alignItems: 'center',
+    position: 'relative',
+  },
+  timelineLine: {
+    position: 'absolute',
+    width: 2,
+    backgroundColor: '#d8e8ff',
+  },
+  timelineLineTop: {
+    top: 0,
+    bottom: 21,
+  },
+  timelineLineBottom: {
+    top: 13,
+    bottom: 0,
+  },
+  timelineDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginTop: 7,
+    backgroundColor: '#007AFF',
+    zIndex: 1,
+  },
+  timelineDotCurrent: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    marginTop: 5,
+    borderWidth: 3,
+    borderColor: '#d8e8ff',
+  },
+  versionBlock: {
+    flex: 1,
+    marginBottom: 28,
+  },
+  versionTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 6,
+  },
+  versionSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 4,
+  },
+  versionDate: {
+    fontSize: 13,
+    color: '#888',
+    marginBottom: 12,
+  },
+  list: {
+    marginTop: 4,
+  },
+  listItem: {
+    fontSize: 15,
+    lineHeight: 24,
+    color: '#444',
+    marginBottom: 6,
+  },
+});
+
+export default VersionHistoryScreen;

@@ -326,3 +326,34 @@
 - 第一阶段范围已限定为实现设置页关于按钮和关于页面。
 - 第二阶段范围已限定为实现关于页内软件介绍、版本记录两个按钮的点击事件和对应页面。
 - AGENTS.md 已记录设置页关于功能的两阶段实现约束。
+
+### 设置页关于功能第一阶段实现
+- SettingsScreen.js 已新增整宽关于按钮，点击后导航到 About 页面。
+- App.js 已注册 About 导航页面。
+- src/screens/AboutScreen.js 已新增关于页面，页面展示应用图标、版本号以及软件介绍和版本记录两个整宽按钮。
+- 关于页版本号已读取 package.json 的 version 字段。
+- 软件介绍和版本记录按钮在第一阶段仅作为可见入口展示，未接入点击跳转。
+- 已执行 node --check App.js、src/screens/SettingsScreen.js、src/screens/AboutScreen.js，语法检查通过。
+- 已执行 git diff --check，空白检查通过。
+
+### 关于页子页面第二阶段实现
+- AboutScreen.js 中软件介绍按钮已接入 SoftwareIntro 页面导航。
+- AboutScreen.js 中版本记录按钮已接入 VersionHistory 页面导航。
+- App.js 已注册 SoftwareIntro 和 VersionHistory 两个导航页面。
+- src/screens/SoftwareIntroScreen.js 已新增软件介绍页面，内容包含应用定位、主要功能和记录规则。
+- src/screens/VersionHistoryScreen.js 已新增版本记录页面，内容展示当前 package.json 版本号和当前版本能力说明。
+
+### 关于页子页面文档同步
+- developer_guide.md 已新增关于信息章节，记录关于、软件介绍、版本记录三个页面能力。
+- developer_guide.md 的代码结构清单已补充 AboutScreen.js、SoftwareIntroScreen.js、VersionHistoryScreen.js。
+
+### 关于页子页面第二阶段验证
+- 已执行 node --check App.js、src/screens/AboutScreen.js、src/screens/SoftwareIntroScreen.js、src/screens/VersionHistoryScreen.js，语法检查通过。
+- 已执行 git diff --check，空白检查通过。
+
+### 版本记录页时间轴样式
+- VersionHistoryScreen.js 已为版本记录列表增加左侧纵向时间轴样式。
+- 版本记录时间轴已使用圆点表示版本节点，使用竖线连接相邻版本节点。
+- 当前版本节点使用更大的圆点和浅蓝描边突出显示。
+- 已执行 node --check src/screens/VersionHistoryScreen.js，语法检查通过。
+- 已执行 git diff --check，空白检查通过。

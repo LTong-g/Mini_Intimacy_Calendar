@@ -39,6 +39,11 @@
 - `导出`：导出本地数据为 JSON 并分享。
 - `导入`：从 JSON 恢复本地数据并做格式校验。
 
+### 2.5 关于信息
+- `关于`：展示应用图标和当前语义版本。
+- `软件介绍`：展示应用定位、三种记录类型名称、主要功能和记录规则。
+- `版本记录`：根据 Git 历史中的版本字段变化展示版本节点记录，当前记录版本显示为 `1.2.0`。
+
 ## 3. 数据模型与规则
 ### 3.1 存储结构
 - 存储：`AsyncStorage`
@@ -110,6 +115,9 @@
 │  │  ├─ YearView.js
 │  │  ├─ StatisticsScreen.js
 │  │  ├─ SettingsScreen.js
+│  │  ├─ AboutScreen.js
+│  │  ├─ SoftwareIntroScreen.js
+│  │  ├─ VersionHistoryScreen.js
 │  │  └─ DatePickerScreen.js
 │  ├─ components
 │  │  ├─ CheckInButtons.js
@@ -172,7 +180,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\android-build-tempmap.ps1 -Dr
 - 语义版本（`appVersion`）定义在：
 - `package.json` -> `version`
 - `app.json` -> `expo.version`
-- 当前语义版本（截至 `2026-05-01`）：`1.1.1`。
+- 当前语义版本（截至 `2026-05-03`）：`1.1.1`。
 
 ### 8.2 统一策略
 - `runtimeVersion` 统一使用 `policy: appVersion`（iOS/Android 一致）。
