@@ -63,6 +63,7 @@
 - 当前项目基于 Expo 开发，用户希望减少“仅依赖 Expo Go 扫码”带来的设备尺寸测试限制。
 - 用户希望构建流程尽量在项目仓库内产出安装包/发布物，以便后续 release 管理与分发。
 - 当前阶段开发与测试仅考虑 Android，不纳入 iOS。
+- 用户希望在 bare workflow 下保持 `expo.version` 与 `ios/android runtimeVersion` 自动统一，不采用手工分别维护。
 - 在 Windows 本机进行 Android 构建时，采用“构建前临时 `subst` 映射短路径、构建后无论成功失败都取消映射”的流程；每次构建重新映射，避免 `M:` 长驻和与原始长路径混用导致 Kotlin/Gradle 缓存根路径冲突及 native 编译路径过深问题。
 
 ## Windows Android 构建执行流程（强约束）

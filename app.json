@@ -13,10 +13,7 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true,
-      "runtimeVersion": {
-        "policy": "appVersion"
-      }
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
@@ -24,10 +21,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.ltongg.MinimalistWeaponEnhancementCalendar",
-      "runtimeVersion": {
-        "policy": "appVersion"
-      }
+      "package": "com.ltongg.MinimalistWeaponEnhancementCalendar"
     },
     "web": {
       "favicon": "./assets/favicon.png"

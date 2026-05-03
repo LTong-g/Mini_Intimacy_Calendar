@@ -223,3 +223,17 @@
 - 已在文档中明确旧格式仅保留读取迁移和导入兼容，导出始终输出新格式。
 - 已在文档中注明月视图和年视图暂不纳入“多次记录功能”的表层改动范围。
 - 已补充文档回归建议，覆盖新格式自动迁移、旧格式导入转换、新格式导出与日视图读写一致性。
+
+## 2026-05-03
+
+### Bare workflow runtimeVersion 配置修复
+- 已将 app.json 中 ios.runtimeVersion 与 android.runtimeVersion 从 policy=appVersion 改为固定字符串 1.1.1。,本次改动用于兼容 bare workflow 下 EAS Update 需要手动设置 runtimeVersion 的约束。
+
+### runtimeVersion 自动联动
+- 已新增 app.config.js，并从 package.json 读取 version。
+- 已在动态配置中将 expo.version 设置为读取到的 version。
+- 已在动态配置中将 ios.runtimeVersion 设置为读取到的 version。
+- 已在动态配置中将 android.runtimeVersion 设置为读取到的 version。
+- 已从 app.json 移除 ios.runtimeVersion 与 android.runtimeVersion 静态字段。
+- 已执行 npx expo config --json，结果显示 version、ios.runtimeVersion、android.runtimeVersion 均为 1.1.1。
+- 已在 AGENTS.md 记录 bare workflow 下版本号与 runtimeVersion 自动统一偏好。
