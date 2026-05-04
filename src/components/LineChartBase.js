@@ -12,6 +12,17 @@ const defaultHeight = 200;
 const defaultColors = { tutorial: "#F57F17", weapon: "#0277BD", duo: "#C62828" };
 const timeAxisLabelPadding = 8;
 const minAxisLabelGap = 32;
+const axisLabelFontSize = 10;
+const axisLabelCharWidth = 6;
+const axisLabelOverlapPadding = 4;
+
+const formatAxisLabel = (item, xType) => (
+  xType === "time" ? moment(item.label).format("MM-DD") : String(item.label)
+);
+
+const estimateAxisLabelWidth = (label) => (
+  String(label).length * axisLabelCharWidth
+);
 
 export default function LineChartBase({
   title = "",
@@ -20,6 +31,7 @@ export default function LineChartBase({
   xType = "time",    // "time" or "point"
   xDomain = null,
   xLabels = null,
+  touchXLabels = null,
   height = defaultHeight,
   colors = defaultColors
 }) {
@@ -27,7 +39,7 @@ export default function LineChartBase({
   const innerHeight = height      - defaultMargin.top  - defaultMargin.bottom;
 
   // 1. 计算比例尺和序列
-  const { series, xScale, yScale, axisLabels, hiddenAxisLabelIndexes } = useMemo(() => {
+  const { series, xScale, yScale, axisLabels, touchAxisLabels, hiddenAxisLabelIndexes } = useMemo(() => {
     const rawSeries = ["tutorial","weapon","duo"].map(key =>
       points.map((p,i) => ({
         x: xType==="time" ? moment(p).toDate() : String(p),
@@ -55,12 +67,16 @@ export default function LineChartBase({
     let maxY = 1;
     rawSeries.flat().forEach(pt => { if (pt.value > maxY) maxY = pt.value; });
     const yScaleFn = scaleLinear().domain([0, maxY]).range([innerHeight, 0]);
+    const toAxisLabels = (labels) => labels.map((label) => ({
+      x: xType==="time" ? moment(label).toDate() : String(label),
+      label
+    }));
     const axisLabelsValue = Array.isArray(xLabels)
-      ? xLabels.map((label) => ({
-          x: xType==="time" ? moment(label).toDate() : String(label),
-          label
-        }))
+      ? toAxisLabels(xLabels)
       : rawSeries[0].map((pt) => ({ x: pt.x, label: pt.x }));
+    const touchAxisLabelsValue = Array.isArray(touchXLabels)
+      ? touchXLabels.map((labels) => Array.isArray(labels) ? toAxisLabels(labels) : null)
+      : null;
     const hiddenLabelIndexes = new Set();
     if (xType === "time" && Array.isArray(xLabels) && axisLabelsValue.length >= 2) {
       const last = axisLabelsValue[axisLabelsValue.length - 1];
@@ -75,9 +91,10 @@ export default function LineChartBase({
       xScale: xScaleFn,
       yScale: yScaleFn,
       axisLabels: axisLabelsValue,
+      touchAxisLabels: touchAxisLabelsValue,
       hiddenAxisLabelIndexes: hiddenLabelIndexes,
     };
-  }, [points, counts, xType, xDomain, xLabels, innerWidth, innerHeight]);
+  }, [points, counts, xType, xDomain, xLabels, touchXLabels, innerWidth, innerHeight]);
 
   // 2. 曲线生成器
   const lineGenerator = d3Shape
@@ -111,6 +128,53 @@ export default function LineChartBase({
     onPanResponderTerminate: () => setTouchIndex(null),
   }), [handleTouch]);
 
+  const activeTouchAxisLabels = touchIndex != null && touchAxisLabels?.[touchIndex]?.length
+    ? touchAxisLabels[touchIndex]
+    : null;
+  const positionedTouchAxisLabels = useMemo(() => {
+    if (!activeTouchAxisLabels) return null;
+
+    const labels = activeTouchAxisLabels.map((item) => ({ ...item }));
+    if (labels.length !== 2) return labels;
+
+    const tickXs = labels.map((item) => xScale(item.x));
+    const labelWidths = labels.map((item) => (
+      estimateAxisLabelWidth(formatAxisLabel(item, xType))
+    ));
+    const requiredGap = Math.max(
+      minAxisLabelGap,
+      labelWidths[0] / 2 + labelWidths[1] / 2 + axisLabelOverlapPadding
+    );
+    const currentGap = Math.abs(tickXs[1] - tickXs[0]);
+
+    if (currentGap >= requiredGap) {
+      return labels;
+    }
+
+    const spread = requiredGap - currentGap;
+    const labelXs = [...tickXs];
+    const isFirstTouchGroup = touchIndex === 0;
+    const isLastTouchGroup = touchIndex === touchAxisLabels.length - 1;
+
+    if (isFirstTouchGroup && !isLastTouchGroup) {
+      labelXs[1] += spread;
+    } else if (isLastTouchGroup && !isFirstTouchGroup) {
+      labelXs[0] -= spread;
+    } else {
+      labelXs[0] -= spread / 2;
+      labelXs[1] += spread / 2;
+    }
+
+    return labels.map((item, index) => ({
+      ...item,
+      labelX: labelXs[index],
+    }));
+  }, [activeTouchAxisLabels, touchIndex, touchAxisLabels, xScale, xType]);
+  const visibleAxisLabels = positionedTouchAxisLabels || axisLabels;
+  const visibleHiddenAxisLabelIndexes = activeTouchAxisLabels
+    ? new Set()
+    : hiddenAxisLabelIndexes;
+
   return (
     <View style={styles.container}>
       {title ? <Text style={styles.title}>{title}</Text> : null}
@@ -118,9 +182,9 @@ export default function LineChartBase({
         <Svg width={screenWidth} height={height}>
           <G x={defaultMargin.left} y={defaultMargin.top}>
             {/* X 轴标签 */}
-            {axisLabels.map((item,i) => {
-              const labelX = xScale(item.x);
-              const labelTickX = labelX;
+            {visibleAxisLabels.map((item,i) => {
+              const labelTickX = xScale(item.x);
+              const labelX = item.labelX ?? labelTickX;
               return (
                 <React.Fragment key={`x-${i}`}>
                   <Line
@@ -131,15 +195,15 @@ export default function LineChartBase({
                     stroke="#ddd"
                     strokeWidth={1}
                   />
-                  {!hiddenAxisLabelIndexes.has(i) && (
+                  {!visibleHiddenAxisLabelIndexes.has(i) && (
                     <SvgText
                       x={labelX}
                       y={innerHeight + 20}
-                      fontSize={10}
+                      fontSize={axisLabelFontSize}
                       fill="#666"
                       textAnchor="middle"
                     >
-                      {xType==="time" ? moment(item.label).format("MM-DD") : item.label}
+                      {formatAxisLabel(item, xType)}
                     </SvgText>
                   )}
                 </React.Fragment>

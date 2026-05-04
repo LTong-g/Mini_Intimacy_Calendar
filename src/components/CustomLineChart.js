@@ -21,13 +21,17 @@ export default function CustomLineChart({ startDate, endDate }) {
   // 下采样到最多 12 个点
   let dsArr = raw;
   let axisLabels = points;
+  let touchAxisLabels = null;
   if (raw.length > 12) {
     const groupSize = Math.ceil(raw.length / 12);
     const grouped = [];
     const labelDates = [];
+    const groupRangeLabels = [];
     for (let i = 0; i < raw.length; i += groupSize) {
       const slice = raw.slice(i, i + groupSize);
       const middleIdx = Math.ceil(slice.length / 2) - 1;
+      const rangeStart = moment(slice[0].date).format("YYYY-MM-DD");
+      const rangeEnd = moment(slice[slice.length - 1].date).format("YYYY-MM-DD");
       const sumTut = slice.reduce((s, v) => s + v.tutorial, 0);
       const sumWea = slice.reduce((s, v) => s + v.weapon, 0);
       const sumDuo = slice.reduce((s, v) => s + v.duo, 0);
@@ -37,7 +41,8 @@ export default function CustomLineChart({ startDate, endDate }) {
         weapon:    sumWea,
         duo:       sumDuo,
       });
-      labelDates.push(moment(slice[0].date).format("YYYY-MM-DD"));
+      labelDates.push(rangeStart);
+      groupRangeLabels.push(rangeStart === rangeEnd ? [rangeStart] : [rangeStart, rangeEnd]);
     }
     const endLabel = points[points.length - 1];
     if (labelDates[labelDates.length - 1] !== endLabel) {
@@ -45,6 +50,7 @@ export default function CustomLineChart({ startDate, endDate }) {
     }
     dsArr = grouped;
     axisLabels = labelDates;
+    touchAxisLabels = groupRangeLabels;
   }
 
   // 分离下采样后的 x 轴和 y 轴数据
@@ -63,6 +69,7 @@ export default function CustomLineChart({ startDate, endDate }) {
       xType="time"
       xDomain={[startDate, endDate]}
       xLabels={axisLabels}
+      touchXLabels={touchAxisLabels}
     />
   );
 }

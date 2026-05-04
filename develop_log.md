@@ -576,3 +576,25 @@
 - 已执行 node --check src/components/CustomLineChart.js，检查通过。
 - 已执行 node --check src/components/LineChartBase.js，检查通过。
 - 已执行 git diff --check，空白检查通过。
+
+### 自定义统计图聚合点触摸横轴显示实现
+- src/components/CustomLineChart.js 已为自定义统计图聚合点记录所在聚合区间的起止日期。
+- src/components/LineChartBase.js 已新增 touchXLabels 参数，并在触摸聚合点时仅渲染该点对应区间的起止日期横轴刻度和标签。
+- src/screens/VersionHistoryScreen.js 的 Unreleased 节点已记录自定义统计图聚合点触摸横轴区间显示优化。
+- developer_guide.md 已记录自定义统计图聚合点触摸时的横轴显示规则。
+
+### 自定义统计图聚合点触摸横轴显示验证
+- 已使用 Babel parser 解析 src/components/CustomLineChart.js、src/components/LineChartBase.js 和 src/screens/VersionHistoryScreen.js，结果通过。
+- 已执行临时 Node 脚本确认 2026-03-20 至 2026-05-02 共 44 天按 4 天一组聚合时，触摸区间标签包含首组 2026-03-20 至 2026-03-23、第二组 2026-03-24 至 2026-03-27、末组 2026-04-29 至 2026-05-02。
+- 首次执行 develop_log.md 追加脚本时因 PowerShell 数组参数写法错误失败，develop_log.md 未写入内容；已改用显式数组语法成功追加日志。
+
+### 自定义统计图触摸区间标签防重叠实现
+- src/components/LineChartBase.js 已将触摸态聚合区间的横轴刻度位置与文字标签位置分离。
+- src/components/LineChartBase.js 已在触摸态聚合区间起止标签距离不足时按估算文字宽度自适应分散标签。
+- src/components/LineChartBase.js 已实现首个聚合区间仅移动终点标签、末个聚合区间仅移动起点标签、中间聚合区间两侧标签共同分散。
+- src/screens/VersionHistoryScreen.js 的 Unreleased 节点已更新自定义统计图聚合点触摸横轴区间显示说明。
+- developer_guide.md 已记录自定义统计图聚合区间标签防重叠规则。
+
+### 自定义统计图触摸区间标签防重叠验证
+- 已使用 Babel parser 解析 src/components/CustomLineChart.js、src/components/LineChartBase.js 和 src/screens/VersionHistoryScreen.js，结果通过。
+- 已执行临时 Node 脚本确认触摸态标签重叠时首个聚合区间仅终点标签右移、末个聚合区间仅起点标签左移、中间聚合区间两个标签分别向外移动。
