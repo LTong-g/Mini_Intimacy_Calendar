@@ -394,3 +394,62 @@
 - scripts/archive-android-release.ps1 已在传入 debug/app-debug.apk 时拒绝归档。
 - developer_guide.md 已将发布或分发归档来源修正为 android/app/build/outputs/apk/release/app-release.apk。
 - AGENTS.md 已记录发布或分发归档来源必须是 Release APK，禁止将 debug/app-debug.apk 作为发布或分发归档来源。
+## 2026-05-04
+
+### 版本记录新增 Unreleased 规则与节点
+- AGENTS.md 已新增规则：正式发布版本之后开发的未发布功能必须先记录到版本记录页的 Unreleased 节点。
+- VersionHistoryScreen.js 已新增 Unreleased 版本节点，并记录本次日历导航行为修正。
+- developer_guide.md 已同步版本记录页口径，说明正式发布前的新功能记录为 Unreleased，发布时再改为正式版本号。
+
+### 版本记录 Unreleased 显示规则更正
+- AGENTS.md 已补充规则：版本记录页里 Unreleased 前面不加 v，且标题使用正常功能描述。
+- VersionHistoryScreen.js 已改为仅对正式版本添加 v 前缀，Unreleased 直接显示为 Unreleased。
+- VersionHistoryScreen.js 的 Unreleased 节点标题已使用正常功能描述。
+- developer_guide.md 已同步 Unreleased 的展示口径。
+
+### 月视图日期跳转日视图需求梳理
+- 已核对 MonthView：当前点击当前月份日期只调用 onDateChange，不会切换到日视图。
+- 已核对 MonthView：当前右下角回到今日按钮只把 selectedDate 和 currentMonth 改为今天，仍停留在月视图。
+- 已核对 CustomTabBar：当前日视图底部中间 today 图标短按打开打卡面板，不执行回到今日。
+- 已识别澄清点：日视图“回到今日”指向现有底部中间 today 图标还是新增/复用右下角浮动按钮。
+- 已识别澄清点：月视图可见的非当前月份日期是否也按对应日期跳转到日视图。
+
+### 月视图日期跳转与日视图回到今日需求补充
+- 用户已明确日视图新增右下角“回到今日”浮动按钮。
+- 用户已明确月视图点击当前月前的灰色日期时跳转到前一月并选中对应日期。
+- 用户已明确月视图跳转日视图仅通过点击当月日期触发。
+- 用户已明确月视图点击当前月后的灰色日期无事发生，不能选中。
+- 已形成实现方案：MonthView 区分当前月日期、当前月前补位日期、当前月后补位日期，并分别处理为跳转日视图、切到前一月选中、不操作。
+
+### 当前月未来日期点击规则澄清
+- 用户已澄清：月视图当前月里的未来日期允许选中。
+- 用户已澄清：月视图当前月里的未来日期不能跳转到日视图。
+- 已更新需求理解：当前月日期点击时先选中日期，只有非未来日期才切换到日视图。
+
+### 月视图日期跳转与日视图回到今日实现
+- MonthView 已改为点击当月过去日期或今天时选中并进入对应日视图。
+- MonthView 已保留当月未来日期只选中不跳转的行为。
+- MonthView 已新增点击当前月前灰色日期切换到前一月并选中对应日期的行为。
+- MonthView 已保持点击当前月后灰色日期无操作的行为。
+- DayView 已新增右下角回到今日浮动按钮，非今天时显示并回到今天的日视图。
+- VersionHistoryScreen 的 Unreleased 节点已记录本次日历交互优化。
+- developer_guide.md 和 AGENTS.md 已同步本次月视图日期点击规则。
+
+### 月视图回到今日按钮显示修复
+- MonthView 已修复右下角回到今日按钮显示条件。
+- MonthView 的回到今日按钮显示现在同时判断 selectedDate 是否为今天和 currentMonth 是否为当月。
+- 本次修复解决切换到非当月但 selectedDate 仍为今天时按钮不显示的问题。
+
+### 月视图日期点击改为二次确认跳转
+- MonthView 已改为点击当月日期时先选中日期。
+- MonthView 已改为再次点击已选中的过去日期或今天时才进入对应日视图。
+- MonthView 已保持点击已选中的未来日期不进入日视图。
+- VersionHistoryScreen 的 Unreleased 节点已记录本次月视图点击行为调整。
+- developer_guide.md 和 AGENTS.md 已同步月视图日期点击规则。
+
+### 月视图灰色日期切月规则修正
+- MonthView 已改为点击灰色日期时按真实今天判断是否为未来日期。
+- MonthView 已改为点击非未来灰色日期时切换到该日期所在月份并选中该日期。
+- MonthView 已保持点击未来灰色日期无操作。
+- VersionHistoryScreen 的 Unreleased 节点已记录本次灰色日期切月规则修正。
+- developer_guide.md 和 AGENTS.md 已同步本次灰色日期点击规则。

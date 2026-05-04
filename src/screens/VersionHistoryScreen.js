@@ -9,6 +9,17 @@ import { useNavigation } from '@react-navigation/native';
 
 const versionHistory = [
   {
+    version: 'Unreleased',
+    title: '日历导航行为修正',
+    date: '2026-05-04',
+    notes: [
+      '优化月视图日期点击行为，并为日视图新增右下角回到今日按钮。',
+      '修复月视图切换月份后回到今日按钮错误隐藏的问题。',
+      '调整月视图日期点击为先选中、再次点击已选中日期才进入日视图。',
+      '修正月视图灰色日期点击规则，历史月份可通过非未来灰色日期切换到相邻月份。',
+    ],
+  },
+  {
     version: '1.2.0',
     title: '关于页面与多次记录更新',
     date: '2026-05-03',
@@ -73,7 +84,9 @@ const VersionHistoryScreen = () => {
             </View>
 
             <View style={styles.versionBlock}>
-              <Text style={styles.versionTitle}>v{item.version}</Text>
+              <Text style={styles.versionTitle}>
+                {item.version === 'Unreleased' ? item.version : `v${item.version}`}
+              </Text>
               <Text style={styles.versionSubtitle}>{item.title}</Text>
               <Text style={styles.versionDate}>{item.date}</Text>
               <View style={styles.list}>

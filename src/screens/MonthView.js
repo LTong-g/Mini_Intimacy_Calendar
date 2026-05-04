@@ -10,7 +10,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, PanResponder } from 'react-native';
 import moment from 'moment';
 import Header from '../components/Header';
-import { getCheckInStatus, CheckInTypes, getCheckInIcons } from '../utils/checkInStorage';
+import { getCheckInStatus, CheckInTypes } from '../utils/checkInStorage';
 import { Svg, Path } from 'react-native-svg';
 
 /**
@@ -87,8 +87,10 @@ const MonthView = ({ selectedDate, onDateChange, onViewChange, refreshKey = 0 })
 
   useEffect(() => {
     const today = moment();
-    setShowTodayButton(!selectedDate.isSame(today, 'day'));
-  }, [selectedDate]);
+    setShowTodayButton(
+      !selectedDate.isSame(today, 'day') || !currentMonth.isSame(today, 'month')
+    );
+  }, [selectedDate, currentMonth]);
 
   const calendarDays = generateCalendarDays();
   const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
@@ -116,8 +118,27 @@ const MonthView = ({ selectedDate, onDateChange, onViewChange, refreshKey = 0 })
   };
 
   const handleDatePress = (date) => {
-    if (date.month() === currentMonth.month()) {
-      onDateChange(date);
+    const today = moment().startOf('day');
+    const pressedDay = date.clone().startOf('day');
+    const selectedDay = selectedDate.clone().startOf('day');
+
+    const isOutsideCurrentMonth =
+      pressedDay.isBefore(currentMonth.clone().startOf('month'), 'day') ||
+      pressedDay.isAfter(currentMonth.clone().endOf('month'), 'day');
+
+    if (isOutsideCurrentMonth) {
+      if (pressedDay.isAfter(today, 'day')) {
+        return;
+      }
+
+      setCurrentMonth(pressedDay.clone().startOf('month'));
+      onDateChange(pressedDay);
+      return;
+    }
+
+    onDateChange(pressedDay);
+    if (pressedDay.isSame(selectedDay, 'day') && !pressedDay.isAfter(today, 'day')) {
+      onViewChange('Day', pressedDay);
     }
   };
 

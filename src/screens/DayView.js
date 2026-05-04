@@ -282,6 +282,7 @@ const DayView = ({ selectedDate, onDateChange, refreshKey = 0 }) => {
     .clone()
     .add(1, 'day')
     .isAfter(moment().startOf('day'));
+  const isToday = selectedDate.isSame(moment(), 'day');
 
   const activeTypes = TYPE_META.filter((item) => getCheckInRecordCount(record, item.key) > 0);
 
@@ -370,6 +371,14 @@ const DayView = ({ selectedDate, onDateChange, refreshKey = 0 }) => {
         onConfirm={handleConfirmEdit}
         onCancel={handleCancelEdit}
       />
+
+      {!isToday && (
+        <Pressable style={styles.todayButton} onPress={() => onDateChange(moment().startOf('day'))}>
+          <View style={styles.calendarBox}>
+            <Text style={styles.todayNumber}>{moment().date()}</Text>
+          </View>
+        </Pressable>
+      )}
     </View>
   );
 };
@@ -448,6 +457,37 @@ const styles = StyleSheet.create({
     fontSize: 36,
     fontWeight: 'bold',
     lineHeight: 40,
+  },
+  todayButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#FFFFFF',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  calendarBox: {
+    width: 36,
+    height: 32,
+    borderWidth: 1.5,
+    borderColor: '#007AFF',
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  todayNumber: {
+    color: '#007AFF',
+    fontSize: 14,
+    fontWeight: 'bold',
   },
   singlePosition: {
     position: 'absolute',
