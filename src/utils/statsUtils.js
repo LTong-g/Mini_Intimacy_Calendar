@@ -138,15 +138,19 @@ export function computeCustomStats(data, startDateStr, endDateStr) {
     totalW += wea;
     totalD += duo;
 
-    // 按月聚合
+    const y = dt.getFullYear();
     const m = dt.getMonth() + 1;
-    if (!monthMap[m]) monthMap[m] = { tutorial: 0, weapon: 0, duo: 0 };
-    monthMap[m].tutorial += tut;
-    monthMap[m].weapon += wea;
-    monthMap[m].duo += duo;
+
+    // 按月聚合。自定义区间可能跨年，必须用年月作为键避免同名月份合并。
+    const monthKey = `${y}-${String(m).padStart(2, "0")}`;
+    if (!monthMap[monthKey]) {
+      monthMap[monthKey] = { year: y, month: m, tutorial: 0, weapon: 0, duo: 0 };
+    }
+    monthMap[monthKey].tutorial += tut;
+    monthMap[monthKey].weapon += wea;
+    monthMap[monthKey].duo += duo;
 
     // 按年聚合
-    const y = dt.getFullYear();
     if (!yearMap[y]) yearMap[y] = { tutorial: 0, weapon: 0, duo: 0 };
     yearMap[y].tutorial += tut;
     yearMap[y].weapon += wea;
@@ -176,7 +180,6 @@ export function computeCustomStats(data, startDateStr, endDateStr) {
     const monthlyAvgW = dailyAvgW * 30;
     const monthlyAvgD = dailyAvgD * 30;
 
-    const months = Array.from({ length: 12 }, (_, i) => i + 1);
     const rows = [
       { label: "总计", tutorial: totalT, weapon: totalW, duo: totalD },
       {
@@ -192,14 +195,14 @@ export function computeCustomStats(data, startDateStr, endDateStr) {
         duo: monthlyAvgD.toFixed(2),
       },
     ];
-    // 仅显示有记录的月份，按月份从大到小排序
+    const isCrossYear = start.getFullYear() !== end.getFullYear();
+    // 仅显示有记录的月份，按真实年月从近到远排序
     Object.keys(monthMap)
-      .map((m) => Number(m))
-      .sort((a, b) => b - a)
-      .forEach((m) => {
-        const c = monthMap[m];
+      .sort((a, b) => b.localeCompare(a))
+      .forEach((monthKey) => {
+        const c = monthMap[monthKey];
         rows.push({
-          label: `${m}月`,
+          label: isCrossYear ? `${c.year}年${c.month}月` : `${c.month}月`,
           tutorial: c.tutorial,
           weapon: c.weapon,
           duo: c.duo,
