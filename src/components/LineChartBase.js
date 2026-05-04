@@ -1,5 +1,5 @@
 // LineChartBase.js
-import React, { useMemo, useRef, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { View, Text, StyleSheet, Dimensions, PanResponder } from "react-native";
 import Svg, { G, Path, Line, Circle, Text as SvgText } from "react-native-svg";
 import * as d3Shape from "d3-shape";
@@ -10,12 +10,16 @@ const { width: screenWidth } = Dimensions.get("window");
 const defaultMargin = { top: 16, bottom: 32, left: 16, right: 40 };
 const defaultHeight = 200;
 const defaultColors = { tutorial: "#F57F17", weapon: "#0277BD", duo: "#C62828" };
+const timeAxisLabelPadding = 8;
+const minAxisLabelGap = 32;
 
 export default function LineChartBase({
   title = "",
   points = [],
   counts = { tutorial: [], weapon: [], duo: [] },
   xType = "time",    // "time" or "point"
+  xDomain = null,
+  xLabels = null,
   height = defaultHeight,
   colors = defaultColors
 }) {
@@ -23,7 +27,7 @@ export default function LineChartBase({
   const innerHeight = height      - defaultMargin.top  - defaultMargin.bottom;
 
   // 1. 计算比例尺和序列
-  const { series, xScale, yScale } = useMemo(() => {
+  const { series, xScale, yScale, axisLabels, hiddenAxisLabelIndexes } = useMemo(() => {
     const rawSeries = ["tutorial","weapon","duo"].map(key =>
       points.map((p,i) => ({
         x: xType==="time" ? moment(p).toDate() : String(p),
@@ -31,15 +35,18 @@ export default function LineChartBase({
         key
       }))
     );
+    const timeDomain = xDomain?.length === 2
+      ? xDomain.map((p) => moment(p).toDate())
+      : [
+          rawSeries[0][0]?.x || new Date(),
+          rawSeries[0].slice(-1)[0]?.x || new Date()
+        ];
 
     // X 轴比例尺
     const xScaleFn = xType==="time"
       ? scaleTime()
-          .domain([
-            rawSeries[0][0]?.x || new Date(),
-            rawSeries[0].slice(-1)[0]?.x || new Date()
-          ])
-          .range([0, innerWidth])
+          .domain(timeDomain)
+          .range([timeAxisLabelPadding, innerWidth - timeAxisLabelPadding])
       : scalePoint()
           .domain(points.map(p=>String(p)))
           .range([0, innerWidth]);
@@ -48,9 +55,29 @@ export default function LineChartBase({
     let maxY = 1;
     rawSeries.flat().forEach(pt => { if (pt.value > maxY) maxY = pt.value; });
     const yScaleFn = scaleLinear().domain([0, maxY]).range([innerHeight, 0]);
+    const axisLabelsValue = Array.isArray(xLabels)
+      ? xLabels.map((label) => ({
+          x: xType==="time" ? moment(label).toDate() : String(label),
+          label
+        }))
+      : rawSeries[0].map((pt) => ({ x: pt.x, label: pt.x }));
+    const hiddenLabelIndexes = new Set();
+    if (xType === "time" && Array.isArray(xLabels) && axisLabelsValue.length >= 2) {
+      const last = axisLabelsValue[axisLabelsValue.length - 1];
+      const penultimate = axisLabelsValue[axisLabelsValue.length - 2];
+      if (Math.abs(xScaleFn(last.x) - xScaleFn(penultimate.x)) < minAxisLabelGap) {
+        hiddenLabelIndexes.add(axisLabelsValue.length - 2);
+      }
+    }
 
-    return { series: rawSeries, xScale: xScaleFn, yScale: yScaleFn };
-  }, [points, counts, xType, innerWidth, innerHeight]);
+    return {
+      series: rawSeries,
+      xScale: xScaleFn,
+      yScale: yScaleFn,
+      axisLabels: axisLabelsValue,
+      hiddenAxisLabelIndexes: hiddenLabelIndexes,
+    };
+  }, [points, counts, xType, xDomain, xLabels, innerWidth, innerHeight]);
 
   // 2. 曲线生成器
   const lineGenerator = d3Shape
@@ -61,18 +88,9 @@ export default function LineChartBase({
 
   // 3. 触摸交互
   const [touchIndex, setTouchIndex] = useState(null);
-  const panResponder = useRef(PanResponder.create({
-    onStartShouldSetPanResponder: () => true,
-    onMoveShouldSetPanResponder: () => true,
-    onPanResponderGrant:   e => handleTouch(e.nativeEvent.locationX),
-    onPanResponderMove:    e => handleTouch(e.nativeEvent.locationX),
-    onPanResponderRelease: () => setTouchIndex(null),
-    onPanResponderTerminate: () => setTouchIndex(null),
-  })).current;
-
-  function handleTouch(x) {
+  const handleTouch = useCallback((x) => {
     const lx = x - defaultMargin.left;
-    if (lx < 0 || lx > innerWidth) {
+    if (lx < 0 || lx > innerWidth || !series[0]?.length) {
       setTouchIndex(null);
       return;
     }
@@ -82,7 +100,16 @@ export default function LineChartBase({
       if (d < minD) { minD = d; idx = i; }
     });
     setTouchIndex(idx);
-  }
+  }, [innerWidth, series, xScale]);
+
+  const panResponder = useMemo(() => PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: () => true,
+    onPanResponderGrant:   e => handleTouch(e.nativeEvent.locationX),
+    onPanResponderMove:    e => handleTouch(e.nativeEvent.locationX),
+    onPanResponderRelease: () => setTouchIndex(null),
+    onPanResponderTerminate: () => setTouchIndex(null),
+  }), [handleTouch]);
 
   return (
     <View style={styles.container}>
@@ -91,18 +118,33 @@ export default function LineChartBase({
         <Svg width={screenWidth} height={height}>
           <G x={defaultMargin.left} y={defaultMargin.top}>
             {/* X 轴标签 */}
-            {series[0].map((pt,i) => (
-              <SvgText
-                key={`x-${i}`}
-                x={xScale(pt.x)}
-                y={innerHeight + 20}
-                fontSize={10}
-                fill="#666"
-                textAnchor="middle"
-              >
-                {xType==="time" ? moment(pt.x).format("MM-DD") : pt.x}
-              </SvgText>
-            ))}
+            {axisLabels.map((item,i) => {
+              const labelX = xScale(item.x);
+              const labelTickX = labelX;
+              return (
+                <React.Fragment key={`x-${i}`}>
+                  <Line
+                    x1={labelTickX}
+                    y1={innerHeight + 2}
+                    x2={labelTickX}
+                    y2={innerHeight + 6}
+                    stroke="#ddd"
+                    strokeWidth={1}
+                  />
+                  {!hiddenAxisLabelIndexes.has(i) && (
+                    <SvgText
+                      x={labelX}
+                      y={innerHeight + 20}
+                      fontSize={10}
+                      fill="#666"
+                      textAnchor="middle"
+                    >
+                      {xType==="time" ? moment(item.label).format("MM-DD") : item.label}
+                    </SvgText>
+                  )}
+                </React.Fragment>
+              );
+            })}
 
             {/* Y 轴刻度与网格 */}
             {yScale.ticks(5).map((t,i) => (

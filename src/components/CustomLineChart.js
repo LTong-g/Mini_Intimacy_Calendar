@@ -20,30 +20,31 @@ export default function CustomLineChart({ startDate, endDate }) {
 
   // 下采样到最多 12 个点
   let dsArr = raw;
+  let axisLabels = points;
   if (raw.length > 12) {
     const groupSize = Math.ceil(raw.length / 12);
-    // 拷贝并在头部填一个哑数据以对齐分组
-    const temp = [...raw];
-    if (temp.length % groupSize !== 0) {
-      temp.unshift({
-        date:   moment(startDate).subtract(1, "days").toDate(),
-        tutorial: 0, weapon: 0, duo: 0
-      });
-    }
     const grouped = [];
-    for (let i = 0; i < temp.length; i += groupSize) {
-      const slice = temp.slice(i, i + groupSize);
+    const labelDates = [];
+    for (let i = 0; i < raw.length; i += groupSize) {
+      const slice = raw.slice(i, i + groupSize);
+      const middleIdx = Math.ceil(slice.length / 2) - 1;
       const sumTut = slice.reduce((s, v) => s + v.tutorial, 0);
       const sumWea = slice.reduce((s, v) => s + v.weapon, 0);
       const sumDuo = slice.reduce((s, v) => s + v.duo, 0);
       grouped.push({
-        date:      slice[0].date,
+        date:      slice[middleIdx].date,
         tutorial:  sumTut,
         weapon:    sumWea,
         duo:       sumDuo,
       });
+      labelDates.push(moment(slice[0].date).format("YYYY-MM-DD"));
+    }
+    const endLabel = points[points.length - 1];
+    if (labelDates[labelDates.length - 1] !== endLabel) {
+      labelDates.push(endLabel);
     }
     dsArr = grouped;
+    axisLabels = labelDates;
   }
 
   // 分离下采样后的 x 轴和 y 轴数据
@@ -60,6 +61,8 @@ export default function CustomLineChart({ startDate, endDate }) {
       points={dsPoints}
       counts={dsCounts}
       xType="time"
+      xDomain={[startDate, endDate]}
+      xLabels={axisLabels}
     />
   );
 }

@@ -9,7 +9,7 @@
 
 # 待开发功能：
 - 允许设置黑名单应用，根据黑名单应用自动记录
-- 图标有bug：1在模拟器上纵轴只能显示1位数，10会显示成0；2自定义范围的图表自适应横轴会把自定义范围的末尾吞掉。
+- 图标有bug：1在模拟器上纵轴只能显示1位数，10会显示成0。
 
 # 日志内容
 
@@ -540,4 +540,39 @@
 - src/screens/VersionHistoryScreen.js 的 Unreleased 节点已记录年度统计图横轴月份从 0 开始的修复。
 - 已执行 node --check src/hooks/useCheckinAggregation.js，检查通过。
 - 已执行 node --check src/screens/VersionHistoryScreen.js，检查通过。
+- 已执行 git diff --check，空白检查通过。
+
+### 自定义统计图横轴聚合显示实现
+- src/components/CustomLineChart.js 已移除自定义统计图下采样时在头部插入 startDate 前一天哑数据的逻辑。
+- src/components/CustomLineChart.js 已保持自定义区间先生成 startDate 到 endDate 的逐日数据。
+- src/components/CustomLineChart.js 已在逐日数据超过 12 个点时按 Math.ceil(天数 / 12) 从前到后分组聚合，尾部不足完整组时保持尾部不完整分组。
+- src/components/CustomLineChart.js 已将每个聚合数据点绘制在对应聚合区间中间日期；偶数天数聚合区间取第一个中间日期。
+- src/components/CustomLineChart.js 已将自定义统计图横轴刻度标签改为每个聚合区间起点，并补充完整统计区间终点标签且避免重复。
+- src/components/LineChartBase.js 已新增 xDomain 参数，使时间轴比例尺范围可独立于实际绘制点位。
+- src/components/LineChartBase.js 已新增 xLabels 参数，使横轴短刻度线和文字标签可独立于实际绘制点位。
+- src/components/LineChartBase.js 已为时间横轴比例尺 range 增加内部留白，避免居中标签在左右边缘裁切。
+- src/components/LineChartBase.js 已在倒数第二个横轴标签与最后一个横轴标签距离不足时仅隐藏倒数第二个文字标签，并保持对应短刻度线显示。
+- src/components/LineChartBase.js 已将触摸响应改为随最新 series 和 xScale 更新，避免日期范围变化后触摸命中使用旧点位。
+- src/screens/VersionHistoryScreen.js 的 Unreleased 节点已记录自定义统计图横轴范围显示优化。
+
+### 自定义统计图横轴聚合显示验证
+- 已执行 node --check src/components/CustomLineChart.js，检查通过。
+- 已执行 node --check src/components/LineChartBase.js，检查通过。
+- 已执行 node --check src/screens/VersionHistoryScreen.js，检查通过。
+- 已执行临时 Node 脚本确认 2026-03-20 至 2026-05-02 按 4 天一组聚合，横轴标签为 03-20、03-24、03-28 到 05-02。
+- 已执行 rg -n "xRangeLabels|xTicks|axisTicks" src/components，确认被废弃的横轴参数和每日刻度变量无残留。
+- 已执行 git diff --check，空白检查通过。
+
+### 版本记录用户可感知规则整理
+- 用户已明确版本记录页面只记录用户能感受到的变化，不记录内部实现细节。
+- AGENTS.md 已记录版本记录页面的用户可感知变化记录规则。
+- src/screens/VersionHistoryScreen.js 已将自定义统计图内部实现记录合并为用户可感知的横轴范围显示和触摸查看效果优化说明。
+- 已执行 node --check src/screens/VersionHistoryScreen.js，检查通过。
+- 已执行 git diff --check，空白检查通过。
+
+### 自定义统计图下采样代码清理
+- src/components/CustomLineChart.js 已移除下采样逻辑中不再需要的 raw 数组拷贝。
+- src/components/CustomLineChart.js 已改为直接按 raw.slice 生成聚合区间，聚合行为保持不变。
+- 已执行 node --check src/components/CustomLineChart.js，检查通过。
+- 已执行 node --check src/components/LineChartBase.js，检查通过。
 - 已执行 git diff --check，空白检查通过。
