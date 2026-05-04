@@ -18,6 +18,7 @@ import DatePickerScreen from "./src/screens/DatePickerScreen";
 import AboutScreen from "./src/screens/AboutScreen";
 import SoftwareIntroScreen from "./src/screens/SoftwareIntroScreen";
 import UsageHelpScreen from "./src/screens/UsageHelpScreen";
+import PrivacyPolicyScreen from "./src/screens/PrivacyPolicyScreen";
 import VersionHistoryScreen from "./src/screens/VersionHistoryScreen";
 
 const Stack = createNativeStackNavigator();
@@ -111,6 +112,7 @@ export default function App() {
             <Stack.Screen name="About" component={AboutScreen} />
             <Stack.Screen name="SoftwareIntro" component={SoftwareIntroScreen} />
             <Stack.Screen name="UsageHelp" component={UsageHelpScreen} />
+            <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
             <Stack.Screen name="VersionHistory" component={VersionHistoryScreen} />
             <Stack.Screen name="Statistics" component={StatisticsScreen} />
             <Stack.Screen name="DatePicker" component={DatePickerScreen} />

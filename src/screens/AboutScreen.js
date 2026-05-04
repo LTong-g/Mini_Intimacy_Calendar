@@ -46,6 +46,14 @@ const AboutScreen = () => {
             <Text style={styles.buttonText}>使用帮助</Text>
           </TouchableOpacity>
           <TouchableOpacity
+            style={[styles.fullWidthButton, styles.middleButton]}
+            activeOpacity={0.8}
+            onPress={() => navigation.navigate('PrivacyPolicy')}
+          >
+            <Ionicons name="shield-checkmark-outline" size={20} color="#007AFF" />
+            <Text style={styles.buttonText}>隐私政策</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
             style={[styles.fullWidthButton, styles.lastButton]}
             activeOpacity={0.8}
             onPress={() => navigation.navigate('VersionHistory')}
