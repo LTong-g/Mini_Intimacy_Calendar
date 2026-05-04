@@ -248,12 +248,12 @@ const DayView = ({ selectedDate, onDateChange, refreshKey = 0 }) => {
   };
 
   const handlePreviousDay = () => {
-    onDateChange(selectedDate.clone().subtract(1, 'day'));
+    onDateChange(selectedDate.clone().subtract(1, 'day').startOf('day'));
   };
 
   const handleNextDay = () => {
     const nextDay = selectedDate.clone().add(1, 'day').startOf('day');
-    if (nextDay.isAfter(moment().startOf('day'))) return;
+    if (nextDay.isAfter(moment(), 'day')) return;
     onDateChange(nextDay);
   };
 
@@ -281,7 +281,7 @@ const DayView = ({ selectedDate, onDateChange, refreshKey = 0 }) => {
   const isNextDayDisabled = selectedDate
     .clone()
     .add(1, 'day')
-    .isAfter(moment().startOf('day'));
+    .isAfter(moment(), 'day');
   const isToday = selectedDate.isSame(moment(), 'day');
 
   const activeTypes = TYPE_META.filter((item) => getCheckInRecordCount(record, item.key) > 0);

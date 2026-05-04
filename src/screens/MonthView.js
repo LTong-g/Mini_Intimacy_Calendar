@@ -143,7 +143,7 @@ const MonthView = ({ selectedDate, onDateChange, onViewChange, refreshKey = 0 })
   };
 
   const handleTodayPress = () => {
-    const today = moment();
+    const today = moment().startOf('day');
     setCurrentMonth(today);
     onDateChange(today);
   };

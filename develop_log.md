@@ -11,7 +11,6 @@
 - 允许设置黑名单应用，根据黑名单应用自动记录
 - 图标有bug：1纵轴只能显示1位数，10会显示成0 2年视图的图标横轴是从0开始的 3自定义范围的图表自适应横轴会把自定义范围的末尾吞掉。
 - 自定义统计界面有bug：选择跨年的范围时当前判断是通过日期数判断，导致如果跨年但没超过365天，会按月显示表格，但没有标注哪年哪月，而是按1月开始排的。例如2025.8.1-2025.4.30，表格会从下往上排1月2月3月4月8月9月...应该改为2025年8月，2025年9月...2026年1月...
-- bug：首次回到日视图时，左滑到昨天，顶部右箭头仍然是灰色，但右滑回今天不受影响。且如果左滑两次到前天，右滑到昨天后右箭头是正常的。如果左滑右滑再左滑，右箭头也是正常的。每次回到日视图后bug只出现一次。
 
 # 日志内容
 
@@ -467,3 +466,25 @@
 
 ### 使用帮助页阶段性协作记录清理
 - AGENTS.md 已移除设置页关于功能两阶段实现的阶段性协作记录。
+
+### 日视图首次左滑右箭头禁用态分析
+- 已定位 DayView 的右箭头禁用判断使用 selectedDate.clone().add(1, 'day').isAfter(moment().startOf('day'))，当 selectedDate 带有当前时分秒时，昨天加一天会得到今天当前时刻并被误判为晚于今天零点。
+- 已定位 CalendarScreen 初始 selectedDate 使用 moment()，MonthView 的回到今日按钮和 CustomTabBar 的回到今日入口也会传入未归一到 startOf('day') 的 moment 对象。
+- 已确认该现象符合用户描述：首次从今天左滑到昨天时继承当前时分秒导致右箭头灰色，后续经 handleNextDay 返回今天后 selectedDate 已归一到 startOf('day')，再次左滑不再复现。
+
+### 日视图首次左滑右箭头禁用态修复方案
+- 已形成修复方案：将 selectedDate 在进入和切换日视图时统一归一到 startOf('day')，避免日期状态携带当前时分秒。
+- 已形成修复方案：DayView 的上一日、下一日、回到今日入口均以当天零点作为 onDateChange 入参。
+- 已形成修复方案：CalendarScreen 初始 selectedDate、MonthView 回到今日入口、CustomTabBar 切回今天日视图入口均改为传入 moment().startOf('day')。
+- 已形成修复方案：DayView 顶部右箭头禁用判断按 day 粒度比较，避免时分秒影响未来日期判断。
+- 已形成验证点：首次进入日视图左滑到昨天后右箭头应为可用；从昨天右滑回今天后右箭头应禁用；左滑两次再右滑到昨天后右箭头应保持可用。
+
+### 日视图首次左滑右箭头禁用态修复实现
+- App.js 已将 CalendarScreen 的 selectedDate 初始值和 onDateChange 入口统一归一到 startOf('day')。
+- DayView 已将上一日导航归一到 startOf('day')，并将下一日守卫和右箭头禁用判断改为按 day 粒度比较。
+- MonthView 的回到今日入口和 CustomTabBar 的切回今天日视图入口已改为传入 moment().startOf('day')。
+- 已执行 node --check App.js、src/screens/DayView.js、src/screens/MonthView.js、src/components/CustomTabBar.js，均通过。
+
+### 版本记录补充日视图导航修复
+- VersionHistoryScreen 的 Unreleased 节点已补充日视图首次从今天左滑到昨天时顶部右箭头误判为不可用的修复记录。
+- 已执行 node --check src/screens/VersionHistoryScreen.js，检查通过。

@@ -25,8 +25,12 @@ const Stack = createNativeStackNavigator();
 // 日历主页面，管理三种视图状态
 const CalendarScreen = () => {
   const [currentView, setCurrentView] = useState("Day");
-  const [selectedDate, setSelectedDate] = useState(moment());
+  const [selectedDate, setSelectedDate] = useState(moment().startOf("day"));
   const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleDateChange = useCallback((date) => {
+    setSelectedDate(date.clone().startOf("day"));
+  }, []);
 
   const renderCurrentView = () => {
     switch (currentView) {
@@ -34,7 +38,7 @@ const CalendarScreen = () => {
         return (
           <DayView
             selectedDate={selectedDate}
-            onDateChange={setSelectedDate}
+            onDateChange={handleDateChange}
             onViewChange={setCurrentView}
             refreshKey={refreshKey}
           />
@@ -43,7 +47,7 @@ const CalendarScreen = () => {
         return (
           <MonthView
             selectedDate={selectedDate}
-            onDateChange={setSelectedDate}
+            onDateChange={handleDateChange}
             onViewChange={setCurrentView}
             refreshKey={refreshKey}
           />
@@ -52,7 +56,7 @@ const CalendarScreen = () => {
         return (
           <YearView
             selectedDate={selectedDate}
-            onDateChange={setSelectedDate}
+            onDateChange={handleDateChange}
             onViewChange={setCurrentView}
           />
         );
@@ -63,7 +67,7 @@ const CalendarScreen = () => {
 
   const handleViewChange = (viewName, date = null) => {
     setCurrentView(viewName);
-    if (date) setSelectedDate(date);
+    if (date) handleDateChange(date);
   };
 
   const handleCycleViews = () => {

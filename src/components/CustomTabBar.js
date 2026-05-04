@@ -161,14 +161,14 @@ const CustomTabBar = ({
     if (currentView === "Day" || currentView === "Month") {
       setShowCheckInButtons(true);
     } else {
-      onViewChange("Day", moment());
+      onViewChange("Day", moment().startOf("day"));
     }
   };
 
   const handleLongPress = () => {
     if (currentView === "Month") {
       Vibration.vibrate(30);
-      onViewChange("Day", moment());
+      onViewChange("Day", moment().startOf("day"));
     }
   };
 
