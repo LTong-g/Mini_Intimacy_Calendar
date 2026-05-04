@@ -12,7 +12,7 @@ export default function useCheckinAggregation({ startDate, endDate, year }) {
       // 生成时间点列表
       let points = [];
       if (year) {
-        points = Array.from({ length: 12 }, (_, i) => i); // 0–11 月
+        points = Array.from({ length: 12 }, (_, i) => i + 1);
       } else {
         const s = moment(startDate), e = moment(endDate);
         for (let m = s.clone(); m.isSameOrBefore(e); m.add(1, "days")) {

@@ -9,7 +9,7 @@
 
 # 待开发功能：
 - 允许设置黑名单应用，根据黑名单应用自动记录
-- 图标有bug：1纵轴只能显示1位数，10会显示成0 2年视图的图标横轴是从0开始的 3自定义范围的图表自适应横轴会把自定义范围的末尾吞掉。
+- 图标有bug：1在模拟器上纵轴只能显示1位数，10会显示成0；2自定义范围的图表自适应横轴会把自定义范围的末尾吞掉。
 
 # 日志内容
 
@@ -525,5 +525,19 @@
 
 ### 统计表行标题对齐最终验证
 - 已执行 node --check src/components/StatsTable.js，检查通过。
+- 已执行 node --check src/screens/VersionHistoryScreen.js，检查通过。
+- 已执行 git diff --check，空白检查通过。
+
+### 年度统计图横轴从零开始缺陷分析
+- 已定位年度统计图入口位于 src/components/YearLineChart.js，组件将 useCheckinAggregation 的 points 以 xType=point 传入 LineChartBase。
+- 已定位年度聚合逻辑位于 src/hooks/useCheckinAggregation.js，year 分支使用 Array.from({ length: 12 }, (_, i) => i) 生成 0 到 11 的月份点位。
+- 已确认 src/components/LineChartBase.js 在 xType=point 时将点位转换为字符串并原样渲染横轴标签，因此年度统计图横轴显示为 0 到 11。
+- 已确认该缺陷属于月份内部编码与用户可见月份标签未分离导致的显示问题，统计计数本身仍按 moment(dateStr).month() 聚合到 0 到 11 索引。
+
+### 年度统计图横轴月份显示修复
+- src/hooks/useCheckinAggregation.js 已将年度统计图横轴点位从 0 到 11 改为 1 到 12。
+- src/hooks/useCheckinAggregation.js 已保持年度统计计数按原数组索引聚合，未追加月字标签。
+- src/screens/VersionHistoryScreen.js 的 Unreleased 节点已记录年度统计图横轴月份从 0 开始的修复。
+- 已执行 node --check src/hooks/useCheckinAggregation.js，检查通过。
 - 已执行 node --check src/screens/VersionHistoryScreen.js，检查通过。
 - 已执行 git diff --check，空白检查通过。
