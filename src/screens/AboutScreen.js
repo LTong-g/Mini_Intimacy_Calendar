@@ -30,7 +30,7 @@ const AboutScreen = () => {
 
         <View style={styles.buttonGroup}>
           <TouchableOpacity
-            style={styles.fullWidthButton}
+            style={[styles.fullWidthButton, styles.firstButton]}
             activeOpacity={0.8}
             onPress={() => navigation.navigate('SoftwareIntro')}
           >
@@ -38,7 +38,7 @@ const AboutScreen = () => {
             <Text style={styles.buttonText}>软件介绍</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.fullWidthButton}
+            style={[styles.fullWidthButton, styles.middleButton]}
             activeOpacity={0.8}
             onPress={() => navigation.navigate('UsageHelp')}
           >
@@ -46,7 +46,7 @@ const AboutScreen = () => {
             <Text style={styles.buttonText}>使用帮助</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.fullWidthButton}
+            style={[styles.fullWidthButton, styles.lastButton]}
             activeOpacity={0.8}
             onPress={() => navigation.navigate('VersionHistory')}
           >
@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   buttonGroup: {
-    gap: 12,
+    width: '100%',
   },
   fullWidthButton: {
     width: '100%',
@@ -111,9 +111,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: '#007AFF',
-    borderRadius: 8,
+    borderRadius: 0,
     paddingVertical: 10,
     paddingHorizontal: 12,
+  },
+  firstButton: {
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
+  },
+  middleButton: {
+    marginTop: -1,
+  },
+  lastButton: {
+    marginTop: -1,
+    borderBottomLeftRadius: 8,
+    borderBottomRightRadius: 8,
   },
   buttonText: {
     color: '#007AFF',

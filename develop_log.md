@@ -611,3 +611,12 @@
 - src/screens/VersionHistoryScreen.js 的 Unreleased 节点已记录统计图触摸相同数值标签显示优化。
 - developer_guide.md 已记录统计图触摸同值标签向右错开的行为。
 - 已使用 Babel parser 解析 src/components/LineChartBase.js 和 src/screens/VersionHistoryScreen.js，结果通过。
+
+### 关于页按钮相邻样式调整
+- AboutScreen 已移除关于页按钮组间距，三个按钮改为相邻显示。
+- AboutScreen 已将中间的使用帮助按钮设置为直角边框样式。
+- 已执行 node --check .\src\screens\AboutScreen.js，语法检查通过。
+
+### 版本记录补充关于页按钮优化
+- VersionHistoryScreen 的 Unreleased 节点已记录关于页入口按钮排列优化。
+- 已执行 node --check .\src\screens\VersionHistoryScreen.js，语法检查通过。
