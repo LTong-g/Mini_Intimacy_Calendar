@@ -464,3 +464,6 @@
 - 已重新核对 DayView、MonthView、YearView、CustomTabBar、CheckInButtons、StatisticsHeader、DatePickerScreen 和 SettingsScreen 的用户操作入口。
 - UsageHelpScreen 已补全日视图、月视图、年视图、底部栏、打卡面板、统计页、日期选择、设置页和关于页的操作说明。
 - VersionHistoryScreen 的 Unreleased 节点已记录本次使用帮助补全。
+
+### 使用帮助页阶段性协作记录清理
+- AGENTS.md 已移除设置页关于功能两阶段实现的阶段性协作记录。
