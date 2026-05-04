@@ -513,3 +513,17 @@
 - 已执行 node --check src/screens/VersionHistoryScreen.js，检查通过。
 - 已执行临时 Node 验证脚本，确认 2025-08-01 至 2026-04-30 的月统计标签按 2026年4月 到 2025年8月 倒序输出。
 - 已执行 git diff --check，空白检查通过。
+
+### 统计表行标题对齐最终实现
+- src/components/StatsTable.js 已新增 LabelCell 渲染统计表左侧行标题。
+- src/components/StatsTable.js 已将纯月份标题（如 1月、12月）保持为连续文本，并按纯月份标题组内最大自然宽度右对齐。
+- src/components/StatsTable.js 已将 YYYY年M月 标题拆为年数字、年字、月数字、月字四段，分别按当前字体下的同类最大自然宽度居中渲染。
+- src/components/StatsTable.js 已保持普通标题（如 日期、总计、日均、月均、年均）为单文本居中渲染。
+- src/components/StatsTable.js 已保持左侧表格列整体 flex 占位不变。
+- VersionHistoryScreen.js 的 Unreleased 节点已记录本次统计表行标题对齐优化。
+- AGENTS.md 已记录统计表纯月份标题组内右对齐的语义边界。
+
+### 统计表行标题对齐最终验证
+- 已执行 node --check src/components/StatsTable.js，检查通过。
+- 已执行 node --check src/screens/VersionHistoryScreen.js，检查通过。
+- 已执行 git diff --check，空白检查通过。
