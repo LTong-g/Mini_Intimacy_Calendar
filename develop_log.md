@@ -598,3 +598,16 @@
 ### 自定义统计图触摸区间标签防重叠验证
 - 已使用 Babel parser 解析 src/components/CustomLineChart.js、src/components/LineChartBase.js 和 src/screens/VersionHistoryScreen.js，结果通过。
 - 已执行临时 Node 脚本确认触摸态标签重叠时首个聚合区间仅终点标签右移、末个聚合区间仅起点标签左移、中间聚合区间两个标签分别向外移动。
+
+### 统计图触摸数值重叠最终方案
+- 已确认统计图触摸态数值标签不采用上下移动。
+- 已确认同一触摸点下相同数值标签按观看教程、武器强化、双人练习顺序排列。
+- 已确认重复标签按每重叠一个向右偏移 6 的规则绘制，并保留原有基础 x 偏移。
+
+### 统计图触摸数值重叠最终实现与验证
+- AGENTS.md 已记录统计图触摸同值标签按观看教程、武器强化、双人练习顺序向右错开的持久规则。
+- src/components/LineChartBase.js 已为触摸态数值标签新增同值重叠计数。
+- src/components/LineChartBase.js 已在同一触摸点同值标签上按每重叠一个向右偏移 6 绘制文本。
+- src/screens/VersionHistoryScreen.js 的 Unreleased 节点已记录统计图触摸相同数值标签显示优化。
+- developer_guide.md 已记录统计图触摸同值标签向右错开的行为。
+- 已使用 Babel parser 解析 src/components/LineChartBase.js 和 src/screens/VersionHistoryScreen.js，结果通过。

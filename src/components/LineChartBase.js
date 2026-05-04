@@ -15,6 +15,8 @@ const minAxisLabelGap = 32;
 const axisLabelFontSize = 10;
 const axisLabelCharWidth = 6;
 const axisLabelOverlapPadding = 4;
+const touchValueLabelOffsetX = 6;
+const touchValueLabelOverlapStepX = 6;
 
 const formatAxisLabel = (item, xType) => (
   xType === "time" ? moment(item.label).format("MM-DD") : String(item.label)
@@ -281,8 +283,12 @@ export default function LineChartBase({
                   stroke="#aaa"
                   strokeDasharray={[4,4]}
                 />
-                {series.map(serie => {
+                {series.map((serie, serieIndex) => {
                   const pt = serie[touchIndex];
+                  const overlapCount = series
+                    .slice(0, serieIndex)
+                    .filter(prevSerie => prevSerie[touchIndex]?.value === pt.value)
+                    .length;
                   return (
                     <G key={`dot-${serie[0].key}`}>
                       <Circle
@@ -294,7 +300,7 @@ export default function LineChartBase({
                         strokeWidth={1}
                       />
                       <SvgText
-                        x={xScale(pt.x) + 6}
+                        x={xScale(pt.x) + touchValueLabelOffsetX + overlapCount * touchValueLabelOverlapStepX}
                         y={yScale(pt.value) - 6}
                         fontSize={12}
                         fontWeight="bold"
