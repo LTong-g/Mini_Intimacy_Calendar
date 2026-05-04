@@ -43,6 +43,7 @@
 ### 2.5 关于信息
 - `关于`：展示应用图标和当前语义版本。
 - `软件介绍`：展示应用定位、三种记录类型名称、主要功能和记录规则。
+- `使用帮助`：展示日视图、月视图、年视图、统计页、设置页和关于页的基础操作方式。
 - `版本记录`：根据 Git 历史中的版本字段变化展示版本节点记录；正式发布后新开发但尚未发布的功能记录在 `Unreleased` 节点，发布时再改成对应正式版本号。`Unreleased` 显示时不加 `v`，其标题使用正常功能描述。
 
 ## 3. 数据模型与规则
@@ -118,6 +119,7 @@
 │  │  ├─ SettingsScreen.js
 │  │  ├─ AboutScreen.js
 │  │  ├─ SoftwareIntroScreen.js
+│  │  ├─ UsageHelpScreen.js
 │  │  ├─ VersionHistoryScreen.js
 │  │  └─ DatePickerScreen.js
 │  ├─ components

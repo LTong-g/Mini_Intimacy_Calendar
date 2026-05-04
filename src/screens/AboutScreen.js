@@ -40,6 +40,14 @@ const AboutScreen = () => {
           <TouchableOpacity
             style={styles.fullWidthButton}
             activeOpacity={0.8}
+            onPress={() => navigation.navigate('UsageHelp')}
+          >
+            <Ionicons name="help-circle-outline" size={20} color="#007AFF" />
+            <Text style={styles.buttonText}>使用帮助</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.fullWidthButton}
+            activeOpacity={0.8}
             onPress={() => navigation.navigate('VersionHistory')}
           >
             <Ionicons name="time-outline" size={20} color="#007AFF" />

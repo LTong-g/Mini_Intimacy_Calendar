@@ -453,3 +453,14 @@
 - MonthView 已保持点击未来灰色日期无操作。
 - VersionHistoryScreen 的 Unreleased 节点已记录本次灰色日期切月规则修正。
 - developer_guide.md 和 AGENTS.md 已同步本次灰色日期点击规则。
+
+### 关于页新增使用帮助入口与页面
+- AboutScreen 已在“软件介绍”和“版本记录”之间新增“使用帮助”按钮。
+- App.js 已注册 UsageHelp 导航页面。
+- src/screens/UsageHelpScreen.js 已新增页面，内容覆盖日视图、月视图、年视图、统计页、设置页和关于页的基础操作说明。
+- developer_guide.md 已补充“使用帮助”章节并同步代码结构清单。
+
+### 使用帮助操作说明补全
+- 已重新核对 DayView、MonthView、YearView、CustomTabBar、CheckInButtons、StatisticsHeader、DatePickerScreen 和 SettingsScreen 的用户操作入口。
+- UsageHelpScreen 已补全日视图、月视图、年视图、底部栏、打卡面板、统计页、日期选择、设置页和关于页的操作说明。
+- VersionHistoryScreen 的 Unreleased 节点已记录本次使用帮助补全。
