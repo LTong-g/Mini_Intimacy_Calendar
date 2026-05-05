@@ -9,9 +9,9 @@ import { useNavigation } from '@react-navigation/native';
 
 const versionHistory = [
   {
-    version: 'Unreleased',
+    version: '1.3.0',
     title: '日历、统计与帮助信息更新',
-    date: '2026-05-04',
+    date: '2026-05-05',
     sections: [
       {
         label: '修复：',
