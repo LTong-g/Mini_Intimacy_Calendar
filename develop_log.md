@@ -661,3 +661,6 @@
 - VersionHistoryScreen.js 已将 Unreleased 中统计图多次横轴与触摸效果记录合并为最终态描述。
 - 已使用 Babel parser 解析 src/screens/VersionHistoryScreen.js，结果通过。
 - 已执行 git diff --check，空白检查通过。
+
+### 1.3.0 版本记录概述修正
+- VersionHistoryScreen.js 中 1.3.0 版本节点概述已改为“日历、统计与帮助信息更新”。
