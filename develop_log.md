@@ -633,3 +633,31 @@
 
 ### 已完成功能持久约束清理
 - AGENTS.md 已删除统计表纯月份行标题右对齐、统计图触摸同值标签错开、月视图日期点击规则三条已完成功能的持久约束。
+
+## 2026-05-05
+
+### 版本记录分组排序规则落地
+- AGENTS.md 已记录版本记录页面按修复、优化、新增分组并显示分类标题的持久规则。
+- AGENTS.md 已记录版本记录页面各分类内部按视图、统计、设置及其子顺序排列的持久规则。
+- developer_guide.md 已同步版本记录分组展示和分类内排序口径。
+- VersionHistoryScreen.js 已将版本记录数据从 notes 平铺数组改为 sections 分组结构。
+- VersionHistoryScreen.js 已按修复、优化、新增分组渲染每个版本节点，并为每组显示分类标题。
+- 已使用 Babel parser 解析 src/screens/VersionHistoryScreen.js，结果通过。
+- 已执行 git diff --check，空白检查通过。
+
+### 版本记录初始版本标题显示修正
+- VersionHistoryScreen.js 已将初始版本的分类标题设为空。
+- VersionHistoryScreen.js 已改为仅在分类标题非空时渲染分类标题文本。
+- AGENTS.md 已记录初始版本不显示新增分类标题的规则。
+- developer_guide.md 已同步初始版本不显示新增分类标题的展示口径。
+- 已使用 Babel parser 解析 src/screens/VersionHistoryScreen.js，结果通过。
+- 已执行 git diff --check，空白检查通过。
+
+### 版本记录最终态规则落地
+- AGENTS.md 已记录版本记录只描述相对上一版本最终变化的持久规则。
+- AGENTS.md 已记录同一版本开发过程中的中间调整、反复修正或临时状态不写入版本记录。
+- developer_guide.md 已同步版本记录只描述相对上一版本最终变化的口径。
+- VersionHistoryScreen.js 已将 Unreleased 中月视图灰色日期规则并入月视图最终点击行为描述。
+- VersionHistoryScreen.js 已将 Unreleased 中统计图多次横轴与触摸效果记录合并为最终态描述。
+- 已使用 Babel parser 解析 src/screens/VersionHistoryScreen.js，结果通过。
+- 已执行 git diff --check，空白检查通过。
