@@ -664,3 +664,17 @@
 
 ### 1.3.0 版本记录概述修正
 - VersionHistoryScreen.js 中 1.3.0 版本节点概述已改为“日历、统计与帮助信息更新”。
+
+### 版本更新至 1.3.0
+- package.json 的 version 已更新为 1.3.0。
+- package-lock.json 的项目根版本已更新为 1.3.0。
+- app.json 的 expo.version 已更新为 1.3.0。
+- android/app/build.gradle 的 versionName 已更新为 1.3.0。
+- android/app/src/main/res/values/strings.xml 的 expo_runtime_version 已更新为 1.3.0。
+- VersionHistoryScreen.js 中的版本记录顶层节点已从 Unreleased 调整为 1.3.0。
+- developer_guide.md 已同步当前语义版本和发布示例为 1.3.0 口径。
+
+### 1.3.0 Android 归档产物生成
+- 已使用 release APK 生成归档 dist/MinimalistWeaponEnhancementCalendar-v1.3.0-android-20260505.apk。
+- 归档来源为 android/app/build/outputs/apk/release/app-release.apk。
+- 归档文件大小为 84506502 bytes。
