@@ -1225,3 +1225,9 @@
 - src/components/StatisticsHeader.js 已复用 DateQuickPickerModal 的 year 模式，确认后调用 onYearChange 切换年度统计年份。
 - developer_guide.md、AGENTS.md、UsageHelpScreen.js 和 VersionHistoryScreen.js 已同步年度统计顶部年份滚轮快速切换能力。
 - SoftwareIntroScreen.js 和 PrivacyPolicyScreen.js 已核对，本次年度统计年份切换入口未改变软件介绍中的功能概览或隐私说明。
+
+### 年度统计图表未来月份零值隐藏
+- src/hooks/useCheckinAggregation.js 已保留年度统计图表 1-12 月坐标点和原始月份计数。
+- src/components/YearLineChart.js 已为当前年份计算未来月份隐藏索引，并传递给 LineChartBase 作为显式绘图遮罩。
+- src/components/LineChartBase.js 已通过 hiddenPointIndexes 显式遮罩未来月份绘图，不依赖数据值为 null；被遮罩的数据点不参与折线、单点和触摸值标签绘制。
+- developer_guide.md、UsageHelpScreen.js 和 VersionHistoryScreen.js 已同步年度统计图表保留坐标轴但不绘制未来月份 0 数据的口径。

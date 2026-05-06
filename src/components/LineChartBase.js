@@ -35,18 +35,21 @@ export default function LineChartBase({
   xLabels = null,
   touchXLabels = null,
   height = defaultHeight,
-  colors = defaultColors
+  colors = defaultColors,
+  hiddenPointIndexes = []
 }) {
   const innerWidth  = screenWidth - defaultMargin.left - defaultMargin.right;
   const innerHeight = height      - defaultMargin.top  - defaultMargin.bottom;
 
   // 1. 计算比例尺和序列
-  const { series, xScale, yScale, axisLabels, touchAxisLabels, hiddenAxisLabelIndexes } = useMemo(() => {
+  const { series, xScale, yScale, axisLabels, touchAxisLabels, hiddenAxisLabelIndexes, hiddenPointIndexSet } = useMemo(() => {
+    const hiddenDataIndexes = new Set(hiddenPointIndexes);
     const rawSeries = ["tutorial","weapon","duo"].map(key =>
       points.map((p,i) => ({
         x: xType==="time" ? moment(p).toDate() : String(p),
         value: counts[key]?.[i] ?? 0,
-        key
+        key,
+        hidden: hiddenDataIndexes.has(i)
       }))
     );
     const timeDomain = xDomain?.length === 2
@@ -67,7 +70,9 @@ export default function LineChartBase({
 
     // Y 轴比例尺
     let maxY = 1;
-    rawSeries.flat().forEach(pt => { if (pt.value > maxY) maxY = pt.value; });
+    rawSeries.flat().forEach(pt => {
+      if (!pt.hidden && pt.value != null && pt.value > maxY) maxY = pt.value;
+    });
     const yScaleFn = scaleLinear().domain([0, maxY]).range([innerHeight, 0]);
     const toAxisLabels = (labels) => labels.map((label) => ({
       x: xType==="time" ? moment(label).toDate() : String(label),
@@ -95,12 +100,14 @@ export default function LineChartBase({
       axisLabels: axisLabelsValue,
       touchAxisLabels: touchAxisLabelsValue,
       hiddenAxisLabelIndexes: hiddenLabelIndexes,
+      hiddenPointIndexSet: hiddenDataIndexes,
     };
-  }, [points, counts, xType, xDomain, xLabels, touchXLabels, innerWidth, innerHeight]);
+  }, [points, counts, xType, xDomain, xLabels, touchXLabels, innerWidth, innerHeight, hiddenPointIndexes]);
 
   // 2. 曲线生成器
   const lineGenerator = d3Shape
     .line()
+    .defined(d => !d.hidden && d.value != null)
     .x(d => xScale(d.x))
     .y(d => yScale(d.value))
     .curve(d3Shape.curveMonotoneX);
@@ -247,8 +254,9 @@ export default function LineChartBase({
             ))}
 
             {/* 单点时静态显示该点 */}
-            {series[0].length === 1 && series.map(serie => {
-              const pt = serie[0];
+            {series[0].filter(pt => !pt.hidden && pt.value != null).length === 1 && series.map(serie => {
+              const pt = serie.find(item => !item.hidden && item.value != null);
+              if (!pt) return null;
               return (
                 <G key={`single-${serie[0].key}`}>
                   <Circle
@@ -273,7 +281,7 @@ export default function LineChartBase({
             })}
 
             {/* 始终响应触摸高亮 */}
-            {touchIndex != null && touchIndex >= 0 && (
+            {touchIndex != null && touchIndex >= 0 && !hiddenPointIndexSet.has(touchIndex) && series.some(serie => serie[touchIndex]?.value != null) && (
               <G>
                 <Line
                   x1={xScale(series[0][touchIndex].x)}
@@ -285,6 +293,7 @@ export default function LineChartBase({
                 />
                 {series.map((serie, serieIndex) => {
                   const pt = serie[touchIndex];
+                  if (!pt || pt.value == null) return null;
                   const overlapCount = series
                     .slice(0, serieIndex)
                     .filter(prevSerie => prevSerie[touchIndex]?.value === pt.value)
