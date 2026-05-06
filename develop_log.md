@@ -1,4 +1,4 @@
-﻿> 提示：请使用 UTF-8 编码读取本文件。
+> 提示：请使用 UTF-8 编码读取本文件。
 
 # 开发日志
 撰写规则：
@@ -1213,3 +1213,9 @@
 - SoftwareIntroScreen.js 已核对，本次年度统计表格修复未改变软件介绍中的功能概览。
 - PrivacyPolicyScreen.js 已核对，本次年度统计表格修复未改变隐私政策中的数据、权限或联网说明。
 - AGENTS.md 已核对，本次年度统计表格修复未新增需要持久记录的用户偏好或协作规则。
+
+### 统计页图表表格顺序调整
+- src/screens/StatisticsScreen.js 已将总览统计、年度统计和自定义区间统计的渲染顺序调整为图表在上、表格在下。
+- developer_guide.md、UsageHelpScreen.js 和 VersionHistoryScreen.js 已同步统计页先显示图表再显示表格的口径。
+- SoftwareIntroScreen.js 和 PrivacyPolicyScreen.js 已核对，本次统计页布局顺序调整未改变软件介绍中的功能概览或隐私说明。
+- AGENTS.md 已核对，本次统计页布局顺序调整未新增需要持久记录的用户偏好或协作规则。

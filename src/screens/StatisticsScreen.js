@@ -76,15 +76,15 @@ const StatisticsScreen = ({ navigation }) => {
       <ScrollView style={styles.content}>
         {mode === "总" && (
           <>
-            <TotalStatsTable />
             <TotalLineChart />
+            <TotalStatsTable />
           </>
         )}
 
         {mode === "年" && (
           <>
-            <YearStatsTable year={currentYear} />
             <YearLineChart year={currentYear} />
+            <YearStatsTable year={currentYear} />
           </>
         )}
 
@@ -92,8 +92,8 @@ const StatisticsScreen = ({ navigation }) => {
           startDate !== "开始日期" &&
           endDate !== "结束日期" && (
             <>
-              <CustomStatsTable startDate={startDate} endDate={endDate} />
               <CustomLineChart startDate={startDate} endDate={endDate} />
+              <CustomStatsTable startDate={startDate} endDate={endDate} />
             </>
           )}
       </ScrollView>
