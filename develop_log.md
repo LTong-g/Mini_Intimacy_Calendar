@@ -1137,3 +1137,10 @@
 - src/screens/ExperimentalUsageBlacklistScreen.js 已将首次读取和手动刷新统一为列表区域加载动画。
 - AGENTS.md、developer_guide.md、UsageHelpScreen.js 和 VersionHistoryScreen.js 已同步记录黑名单应用列表刷新加载行为。
 - 已执行 node --check 检查 ExperimentalUsageBlacklistScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js，结果通过。
+
+### 黑名单首字母条滑出命中修复
+- src/screens/ExperimentalUsageBlacklistScreen.js 已将首字母条 PanResponder 从外层定位栏移动到内部字母组。
+- src/screens/ExperimentalUsageBlacklistScreen.js 已改为在触摸开始时记录字母组本地纵向坐标与手指起始纵向坐标。
+- src/screens/ExperimentalUsageBlacklistScreen.js 已在拖动过程中用手指纵向位移推算字母组本地坐标，避免拖出字母组后继续使用不稳定的移动事件 locationY。
+- src/screens/ExperimentalUsageBlacklistScreen.js 已将外层首字母定位栏 pointerEvents 调整为 box-none，并让字母项不作为触摸目标。
+- src/screens/VersionHistoryScreen.js 已在 Unreleased 修复记录中补充黑名单应用页首字母条从内部滑出后误跳到错误字母的问题。

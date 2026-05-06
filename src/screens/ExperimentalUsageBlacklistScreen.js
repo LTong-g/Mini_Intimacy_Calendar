@@ -103,7 +103,7 @@ const ExperimentalUsageBlacklistScreen = () => {
   const blacklistRef = useRef([]);
   const saveVersionRef = useRef(0);
   const indexBarHeightRef = useRef(0);
-  const indexLettersTopRef = useRef(0);
+  const indexTouchStartRef = useRef({ locationY: 0, pageY: 0 });
   const indexHighlightTimerRef = useRef(null);
   const [apps, setApps] = useState([]);
   const [blacklist, setBlacklist] = useState([]);
@@ -207,12 +207,6 @@ const ExperimentalUsageBlacklistScreen = () => {
     });
   };
 
-  const handleIndexTouch = (event) => {
-    if (visibleIndexLetters.length === 0) return;
-    const nextLocationY = (event.nativeEvent.locationY || 0) - indexLettersTopRef.current;
-    handleIndexTouchAt(nextLocationY);
-  };
-
   const handleIndexTouchAt = (locationY = 0) => {
     if (visibleIndexLetters.length === 0) return;
     if (indexHighlightTimerRef.current) {
@@ -235,6 +229,26 @@ const ExperimentalUsageBlacklistScreen = () => {
     handleJumpToLetter(letter);
   };
 
+  const handleIndexTouchStart = (event, gestureState) => {
+    if (visibleIndexLetters.length === 0) return;
+    const locationY = event.nativeEvent.locationY || 0;
+    const pageY = typeof gestureState.y0 === 'number'
+      ? gestureState.y0
+      : event.nativeEvent.pageY || 0;
+    indexTouchStartRef.current = { locationY, pageY };
+    handleIndexTouchAt(locationY);
+  };
+
+  const handleIndexTouchMove = (event, gestureState) => {
+    if (visibleIndexLetters.length === 0) return;
+    const { locationY, pageY } = indexTouchStartRef.current;
+    if (typeof gestureState.moveY === 'number') {
+      handleIndexTouchAt(locationY + gestureState.moveY - pageY);
+      return;
+    }
+    handleIndexTouchAt(event.nativeEvent.locationY || 0);
+  };
+
   const handleIndexTouchEnd = () => {
     if (indexHighlightTimerRef.current) {
       clearTimeout(indexHighlightTimerRef.current);
@@ -250,17 +264,16 @@ const ExperimentalUsageBlacklistScreen = () => {
     onStartShouldSetPanResponderCapture: () => true,
     onMoveShouldSetPanResponder: () => true,
     onMoveShouldSetPanResponderCapture: () => true,
-    onPanResponderGrant: handleIndexTouch,
-    onPanResponderMove: handleIndexTouch,
+    onPanResponderGrant: handleIndexTouchStart,
+    onPanResponderMove: handleIndexTouchMove,
     onPanResponderTerminationRequest: () => false,
     onPanResponderRelease: handleIndexTouchEnd,
     onPanResponderTerminate: handleIndexTouchEnd,
-  }), [handleIndexTouch, handleIndexTouchEnd]);
+  }), [handleIndexTouchEnd, handleIndexTouchMove, handleIndexTouchStart]);
 
   const handleIndexLettersLayout = (event) => {
-    const { height, y } = event.nativeEvent.layout;
+    const { height } = event.nativeEvent.layout;
     indexBarHeightRef.current = height;
-    indexLettersTopRef.current = y;
   };
 
   const handleToggleApp = async (app) => {
@@ -418,16 +431,17 @@ const ExperimentalUsageBlacklistScreen = () => {
         {visibleIndexLetters.length > 0 && !isLoading && (
           <View
             style={styles.indexBar}
-            pointerEvents="box-only"
-            {...indexPanResponder.panHandlers}
+            pointerEvents="box-none"
           >
             <View
               style={styles.indexLettersWrap}
               onLayout={handleIndexLettersLayout}
+              {...indexPanResponder.panHandlers}
             >
               {visibleIndexLetters.map((letter) => (
                 <View
                   key={letter}
+                  pointerEvents="none"
                   style={[
                     styles.indexLetterButton,
                     activeIndexLetter === letter && styles.indexLetterButtonActive,
