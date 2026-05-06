@@ -1219,3 +1219,9 @@
 - developer_guide.md、UsageHelpScreen.js 和 VersionHistoryScreen.js 已同步统计页先显示图表再显示表格的口径。
 - SoftwareIntroScreen.js 和 PrivacyPolicyScreen.js 已核对，本次统计页布局顺序调整未改变软件介绍中的功能概览或隐私说明。
 - AGENTS.md 已核对，本次统计页布局顺序调整未新增需要持久记录的用户偏好或协作规则。
+
+### 年度统计年份滚轮快速切换
+- src/components/StatisticsHeader.js 已将年度统计顶部年份文字改为可点击区域，点击后弹出年份滚轮选择框。
+- src/components/StatisticsHeader.js 已复用 DateQuickPickerModal 的 year 模式，确认后调用 onYearChange 切换年度统计年份。
+- developer_guide.md、AGENTS.md、UsageHelpScreen.js 和 VersionHistoryScreen.js 已同步年度统计顶部年份滚轮快速切换能力。
+- SoftwareIntroScreen.js 和 PrivacyPolicyScreen.js 已核对，本次年度统计年份切换入口未改变软件介绍中的功能概览或隐私说明。

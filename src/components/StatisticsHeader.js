@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import moment from "moment";
+import DateQuickPickerModal from "./DateQuickPickerModal";
 
 const modes = ["总", "年", "自"];
 
@@ -14,6 +16,8 @@ const StatisticsHeader = ({
   endDate,
   onPickDate,
 }) => {
+  const [yearPickerVisible, setYearPickerVisible] = useState(false);
+
   return (
     <View style={styles.container}>
       {/* 顶部返回按钮 */}
@@ -58,7 +62,13 @@ const StatisticsHeader = ({
           <TouchableOpacity onPress={() => onYearChange(year - 1)}>
             <Ionicons name="chevron-back" size={24} color="#007AFF" />
           </TouchableOpacity>
-          <Text style={styles.yearText}>{year} 年</Text>
+          <TouchableOpacity
+            style={styles.yearButton}
+            onPress={() => setYearPickerVisible(true)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.yearText}>{year} 年</Text>
+          </TouchableOpacity>
           <TouchableOpacity
             onPress={() => onYearChange(year + 1)}
             disabled={year >= new Date().getFullYear()}
@@ -71,6 +81,17 @@ const StatisticsHeader = ({
           </TouchableOpacity>
         </View>
       )}
+
+      <DateQuickPickerModal
+        visible={yearPickerVisible}
+        mode="year"
+        value={moment().year(year)}
+        onConfirm={(date) => {
+          setYearPickerVisible(false);
+          onYearChange(date.year());
+        }}
+        onCancel={() => setYearPickerVisible(false)}
+      />
 
       {mode === "自" && (
         <View style={styles.extraRow}>
@@ -158,8 +179,11 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     fontSize: 18,
     fontWeight: "bold",
-    marginHorizontal: 12,
     color: "#333",
+  },
+  yearButton: {
+    marginHorizontal: 12,
+    paddingHorizontal: 8,
   },
   dateBox: {
     paddingVertical: 6,
