@@ -1,5 +1,5 @@
-import React from 'react';
-import { Dimensions, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import { Dimensions, PanResponder, StyleSheet, Text, View } from 'react-native';
 import Svg, {
   Circle,
   Defs,
@@ -25,6 +25,7 @@ const gridColor = '#ECEFF3';
 const axisTextColor = '#6B7280';
 const remainderColor = '#E2E5EA';
 const msPerMinute = 1000 * 60;
+const monthlyTouchValueLabelOffsetX = 6;
 
 const formatMinutes = (ms) => `${Math.round(ms / msPerMinute)} 分钟`;
 const minutesValue = (ms) => Math.round(ms / msPerMinute);
@@ -211,6 +212,7 @@ export const WeeklyUsageBarChart = ({ rows }) => {
 };
 
 export const MonthlyUsageLineChart = ({ rows }) => {
+  const [touchIndex, setTouchIndex] = useState(null);
   const visibleRows = rows.filter((item) => !item.isFuture);
   const maxValue = Math.max(1, ...visibleRows.map((item) => item.durationMs));
   const innerWidth = chartWidth - 46;
@@ -232,6 +234,33 @@ export const MonthlyUsageLineChart = ({ rows }) => {
     .y0(innerHeight)
     .y1((item) => item.y)
     .curve(d3Shape.curveMonotoneX)(points);
+  const handleTouch = useCallback((x) => {
+    const lx = x - 20;
+    if (lx < 0 || lx > innerWidth || points.length === 0) {
+      setTouchIndex(null);
+      return;
+    }
+
+    let nextIndex = null;
+    let minDistance = Infinity;
+    points.forEach((point, index) => {
+      const distance = Math.abs(point.x - lx);
+      if (distance < minDistance) {
+        minDistance = distance;
+        nextIndex = index;
+      }
+    });
+    setTouchIndex(nextIndex);
+  }, [innerWidth, points]);
+  const panResponder = useMemo(() => PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: () => true,
+    onPanResponderGrant: (event) => handleTouch(event.nativeEvent.locationX),
+    onPanResponderMove: (event) => handleTouch(event.nativeEvent.locationX),
+    onPanResponderRelease: () => setTouchIndex(null),
+    onPanResponderTerminate: () => setTouchIndex(null),
+  }), [handleTouch]);
+  const touchPoint = touchIndex != null ? points[touchIndex] : null;
 
   return (
     <View style={styles.chartBlock}>
@@ -239,67 +268,101 @@ export const MonthlyUsageLineChart = ({ rows }) => {
         <Text style={styles.chartTitle}>最近30天每日趋势</Text>
         <Text style={styles.chartMeta}>单位：分钟</Text>
       </View>
-      <Svg width={chartWidth} height={chartHeight}>
-        <Defs>
-          <LinearGradient id="monthlyAreaGradient" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor={tutorialLightColor} stopOpacity="0.72" />
-            <Stop offset="1" stopColor={tutorialLightColor} stopOpacity="0.08" />
-          </LinearGradient>
-        </Defs>
-        <G x={20} y={24}>
-          {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
-            const y = innerHeight * (1 - ratio);
-            return (
-              <G key={ratio}>
-                <Line x1={0} y1={y} x2={innerWidth} y2={y} stroke={gridColor} strokeWidth={1} />
-                <SvgText x={innerWidth + 4} y={y + 4} fontSize={10} fill={axisTextColor}>
-                  {formatAxisMinutes(maxValue * ratio, maxValue)}
+      <View {...panResponder.panHandlers}>
+        <Svg width={chartWidth} height={chartHeight}>
+          <Defs>
+            <LinearGradient id="monthlyAreaGradient" x1="0" y1="0" x2="0" y2="1">
+              <Stop offset="0" stopColor={tutorialLightColor} stopOpacity="0.72" />
+              <Stop offset="1" stopColor={tutorialLightColor} stopOpacity="0.08" />
+            </LinearGradient>
+          </Defs>
+          <G x={20} y={24}>
+            {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
+              const y = innerHeight * (1 - ratio);
+              return (
+                <G key={ratio}>
+                  <Line x1={0} y1={y} x2={innerWidth} y2={y} stroke={gridColor} strokeWidth={1} />
+                  <SvgText x={innerWidth + 4} y={y + 4} fontSize={10} fill={axisTextColor}>
+                    {formatAxisMinutes(maxValue * ratio, maxValue)}
+                  </SvgText>
+                </G>
+              );
+            })}
+            <Line x1={0} y1={innerHeight} x2={innerWidth} y2={innerHeight} stroke="#DDE2E8" strokeWidth={1} />
+            {areaPath && <Path d={areaPath} fill="url(#monthlyAreaGradient)" />}
+            {linePath && (
+              <Path
+                d={linePath}
+                fill="none"
+                stroke={tutorialColor}
+                strokeWidth={3}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            )}
+            {points.filter((_, index) => shouldShowMonthlyPoint(points, index)).map((point) => (
+              <G key={point.item.key}>
+                <Circle cx={point.x} cy={point.y} r={4} fill="#fff" stroke={tutorialColor} strokeWidth={2} />
+                {point.item.durationMs > 0 && (
+                  <Circle cx={point.x} cy={point.y} r={2} fill={tutorialColor} />
+                )}
+              </G>
+            ))}
+            {touchPoint && (
+              <G>
+                <Line
+                  x1={touchPoint.x}
+                  y1={0}
+                  x2={touchPoint.x}
+                  y2={innerHeight}
+                  stroke="#aaa"
+                  strokeDasharray={[4, 4]}
+                />
+                <Circle
+                  cx={touchPoint.x}
+                  cy={touchPoint.y}
+                  r={4}
+                  fill={tutorialColor}
+                  stroke="#fff"
+                  strokeWidth={1}
+                />
+                <SvgText
+                  x={Math.min(
+                    innerWidth,
+                    touchPoint.x + monthlyTouchValueLabelOffsetX
+                  )}
+                  y={Math.max(12, touchPoint.y - 6)}
+                  fontSize={12}
+                  fontWeight="bold"
+                  fill={tutorialColor}
+                >
+                  {minutesValue(touchPoint.item.durationMs)}
                 </SvgText>
               </G>
-            );
-          })}
-          <Line x1={0} y1={innerHeight} x2={innerWidth} y2={innerHeight} stroke="#DDE2E8" strokeWidth={1} />
-          {areaPath && <Path d={areaPath} fill="url(#monthlyAreaGradient)" />}
-          {linePath && (
-            <Path
-              d={linePath}
-              fill="none"
-              stroke={tutorialColor}
-              strokeWidth={3}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          )}
-          {points.filter((_, index) => shouldShowMonthlyPoint(points, index)).map((point) => (
-            <G key={point.item.key}>
-              <Circle cx={point.x} cy={point.y} r={4} fill="#fff" stroke={tutorialColor} strokeWidth={2} />
-              {point.item.durationMs > 0 && (
-                <Circle cx={point.x} cy={point.y} r={2} fill={tutorialColor} />
-              )}
-            </G>
-          ))}
-          {rows.filter((_, index) => (
-            index === 0
-            || index === rows.length - 1
-            || index === Math.floor((rows.length - 1) / 2)
-          )).map((item) => {
-            const index = rows.findIndex((row) => row.key === item.key);
-            const x = rows.length > 1 ? index * step : innerWidth / 2;
-            return (
-              <SvgText
-                key={`label-${item.key}`}
-                x={x}
-                y={innerHeight + 18}
-                fontSize={10}
-                fill={axisTextColor}
-                textAnchor="middle"
-              >
-                {moment(item.key).format('MM-DD')}
-              </SvgText>
-            );
-          })}
-        </G>
-      </Svg>
+            )}
+            {rows.filter((_, index) => (
+              index === 0
+              || index === rows.length - 1
+              || index === Math.floor((rows.length - 1) / 2)
+            )).map((item) => {
+              const index = rows.findIndex((row) => row.key === item.key);
+              const x = rows.length > 1 ? index * step : innerWidth / 2;
+              return (
+                <SvgText
+                  key={`label-${item.key}`}
+                  x={x}
+                  y={innerHeight + 18}
+                  fontSize={10}
+                  fill={axisTextColor}
+                  textAnchor="middle"
+                >
+                  {moment(item.key).format('MM-DD')}
+                </SvgText>
+              );
+            })}
+          </G>
+        </Svg>
+      </View>
     </View>
   );
 };

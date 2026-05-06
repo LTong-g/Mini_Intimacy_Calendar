@@ -1314,3 +1314,13 @@
 - 已执行 node --check 检查 UsageCharts.js、UsageHelpScreen.js 和 VersionHistoryScreen.js，结果通过。
 - 已使用本地 @babel/parser 解析 UsageCharts.js、UsageHelpScreen.js 和 VersionHistoryScreen.js，结果通过。
 - 已执行 git diff --check，结果通过。
+
+### 黑名单30天趋势触摸交互
+- src/components/UsageCharts.js 已为黑名单最近 30 天趋势图添加 PanResponder 触摸交互。
+- src/components/UsageCharts.js 已在触摸最近 30 天趋势图时按横向位置命中最近日期，并显示竖向虚线、高亮点位和分钟数标签。
+- src/components/UsageCharts.js 已在触摸结束或中断时清除最近 30 天趋势图的触摸高亮状态。
+- UsageHelpScreen.js、VersionHistoryScreen.js、developer_guide.md 和 AGENTS.md 已同步记录黑名单最近 30 天趋势图触摸查看点位和分钟数。
+- SoftwareIntroScreen.js 和 PrivacyPolicyScreen.js 已核对，本次图表交互调整未改变对应说明。
+- 已执行 node --check 检查 UsageCharts.js、UsageHelpScreen.js 和 VersionHistoryScreen.js，结果通过。
+- 已使用本地 @babel/parser 解析 UsageCharts.js、UsageHelpScreen.js 和 VersionHistoryScreen.js，结果通过。
+- 已执行 git diff --check，结果通过。
