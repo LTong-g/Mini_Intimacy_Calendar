@@ -1,4 +1,4 @@
-﻿> 提示：请使用 UTF-8 编码读取本文件。
+> 提示：请使用 UTF-8 编码读取本文件。
 
 # 开发日志
 撰写规则：
@@ -1131,3 +1131,9 @@
 ### 更新换行符处理协作规则
 - 已在 AGENTS.md 将换行符协作规则更新为处理文本文件时默认换行符可能不符合要求，不再先检查确认，直接统一修正为 CRLF。
 - 已在 AGENTS.md 将换行符处理范围从文本文件澄清为文本类文件，包含代码、配置和文档等文件。
+
+### 黑名单应用列表刷新加载动画调整
+- src/screens/ExperimentalUsageBlacklistScreen.js 已移除右下角刷新按钮自身旋转动画。
+- src/screens/ExperimentalUsageBlacklistScreen.js 已将首次读取和手动刷新统一为列表区域加载动画。
+- AGENTS.md、developer_guide.md、UsageHelpScreen.js 和 VersionHistoryScreen.js 已同步记录黑名单应用列表刷新加载行为。
+- 已执行 node --check 检查 ExperimentalUsageBlacklistScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js，结果通过。

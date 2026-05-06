@@ -6,7 +6,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
-  Animated,
   FlatList,
   Image,
   PanResponder,
@@ -35,7 +34,6 @@ const PINYIN_COLLATOR = new Intl.Collator('zh-Hans-u-co-pinyin', {
   sensitivity: 'base',
   numeric: true,
 });
-const REFRESH_ANIMATION_PRIME_DELAY_MS = 80;
 const PINYIN_INITIAL_BOUNDARIES = [
   ['A', '阿'],
   ['B', '芭'],
@@ -99,16 +97,6 @@ const getSearchRank = (app, keyword) => {
   return 3;
 };
 
-const waitForRefreshAnimationFrame = () => new Promise((resolve) => {
-  const scheduleFrame = typeof requestAnimationFrame === 'function'
-    ? requestAnimationFrame
-    : (callback) => setTimeout(callback, 16);
-
-  scheduleFrame(() => {
-    setTimeout(resolve, REFRESH_ANIMATION_PRIME_DELAY_MS);
-  });
-});
-
 const ExperimentalUsageBlacklistScreen = () => {
   const navigation = useNavigation();
   const listRef = useRef(null);
@@ -117,7 +105,6 @@ const ExperimentalUsageBlacklistScreen = () => {
   const indexBarHeightRef = useRef(0);
   const indexLettersTopRef = useRef(0);
   const indexHighlightTimerRef = useRef(null);
-  const refreshSpin = useRef(new Animated.Value(0)).current;
   const [apps, setApps] = useState([]);
   const [blacklist, setBlacklist] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -170,9 +157,6 @@ const ExperimentalUsageBlacklistScreen = () => {
   const loadState = useCallback(async ({ forceRefresh = false } = {}) => {
     setIsLoading(true);
     try {
-      if (forceRefresh) {
-        await waitForRefreshAnimationFrame();
-      }
       const [nextApps, nextBlacklist] = await Promise.all([
         getCachedLaunchableApplications({ forceRefresh }),
         getExperimentalUsageBlacklist(),
@@ -193,24 +177,6 @@ const ExperimentalUsageBlacklistScreen = () => {
       loadState();
     }, [loadState])
   );
-
-  useEffect(() => {
-    if (!isLoading) {
-      refreshSpin.stopAnimation();
-      refreshSpin.setValue(0);
-      return undefined;
-    }
-
-    const animation = Animated.loop(
-      Animated.timing(refreshSpin, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      })
-    );
-    animation.start();
-    return () => animation.stop();
-  }, [isLoading, refreshSpin]);
 
   useEffect(() => {
     if (activeIndexLetter && !visibleIndexLetters.includes(activeIndexLetter)) {
@@ -420,7 +386,7 @@ const ExperimentalUsageBlacklistScreen = () => {
         <View style={styles.appList}>
           <FlatList
             ref={listRef}
-            data={visibleApps}
+            data={isLoading ? [] : visibleApps}
             keyExtractor={(item) => item.packageName}
             renderItem={renderApp}
             contentContainerStyle={styles.listContent}
@@ -487,18 +453,7 @@ const ExperimentalUsageBlacklistScreen = () => {
         disabled={isLoading}
         onPress={handleRefreshApps}
       >
-        <Animated.View
-          style={{
-            transform: [{
-              rotate: refreshSpin.interpolate({
-                inputRange: [0, 1],
-                outputRange: ['0deg', '360deg'],
-              }),
-            }],
-          }}
-        >
-          <Ionicons name="refresh" size={26} color="#fff" />
-        </Animated.View>
+        <Ionicons name="refresh" size={26} color="#fff" />
       </TouchableOpacity>
     </View>
   );
