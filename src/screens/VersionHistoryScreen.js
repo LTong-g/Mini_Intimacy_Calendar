@@ -10,9 +10,15 @@ import { useNavigation } from '@react-navigation/native';
 const versionHistory = [
   {
     version: 'Unreleased',
-    title: '关于入口更新',
+    title: '关于页更新',
     date: '2026-05-05',
     sections: [
+      {
+        label: '新增：',
+        notes: [
+          '新增关于页 GitHub 入口，可打开项目主页。',
+        ],
+      },
       {
         label: '优化：',
         notes: [

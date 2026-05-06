@@ -3,15 +3,24 @@
  */
 
 import React from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import pkg from '../../package.json';
 
 const appIcon = require('../../assets/icon.png');
+const GITHUB_URL = 'https://github.com/LTong-g/MinimalistWeaponEnhancementCalendar';
 
 const AboutScreen = () => {
   const navigation = useNavigation();
+
+  const handleOpenGitHub = async () => {
+    try {
+      await Linking.openURL(GITHUB_URL);
+    } catch (error) {
+      Alert.alert('打开失败', error.message || '无法打开 GitHub 项目主页');
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -62,6 +71,15 @@ const AboutScreen = () => {
             <Text style={styles.buttonText}>版本记录</Text>
           </TouchableOpacity>
         </View>
+
+        <TouchableOpacity
+          style={styles.githubButton}
+          activeOpacity={0.8}
+          onPress={handleOpenGitHub}
+        >
+          <Ionicons name="logo-github" size={20} color="#007AFF" />
+          <Text style={styles.buttonText}>GitHub</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -110,6 +128,20 @@ const styles = StyleSheet.create({
   },
   buttonGroup: {
     width: '100%',
+  },
+  githubButton: {
+    width: '100%',
+    minHeight: 44,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#007AFF',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    marginTop: 'auto',
+    marginBottom: 24,
   },
   fullWidthButton: {
     width: '100%',

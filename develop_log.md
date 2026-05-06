@@ -681,3 +681,12 @@
 - UsageHelpScreen、VersionHistoryScreen、developer_guide.md 和 AGENTS.md 已同步记录关于入口位置。
 - node --check 已通过 CustomTabBar.js、SettingsScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js。
 - 本次改动为 JS/UI 与文档改动，未执行 Android 重新安装。
+
+### 关于页 GitHub 入口
+- AboutScreen.js 在关于页新增 GitHub 按钮，并使用 Ionicons 的 logo-github 图标。
+- AboutScreen.js 将 GitHub 按钮从关于页按钮组中拆出，改为页面底部独立按钮。
+- AboutScreen.js 保持软件介绍、使用帮助、隐私政策和版本记录为原有紧凑按钮组。
+- AboutScreen.js 通过 Linking.openURL 打开项目主页 https://github.com/LTong-g/MinimalistWeaponEnhancementCalendar，并在打开失败时提示用户。
+- UsageHelpScreen.js、VersionHistoryScreen.js 和 developer_guide.md 已同步说明关于页 GitHub 入口。
+- AboutScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js 已通过 node --check 检查。
+- 本次改动为 JS/UI 与文档改动，未执行 Android 重新安装。
