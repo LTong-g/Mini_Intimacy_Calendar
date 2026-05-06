@@ -14,6 +14,7 @@ const timeAxisLabelPadding = 8;
 const minAxisLabelGap = 32;
 const axisLabelFontSize = 10;
 const axisLabelCharWidth = 6;
+const terminalAxisLabelOverlapPadding = 0;
 const axisLabelOverlapPadding = 4;
 const touchValueLabelOffsetX = 6;
 const touchValueLabelOverlapStepX = 6;
@@ -40,6 +41,7 @@ export default function LineChartBase({
 }) {
   const innerWidth  = screenWidth - defaultMargin.left - defaultMargin.right;
   const innerHeight = height      - defaultMargin.top  - defaultMargin.bottom;
+  const [axisLabelMeasurements, setAxisLabelMeasurements] = useState({});
 
   // 1. 计算比例尺和序列
   const { series, xScale, yScale, axisLabels, touchAxisLabels, hiddenAxisLabelIndexes, hiddenPointIndexSet } = useMemo(() => {
@@ -88,7 +90,16 @@ export default function LineChartBase({
     if (xType === "time" && Array.isArray(xLabels) && axisLabelsValue.length >= 2) {
       const last = axisLabelsValue[axisLabelsValue.length - 1];
       const penultimate = axisLabelsValue[axisLabelsValue.length - 2];
-      if (Math.abs(xScaleFn(last.x) - xScaleFn(penultimate.x)) < minAxisLabelGap) {
+      const lastGap = Math.abs(xScaleFn(last.x) - xScaleFn(penultimate.x));
+      const lastWidth = axisLabelMeasurements[axisLabelsValue.length - 1];
+      const penultimateWidth = axisLabelMeasurements[axisLabelsValue.length - 2];
+      const canMeasureTerminalLabels =
+        typeof lastWidth === "number" &&
+        typeof penultimateWidth === "number";
+      const requiredGap = canMeasureTerminalLabels
+        ? lastWidth / 2 + penultimateWidth / 2 + terminalAxisLabelOverlapPadding
+        : 0;
+      if (canMeasureTerminalLabels && lastGap < requiredGap) {
         hiddenLabelIndexes.add(axisLabelsValue.length - 2);
       }
     }
@@ -102,7 +113,7 @@ export default function LineChartBase({
       hiddenAxisLabelIndexes: hiddenLabelIndexes,
       hiddenPointIndexSet: hiddenDataIndexes,
     };
-  }, [points, counts, xType, xDomain, xLabels, touchXLabels, innerWidth, innerHeight, hiddenPointIndexes]);
+  }, [points, counts, xType, xDomain, xLabels, touchXLabels, innerWidth, innerHeight, hiddenPointIndexes, axisLabelMeasurements]);
 
   // 2. 曲线生成器
   const lineGenerator = d3Shape
@@ -183,6 +194,12 @@ export default function LineChartBase({
   const visibleHiddenAxisLabelIndexes = activeTouchAxisLabels
     ? new Set()
     : hiddenAxisLabelIndexes;
+  const handleAxisLabelLayout = useCallback((index, width) => {
+    setAxisLabelMeasurements((prev) => {
+      if (prev[index] === width) return prev;
+      return { ...prev, [index]: width };
+    });
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -191,6 +208,21 @@ export default function LineChartBase({
         <Svg width={screenWidth} height={height}>
           <G x={defaultMargin.left} y={defaultMargin.top}>
             {/* X 轴标签 */}
+            {!activeTouchAxisLabels && axisLabels.map((item, i) => (
+              <SvgText
+                key={`x-measure-${i}`}
+                x={-1000}
+                y={-1000}
+                fontSize={axisLabelFontSize}
+                fill="transparent"
+                opacity={0}
+                onLayout={(event) => {
+                  handleAxisLabelLayout(i, event.nativeEvent.layout.width);
+                }}
+              >
+                {formatAxisLabel(item, xType)}
+              </SvgText>
+            ))}
             {visibleAxisLabels.map((item,i) => {
               const labelTickX = xScale(item.x);
               const labelX = item.labelX ?? labelTickX;
@@ -211,6 +243,11 @@ export default function LineChartBase({
                       fontSize={axisLabelFontSize}
                       fill="#666"
                       textAnchor="middle"
+                      onLayout={(event) => {
+                        if (!activeTouchAxisLabels) {
+                          handleAxisLabelLayout(i, event.nativeEvent.layout.width);
+                        }
+                      }}
                     >
                       {formatAxisLabel(item, xType)}
                     </SvgText>

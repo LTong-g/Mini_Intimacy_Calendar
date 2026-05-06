@@ -1231,3 +1231,10 @@
 - src/components/YearLineChart.js 已为当前年份计算未来月份隐藏索引，并传递给 LineChartBase 作为显式绘图遮罩。
 - src/components/LineChartBase.js 已通过 hiddenPointIndexes 显式遮罩未来月份绘图，不依赖数据值为 null；被遮罩的数据点不参与折线、单点和触摸值标签绘制。
 - developer_guide.md、UsageHelpScreen.js 和 VersionHistoryScreen.js 已同步年度统计图表保留坐标轴但不绘制未来月份 0 数据的口径。
+
+### 自定义统计图末尾标签隐藏判断修正
+- src/components/LineChartBase.js 已将自定义统计图倒数第二个横轴标签隐藏条件改为按末尾两个标签的屏幕像素距离和实际渲染测量宽度判断重叠。
+- src/components/LineChartBase.js 已将默认横轴末尾标签隐藏判断的额外安全边距调整为 0。
+- src/components/LineChartBase.js 已保留触摸态聚合区间标签分散判断的原有安全边距。
+- developer_guide.md 和 VersionHistoryScreen.js 已同步自定义统计图末尾日期标签按实际重叠隐藏的规则。
+- UsageHelpScreen.js、SoftwareIntroScreen.js、PrivacyPolicyScreen.js 和 AGENTS.md 已核对，本次图表标签判断修复未改变对应说明或持久规则。
