@@ -1191,3 +1191,10 @@
 - src/screens/DatePickerScreen.js 已使用 React Navigation 的 usePreventRemove 在月份日期选择阶段拦截返回，并将普通返回操作改为切回年份选择。
 - src/screens/DatePickerScreen.js 已将日期选择完成后的退出路径调整为先解除月份层防移除，再由 effect 执行 navigation.goBack，保持选定具体日期后返回来源页面的行为。
 - UsageHelpScreen.js、VersionHistoryScreen.js 和 developer_guide.md 已同步记录日期选择页月份层返回行为与本次修复。
+
+### 日期选择页月份层默认进入退出动画优化
+- 已确认 DatePickerScreen 原先直接条件渲染 YearView 和 MonthView，年份层与月份层之间切换没有与外层年份选择页一致的进入/退出动画。
+- 用户明确日期选择页从年份选择进入月份日期选择、从月份日期选择返回年份选择时应使用与外层年份选择页进出一致的默认进入/退出动画，不使用横向平移或纯透明淡入淡出。
+- src/screens/DatePickerScreen.js 已改为使用嵌套 native stack 承载日期选择页年份层和月份层，并使用 native stack 默认进入/退出动画。
+- src/screens/DatePickerScreen.js 已通过路由参数同步年份层选择的月份，避免月份层动画进入时短暂显示旧月份。
+- AGENTS.md、UsageHelpScreen.js、VersionHistoryScreen.js 和 developer_guide.md 已同步记录日期选择页月份层默认进入/退出动画。
