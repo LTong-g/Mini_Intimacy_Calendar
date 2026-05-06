@@ -37,6 +37,11 @@ import {
 
 const msPerDay = 24 * 60 * 60 * 1000;
 const msPerMinute = 60 * 1000;
+const CHART_RANGE_OPTIONS = [
+  { key: 'today', label: '今日' },
+  { key: '7days', label: '7天' },
+  { key: '30days', label: '30天' },
+];
 
 const formatDuration = (durationMs) => {
   const totalMinutes = Math.round(durationMs / 60000);
@@ -141,7 +146,9 @@ const ExperimentalUsageScreen = () => {
   const [readResult, setReadResult] = useState(null);
   const [rangeStartDate, setRangeStartDate] = useState(moment().format('YYYY-MM-DD'));
   const [rangeEndDate, setRangeEndDate] = useState(moment().format('YYYY-MM-DD'));
+  const [chartRangeIndex, setChartRangeIndex] = useState(1);
   const isReading = loading || refreshing;
+  const currentChartRange = CHART_RANGE_OPTIONS[chartRangeIndex];
 
   const loadState = useCallback(async () => {
     try {
@@ -396,9 +403,35 @@ const ExperimentalUsageScreen = () => {
           <Ionicons name="chevron-forward" size={22} color="#777" />
         </TouchableOpacity>
 
-        <DailyUsagePieChart rows={stats.dailyRows} />
-        <WeeklyUsageBarChart rows={stats.weeklyRows} />
-        <MonthlyUsageLineChart rows={stats.monthlyRows} />
+        <View style={styles.chartRangeBar}>
+          <View style={styles.rangeGroup}>
+            {CHART_RANGE_OPTIONS.map((option, index) => (
+              <TouchableOpacity
+                key={option.key}
+                style={[
+                  styles.rangeButton,
+                  option.key === currentChartRange.key && styles.rangeButtonActive,
+                  index === 0 && styles.rangeButtonFirst,
+                  index === CHART_RANGE_OPTIONS.length - 1 && styles.rangeButtonLast,
+                ]}
+                onPress={() => setChartRangeIndex(index)}
+              >
+                <Text
+                  style={[
+                    styles.rangeText,
+                    option.key === currentChartRange.key && styles.rangeTextActive,
+                  ]}
+                >
+                  {option.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {currentChartRange.key === 'today' && <DailyUsagePieChart rows={stats.dailyRows} />}
+        {currentChartRange.key === '7days' && <WeeklyUsageBarChart rows={stats.weeklyRows} />}
+        {currentChartRange.key === '30days' && <MonthlyUsageLineChart rows={stats.monthlyRows} />}
       </ScrollView>
 
       <Modal
@@ -685,6 +718,47 @@ const styles = StyleSheet.create({
   blacklistEntryText: {
     fontSize: 13,
     color: '#666',
+  },
+  chartRangeBar: {
+    minHeight: 28,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  rangeGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  rangeButton: {
+    minHeight: 28,
+    minWidth: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: '#F4D79A',
+    borderLeftWidth: 0,
+    backgroundColor: '#fff',
+  },
+  rangeButtonFirst: {
+    borderLeftWidth: 1,
+    borderTopLeftRadius: 6,
+    borderBottomLeftRadius: 6,
+  },
+  rangeButtonLast: {
+    borderTopRightRadius: 6,
+    borderBottomRightRadius: 6,
+  },
+  rangeButtonActive: {
+    backgroundColor: '#FFF8E1',
+  },
+  rangeText: {
+    fontSize: 13,
+    color: '#777',
+  },
+  rangeTextActive: {
+    fontWeight: '700',
+    color: '#8A4B00',
   },
   appList: {
     borderWidth: 1,

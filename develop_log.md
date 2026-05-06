@@ -1340,3 +1340,10 @@
 - 已执行 node --check 检查 src/components/UsageCharts.js、src/screens/UsageHelpScreen.js 和 src/screens/VersionHistoryScreen.js，结果通过。
 - 已使用本地 @babel/parser 解析 src/components/UsageCharts.js、src/screens/UsageHelpScreen.js 和 src/screens/VersionHistoryScreen.js，结果通过。
 - 已执行 git diff --check，结果通过。
+
+### 黑名单主页统计图范围切换与默认范围调整
+- src/screens/UsageScreen.js 已在黑名单主页“查看使用时间段”入口下方新增“今日 / 7天 / 30天”统计图切换按钮组。
+- src/screens/UsageScreen.js 已将黑名单主页统计图改为按当前按钮选择仅显示当日饼图、最近 7 天柱状图或最近 30 天趋势图之一。
+- src/screens/UsageScreen.js 已将黑名单主页统计图范围切换按钮组的默认选中项改为 7天，首次进入时默认显示最近 7 天柱状图。
+- AGENTS.md、developer_guide.md、src/screens/UsageHelpScreen.js 和 src/screens/VersionHistoryScreen.js 已同步记录黑名单主页统计图通过按钮组切换显示。
+- 已执行 node --check 检查 src/screens/UsageScreen.js、src/components/UsageCharts.js、src/screens/UsageHelpScreen.js 和 src/screens/VersionHistoryScreen.js，结果通过。
