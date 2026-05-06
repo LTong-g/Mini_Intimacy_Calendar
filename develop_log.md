@@ -1296,3 +1296,12 @@
 - 已执行 node --check 检查 DatePickerScreen.js、UsageIntervalsScreen.js、UsageScreen.js、StatisticsScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js，结果通过。
 - 已使用本地 @babel/parser 解析 DatePickerScreen.js、UsageIntervalsScreen.js、UsageScreen.js、StatisticsScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js，结果通过。
 - 已执行 git diff --check，结果通过。
+
+### 黑名单主页统计范围调整
+- src/screens/UsageScreen.js 已将黑名单主页周统计改为以今天为末尾的最近 7 天数据。
+- src/screens/UsageScreen.js 已将黑名单主页月统计改为以今天为末尾的最近 30 天数据。
+- src/components/UsageCharts.js 已将统计图标题改为最近7天使用时长和最近30天每日趋势，并将 30 天趋势横轴标签改为首日、中点和末日。
+- UsageHelpScreen.js、VersionHistoryScreen.js、developer_guide.md 和 AGENTS.md 已同步记录黑名单主页统计图使用当日、最近 7 天、最近 30 天口径。
+- 已执行 node --check 检查 UsageScreen.js、UsageCharts.js、UsageHelpScreen.js 和 VersionHistoryScreen.js，结果通过。
+- 已执行 git diff --check，结果通过。
+- 已使用本地 @babel/parser 解析 UsageScreen.js、UsageCharts.js、UsageHelpScreen.js 和 VersionHistoryScreen.js，结果通过。

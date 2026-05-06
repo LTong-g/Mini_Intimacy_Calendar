@@ -127,13 +127,6 @@ const buildRangeRows = (intervals, startMoment, days) => (
   })
 );
 
-const buildMonthlyRows = (intervals, monthStart, daysInMonth, elapsedDaysInMonth) => (
-  buildRangeRows(intervals, monthStart, daysInMonth).map((row, index) => ({
-    ...row,
-    isFuture: index >= elapsedDaysInMonth,
-  }))
-);
-
 const ExperimentalUsageScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
@@ -190,10 +183,8 @@ const ExperimentalUsageScreen = () => {
     const now = moment();
     const todayStart = now.clone().startOf('day');
     const todayEnd = now;
-    const weekStart = now.clone().startOf('isoWeek');
-    const monthStart = now.clone().startOf('month');
-    const daysInMonth = now.daysInMonth();
-    const elapsedDaysInMonth = now.date();
+    const recent7Start = todayStart.clone().subtract(6, 'days');
+    const recent30Start = todayStart.clone().subtract(29, 'days');
     const elapsedTodayMs = Math.max(msPerMinute, now.valueOf() - todayStart.valueOf());
 
     return {
@@ -204,13 +195,8 @@ const ExperimentalUsageScreen = () => {
         todayEnd.valueOf(),
         elapsedTodayMs
       ),
-      weeklyRows: buildRangeRows(visibleIntervals, weekStart, 7),
-      monthlyRows: buildMonthlyRows(
-        visibleIntervals,
-        monthStart,
-        daysInMonth,
-        elapsedDaysInMonth
-      ),
+      weeklyRows: buildRangeRows(visibleIntervals, recent7Start, 7),
+      monthlyRows: buildRangeRows(visibleIntervals, recent30Start, 30),
     };
   }, [visibleIntervals, blacklist]);
 

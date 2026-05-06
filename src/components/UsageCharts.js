@@ -124,7 +124,7 @@ export const WeeklyUsageBarChart = ({ rows }) => {
   return (
     <View style={styles.chartBlock}>
       <View style={styles.chartTitleRow}>
-        <Text style={styles.chartTitle}>本周使用时长</Text>
+        <Text style={styles.chartTitle}>最近7天使用时长</Text>
         <Text style={styles.chartMeta}>单位：分钟</Text>
       </View>
       <Svg width={chartWidth} height={chartHeight - 6}>
@@ -225,7 +225,7 @@ export const MonthlyUsageLineChart = ({ rows }) => {
   return (
     <View style={styles.chartBlock}>
       <View style={styles.chartTitleRow}>
-        <Text style={styles.chartTitle}>本月每日趋势</Text>
+        <Text style={styles.chartTitle}>最近30天每日趋势</Text>
         <Text style={styles.chartMeta}>单位：分钟</Text>
       </View>
       <Svg width={chartWidth} height={chartHeight}>
@@ -267,7 +267,11 @@ export const MonthlyUsageLineChart = ({ rows }) => {
               )}
             </G>
           ))}
-          {rows.filter((_, index) => index === 0 || index === rows.length - 1 || moment(rows[index].key).date() === 15).map((item) => {
+          {rows.filter((_, index) => (
+            index === 0
+            || index === rows.length - 1
+            || index === Math.floor((rows.length - 1) / 2)
+          )).map((item) => {
             const index = rows.findIndex((row) => row.key === item.key);
             const x = rows.length > 1 ? index * step : innerWidth / 2;
             return (
