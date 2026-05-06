@@ -278,6 +278,7 @@ const ExperimentalUsageScreen = () => {
     navigation.navigate('DatePicker', {
       mode: field,
       returnTo: 'ExperimentalUsage',
+      returnKey: route.key,
     });
   };
 

@@ -1276,3 +1276,23 @@
 - src/screens/VersionHistoryScreen.js 已在 Unreleased 修复记录中补充黑名单主页按日期读取记录弹窗无法点击外部区域取消的问题。
 - UsageHelpScreen.js、SoftwareIntroScreen.js、PrivacyPolicyScreen.js、developer_guide.md 和 AGENTS.md 已核对，本次修复未改变对应说明或持久规则。
 - 已执行 node --check 检查 UsageScreen.js 和 VersionHistoryScreen.js，结果通过。
+
+### 黑名单使用时间段筛选与日期返回修复
+- src/screens/UsageIntervalsScreen.js 已为使用时间段详情页筛选按钮新增筛选弹窗。
+- src/screens/UsageIntervalsScreen.js 已在筛选弹窗中复用日期范围输入样式，并通过 DatePicker 回传结果设置筛选起止日期。
+- src/screens/UsageIntervalsScreen.js 已在确认自定义日期范围后，将原今日、7天、30天按钮区域改为显示当前日期范围。
+- src/screens/UsageIntervalsScreen.js 已为全部记录详情新增应用显示筛选弹窗，支持在已显示和未显示黑名单应用图标之间点击移动。
+- src/screens/UsageIntervalsScreen.js 已按屏幕宽度动态计算全部记录筛选弹窗顶部可预览的应用图标数量，并在最右侧显示编辑图标。
+- src/screens/UsageIntervalsScreen.js 已在单个应用详情筛选弹窗顶部居中显示当前应用图标。
+- src/screens/UsageIntervalsScreen.js 已在存在筛选时将筛选弹窗左侧操作显示为清除筛选。
+- src/screens/UsageIntervalsScreen.js 已在筛选日期选择流程中阻止详情页 beforeRemove 拦截将 selectedPackageName 清空。
+- src/screens/UsageIntervalsScreen.js 已在打开筛选日期选择页时传入当前详情页 route.key。
+- src/screens/DatePickerScreen.js 已支持 returnKey 参数，并在选定日期后通过 SET_PARAMS 将 datePickerResult 写回指定页面实例。
+- src/screens/DatePickerScreen.js 已在 returnKey 写回参数后执行 goBack，避免按同名路由 navigate 导致目标页被压到 DatePicker 上方或回到外层记录页。
+- src/screens/UsageScreen.js 已在按日期读取记录入口打开 DatePicker 时传入当前页面 route.key。
+- src/screens/StatisticsScreen.js 已在自定义统计日期选择入口打开 DatePicker 时传入当前页面 route.key。
+- AGENTS.md、developer_guide.md、UsageHelpScreen.js 和 VersionHistoryScreen.js 已同步记录使用时间段筛选弹窗和应用显示筛选行为。
+- UsageHelpScreen.js、SoftwareIntroScreen.js、PrivacyPolicyScreen.js、developer_guide.md、AGENTS.md 和 VersionHistoryScreen.js 已核对，本次日期选择返回修复未改变对应说明或版本最终态。
+- 已执行 node --check 检查 DatePickerScreen.js、UsageIntervalsScreen.js、UsageScreen.js、StatisticsScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js，结果通过。
+- 已使用本地 @babel/parser 解析 DatePickerScreen.js、UsageIntervalsScreen.js、UsageScreen.js、StatisticsScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js，结果通过。
+- 已执行 git diff --check，结果通过。

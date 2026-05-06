@@ -63,6 +63,7 @@ const StatisticsScreen = ({ navigation, route }) => {
     navigation.navigate("DatePicker", {
       mode: which, // 'start' or 'end'
       returnTo: "Statistics",
+      returnKey: route.key,
     });
   };
 
