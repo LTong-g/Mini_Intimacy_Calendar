@@ -29,6 +29,12 @@ const formatDuration = (durationMs) => {
   return `${minutes}分钟`;
 };
 
+const RANGE_OPTIONS = [
+  { key: 'today', label: '今日', days: 1 },
+  { key: '7days', label: '7天', days: 7 },
+  { key: '30days', label: '30天', days: 30 },
+];
+
 const groupIntervalsByDate = (intervals, blacklist) => {
   const appsByPackage = new Map(blacklist.map((item) => [item.packageName, item]));
   const groups = [];
@@ -64,6 +70,7 @@ const ExperimentalUsageIntervalsScreen = () => {
   const route = useRoute();
   const initialPackageName = route.params?.packageName || null;
   const [selectedPackageName, setSelectedPackageName] = useState(initialPackageName);
+  const [rangeIndex, setRangeIndex] = useState(0);
   const [blacklist, setBlacklist] = useState([]);
   const [intervals, setIntervals] = useState([]);
 
@@ -134,10 +141,19 @@ const ExperimentalUsageIntervalsScreen = () => {
       : visibleIntervals
   ), [selectedPackageName, visibleIntervals]);
 
-  const totalDuration = filteredIntervals.reduce((sum, item) => sum + item.durationMs, 0);
+  const currentRange = RANGE_OPTIONS[rangeIndex];
+  const rangedIntervals = useMemo(() => {
+    const rangeStart = moment().startOf('day').subtract(currentRange.days - 1, 'days').valueOf();
+    const rangeEnd = moment().endOf('day').valueOf();
+    return filteredIntervals.filter((item) => (
+      item.startTime <= rangeEnd && item.endTime >= rangeStart
+    ));
+  }, [filteredIntervals, currentRange.days]);
+
+  const totalDuration = rangedIntervals.reduce((sum, item) => sum + item.durationMs, 0);
   const intervalGroups = useMemo(
-    () => groupIntervalsByDate(filteredIntervals, blacklist),
-    [filteredIntervals, blacklist]
+    () => groupIntervalsByDate(rangedIntervals, blacklist),
+    [rangedIntervals, blacklist]
   );
   const currentApp = selectedPackageName && selectedPackageName !== '__all__'
     ? blacklist.find((item) => item.packageName === selectedPackageName)
@@ -175,15 +191,46 @@ const ExperimentalUsageIntervalsScreen = () => {
         <Text style={styles.headerTitle} numberOfLines={1}>{title}</Text>
       </View>
 
-      <ScrollView contentContainerStyle={styles.content}>
-        {selectedPackageName ? (
-          <>
+      {selectedPackageName ? (
+        <View style={styles.detailContent}>
+          <View style={styles.fixedDetailHeader}>
             <View style={styles.summaryCard}>
-              <Text style={styles.summaryTitle}>{filteredIntervals.length} 条记录</Text>
+              <Text style={styles.summaryTitle}>{rangedIntervals.length} 条记录</Text>
               <Text style={styles.summaryText}>合计 {formatDuration(totalDuration)}</Text>
             </View>
 
-            {filteredIntervals.length === 0 ? (
+            <View style={styles.filterBar}>
+              <View style={styles.rangeGroup}>
+                {RANGE_OPTIONS.map((option, index) => (
+                  <TouchableOpacity
+                    key={option.key}
+                    style={[
+                      styles.rangeButton,
+                      option.key === currentRange.key && styles.rangeButtonActive,
+                      index === 0 && styles.rangeButtonFirst,
+                      index === RANGE_OPTIONS.length - 1 && styles.rangeButtonLast,
+                    ]}
+                    onPress={() => setRangeIndex(index)}
+                  >
+                    <Text
+                      style={[
+                        styles.rangeText,
+                        option.key === currentRange.key && styles.rangeTextActive,
+                      ]}
+                    >
+                      {option.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              <TouchableOpacity style={styles.filterButton} disabled>
+                <Ionicons name="filter-outline" size={18} color="#8A4B00" />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <ScrollView style={styles.recordsScroll} contentContainerStyle={styles.recordsContent}>
+            {rangedIntervals.length === 0 ? (
               <Text style={styles.emptyText}>暂无使用时间段</Text>
             ) : (
               intervalGroups.map((group) => (
@@ -213,41 +260,45 @@ const ExperimentalUsageIntervalsScreen = () => {
                 </View>
               ))
             )}
-          </>
-        ) : (
-          <View style={styles.appList}>
-            <TouchableOpacity style={styles.appRow} onPress={() => setSelectedPackageName('__all__')}>
-              <View style={styles.allIcon}>
-                <Ionicons name="layers-outline" size={20} color="#F57F17" />
-              </View>
-              <View style={styles.appTextBlock}>
-                <Text style={styles.appLabel}>全部记录</Text>
-                <Text style={styles.packageName}>
-                  {visibleIntervals.length} 条，合计 {formatDuration(visibleIntervals.reduce((sum, item) => sum + item.durationMs, 0))}
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={22} color="#777" />
-            </TouchableOpacity>
-
-            {apps.map((app) => (
-              <TouchableOpacity
-                key={app.packageName}
-                style={styles.appRow}
-                onPress={() => setSelectedPackageName(app.packageName)}
-              >
-                {renderAppIcon(app)}
+          </ScrollView>
+        </View>
+      ) : (
+        <ScrollView contentContainerStyle={styles.content}>
+          <>
+            <View style={styles.appList}>
+              <TouchableOpacity style={styles.appRow} onPress={() => setSelectedPackageName('__all__')}>
+                <View style={styles.allIcon}>
+                  <Ionicons name="layers-outline" size={20} color="#F57F17" />
+                </View>
                 <View style={styles.appTextBlock}>
-                  <Text style={styles.appLabel}>{app.label}</Text>
+                  <Text style={styles.appLabel}>全部记录</Text>
                   <Text style={styles.packageName}>
-                    {app.count} 条，合计 {formatDuration(app.durationMs)}
+                    {visibleIntervals.length} 条，合计 {formatDuration(visibleIntervals.reduce((sum, item) => sum + item.durationMs, 0))}
                   </Text>
                 </View>
                 <Ionicons name="chevron-forward" size={22} color="#777" />
               </TouchableOpacity>
-            ))}
-          </View>
-        )}
-      </ScrollView>
+
+              {apps.map((app) => (
+                <TouchableOpacity
+                  key={app.packageName}
+                  style={styles.appRow}
+                  onPress={() => setSelectedPackageName(app.packageName)}
+                >
+                  {renderAppIcon(app)}
+                  <View style={styles.appTextBlock}>
+                    <Text style={styles.appLabel}>{app.label}</Text>
+                    <Text style={styles.packageName}>
+                      {app.count} 条，合计 {formatDuration(app.durationMs)}
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={22} color="#777" />
+                </TouchableOpacity>
+              ))}
+            </View>
+          </>
+        </ScrollView>
+      )}
     </View>
   );
 };
@@ -280,6 +331,21 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 36,
   },
+  detailContent: {
+    flex: 1,
+  },
+  fixedDetailHeader: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    backgroundColor: '#fff',
+  },
+  recordsScroll: {
+    flex: 1,
+  },
+  recordsContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 36,
+  },
   summaryCard: {
     borderWidth: 1,
     borderColor: '#ECEFF3',
@@ -297,6 +363,54 @@ const styles = StyleSheet.create({
   summaryText: {
     fontSize: 13,
     color: '#5F4300',
+  },
+  filterBar: {
+    minHeight: 28,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  rangeGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  rangeButton: {
+    minHeight: 28,
+    minWidth: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: '#F4D79A',
+    borderLeftWidth: 0,
+    backgroundColor: '#fff',
+  },
+  rangeButtonFirst: {
+    borderLeftWidth: 1,
+    borderTopLeftRadius: 6,
+    borderBottomLeftRadius: 6,
+  },
+  rangeButtonLast: {
+    borderTopRightRadius: 6,
+    borderBottomRightRadius: 6,
+  },
+  rangeButtonActive: {
+    backgroundColor: '#FFF8E1',
+  },
+  rangeText: {
+    fontSize: 13,
+    color: '#777',
+  },
+  rangeTextActive: {
+    fontWeight: '700',
+    color: '#8A4B00',
+  },
+  filterButton: {
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   appList: {
     borderWidth: 1,

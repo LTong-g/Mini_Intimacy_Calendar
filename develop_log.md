@@ -1259,3 +1259,13 @@
 - rg 已确认 src 和 App.js 中不再存在 DatePicker 路由传入 onDateSelected 函数的调用点。
 - git diff --check 已完成，未发现空白错误。
 - 已使用本地 @babel/parser 解析 src/screens/DatePickerScreen.js、src/screens/StatisticsScreen.js 和 src/screens/UsageScreen.js，结果通过。
+
+### 黑名单使用时间段详情筛选与范围切换
+- src/screens/UsageIntervalsScreen.js 已将全部记录详情和单个应用记录详情拆分为固定汇总区域与独立滚动记录区域。
+- src/screens/UsageIntervalsScreen.js 已在汇总框下方新增今日、7天、30天三个独立范围按钮，并用所选范围更新下方记录和汇总统计。
+- src/screens/UsageIntervalsScreen.js 已将当前范围按钮显示为选中态。
+- src/screens/UsageIntervalsScreen.js 已在范围切换右侧新增暂不执行操作的筛选占位按钮。
+- AGENTS.md、developer_guide.md、UsageHelpScreen.js 和 VersionHistoryScreen.js 已同步记录黑名单使用时间段详情的固定汇总、范围按钮和筛选占位行为。
+- 已执行 node --check 检查 UsageIntervalsScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js，结果通过。
+- 已使用本地 @babel/parser 解析 UsageIntervalsScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js，结果通过。
+- 已执行 git diff --check，结果通过。
