@@ -1324,3 +1324,19 @@
 - 已执行 node --check 检查 UsageCharts.js、UsageHelpScreen.js 和 VersionHistoryScreen.js，结果通过。
 - 已使用本地 @babel/parser 解析 UsageCharts.js、UsageHelpScreen.js 和 VersionHistoryScreen.js，结果通过。
 - 已执行 git diff --check，结果通过。
+
+### 黑名单统计图布局与7天触摸交互
+- 已确认黑名单最近 7 天柱状图和最近 30 天趋势图不居中的原因包含 SVG 宽度未扣除图表卡片内边距。
+- src/components/UsageCharts.js 已新增 chartInnerWidth，并将黑名单最近 7 天柱状图和最近 30 天趋势图的 SVG 宽度与绘图区宽度计算改为基于卡片内部可用宽度。
+- src/components/UsageCharts.js 已将黑名单最近 7 天柱状图和最近 30 天趋势图的纵坐标刻度标签移动到图表左侧，并保持左侧绘图区预留宽度为 0px。
+- src/components/UsageCharts.js 已为黑名单最近 7 天柱状图和最近 30 天趋势图新增横轴数据范围左右内缩，避免纵坐标刻度贴近绘图。
+- src/components/UsageCharts.js 已为黑名单最近 7 天柱状图新增触摸命中逻辑，按触摸横坐标选中对应日期柱子。
+- src/components/UsageCharts.js 已在触摸黑名单最近 7 天柱状图时框选对应柱子并显示使用时长，未使用最近 30 天趋势图的垂直虚线样式。
+- src/components/UsageCharts.js 已将触摸选中外框改为紧贴柱子本体，并将零时长日期的选中外框改为贴近横轴基线的小框。
+- src/components/UsageCharts.js 已将触摸时长标签固定显示在选中柱子顶部，并使最高柱子的触摸时长标签保持在柱子顶上方显示。
+- AGENTS.md 和 developer_guide.md 已同步记录黑名单最近 7 天柱状图和最近 30 天趋势图纵坐标刻度标签显示在左侧，并通过横轴数据范围左右内缩避免刻度贴近绘图。
+- AGENTS.md、developer_guide.md、src/screens/UsageHelpScreen.js 和 src/screens/VersionHistoryScreen.js 已同步记录黑名单最近 7 天柱状图触摸查看时长的行为。
+- UsageHelpScreen.js、VersionHistoryScreen.js、SoftwareIntroScreen.js 和 PrivacyPolicyScreen.js 已核对，本次统计图布局与交互调整未改变对应说明或版本最终态。
+- 已执行 node --check 检查 src/components/UsageCharts.js、src/screens/UsageHelpScreen.js 和 src/screens/VersionHistoryScreen.js，结果通过。
+- 已使用本地 @babel/parser 解析 src/components/UsageCharts.js、src/screens/UsageHelpScreen.js 和 src/screens/VersionHistoryScreen.js，结果通过。
+- 已执行 git diff --check，结果通过。

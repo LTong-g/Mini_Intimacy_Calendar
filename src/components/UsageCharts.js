@@ -16,6 +16,8 @@ import moment from 'moment';
 
 const { width: screenWidth } = Dimensions.get('window');
 const chartWidth = screenWidth - 40;
+const chartBlockPadding = 12;
+const chartInnerWidth = chartWidth - chartBlockPadding * 2;
 const chartHeight = 230;
 const tutorialColor = '#F57F17';
 const tutorialLightColor = '#FFE082';
@@ -26,6 +28,8 @@ const axisTextColor = '#6B7280';
 const remainderColor = '#E2E5EA';
 const msPerMinute = 1000 * 60;
 const monthlyTouchValueLabelOffsetX = 6;
+const yAxisLabelWidth = 0;
+const horizontalAxisPadding = 10;
 
 const formatMinutes = (ms) => `${Math.round(ms / msPerMinute)} 分钟`;
 const minutesValue = (ms) => Math.round(ms / msPerMinute);
@@ -123,15 +127,70 @@ export const DailyUsagePieChart = ({ rows }) => {
 };
 
 export const WeeklyUsageBarChart = ({ rows }) => {
+  const [touchIndex, setTouchIndex] = useState(null);
   const maxValue = Math.max(1, ...rows.map((item) => item.durationMs));
-  const innerWidth = chartWidth - 42;
+  const innerWidth = chartInnerWidth - 42;
   const innerHeight = chartHeight - 58;
   const barGap = 12;
   const barWidth = Math.min(24, Math.max(14, (innerWidth - barGap * (rows.length - 1)) / rows.length));
   const totalBarWidth = rows.length * barWidth + Math.max(0, rows.length - 1) * barGap;
-  const plotWidth = Math.max(totalBarWidth, 120);
-  const plotStartX = Math.max(0, (innerWidth - plotWidth) / 2);
-  const barStartX = plotStartX + Math.max(0, (plotWidth - totalBarWidth) / 2);
+  const plotWidth = Math.max(totalBarWidth + horizontalAxisPadding * 2, 120);
+  const plotStartX = Math.max(yAxisLabelWidth, (innerWidth - plotWidth) / 2);
+  const barStartX = plotStartX + Math.max(
+    horizontalAxisPadding,
+    (plotWidth - totalBarWidth) / 2
+  );
+  const bars = rows.map((item, index) => {
+    const x = barStartX + index * (barWidth + barGap);
+    const height = Math.max(item.durationMs > 0 ? 4 : 0, (item.durationMs / maxValue) * innerHeight);
+    return {
+      x,
+      y: innerHeight - height,
+      height,
+      item,
+    };
+  });
+  const handleTouch = useCallback((x) => {
+    const lx = x - 16;
+    if (lx < plotStartX || lx > plotStartX + plotWidth || bars.length === 0) {
+      setTouchIndex(null);
+      return;
+    }
+
+    let nextIndex = null;
+    let minDistance = Infinity;
+    bars.forEach((bar, index) => {
+      const centerX = bar.x + barWidth / 2;
+      const distance = Math.abs(centerX - lx);
+      if (distance < minDistance) {
+        minDistance = distance;
+        nextIndex = index;
+      }
+    });
+    setTouchIndex(nextIndex);
+  }, [barWidth, bars, plotStartX, plotWidth]);
+  const panResponder = useMemo(() => PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: () => true,
+    onPanResponderGrant: (event) => handleTouch(event.nativeEvent.locationX),
+    onPanResponderMove: (event) => handleTouch(event.nativeEvent.locationX),
+    onPanResponderRelease: () => setTouchIndex(null),
+    onPanResponderTerminate: () => setTouchIndex(null),
+  }), [handleTouch]);
+  const touchBar = touchIndex != null ? bars[touchIndex] : null;
+  const touchLabel = touchBar ? formatMinutes(touchBar.item.durationMs) : '';
+  const touchLabelWidth = touchLabel.length * 7;
+  const touchLabelX = touchBar
+    ? Math.max(
+      plotStartX + touchLabelWidth / 2,
+      Math.min(plotStartX + plotWidth - touchLabelWidth / 2, touchBar.x + barWidth / 2)
+    )
+    : 0;
+  const touchLabelY = touchBar
+    ? touchBar.y - 8
+    : 0;
+  const touchFrameY = touchBar && touchBar.height > 0 ? touchBar.y : innerHeight - 4;
+  const touchFrameHeight = touchBar && touchBar.height > 0 ? touchBar.height : 4;
 
   return (
     <View style={styles.chartBlock}>
@@ -139,74 +198,102 @@ export const WeeklyUsageBarChart = ({ rows }) => {
         <Text style={styles.chartTitle}>最近7天使用时长</Text>
         <Text style={styles.chartMeta}>单位：分钟</Text>
       </View>
-      <Svg width={chartWidth} height={chartHeight - 6}>
-        <Defs>
-          <LinearGradient
-            id="weeklyBarGradient"
-            x1="0"
-            y1="0"
-            x2="0"
-            y2={innerHeight}
-            gradientUnits="userSpaceOnUse"
-          >
-            <Stop offset="0" stopColor={tutorialMidColor} stopOpacity="1" />
-            <Stop offset="1" stopColor={tutorialColor} stopOpacity="1" />
-          </LinearGradient>
-        </Defs>
-        <G x={16} y={24}>
-          {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
-            const y = innerHeight * (1 - ratio);
-            return (
-              <G key={ratio}>
-                <Line
-                  x1={plotStartX}
-                  y1={y}
-                  x2={plotStartX + plotWidth}
-                  y2={y}
-                  stroke={gridColor}
-                  strokeWidth={1}
-                />
-                <SvgText x={plotStartX + plotWidth + 4} y={y + 4} fontSize={10} fill="#666">
-                  {formatAxisMinutes(maxValue * ratio, maxValue)}
-                </SvgText>
-              </G>
-            );
-          })}
-          <Line
-            x1={plotStartX}
-            y1={innerHeight}
-            x2={plotStartX + plotWidth}
-            y2={innerHeight}
-            stroke="#DDE2E8"
-            strokeWidth={1}
-          />
-          {rows.map((item, index) => {
-            const x = barStartX + index * (barWidth + barGap);
-            const height = Math.max(item.durationMs > 0 ? 4 : 0, (item.durationMs / maxValue) * innerHeight);
-            return (
-              <G key={item.key}>
+      <View {...panResponder.panHandlers}>
+        <Svg width={chartInnerWidth} height={chartHeight - 6}>
+          <Defs>
+            <LinearGradient
+              id="weeklyBarGradient"
+              x1="0"
+              y1="0"
+              x2="0"
+              y2={innerHeight}
+              gradientUnits="userSpaceOnUse"
+            >
+              <Stop offset="0" stopColor={tutorialMidColor} stopOpacity="1" />
+              <Stop offset="1" stopColor={tutorialColor} stopOpacity="1" />
+            </LinearGradient>
+          </Defs>
+          <G x={16} y={24}>
+            {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
+              const y = innerHeight * (1 - ratio);
+              return (
+                <G key={ratio}>
+                  <Line
+                    x1={plotStartX}
+                    y1={y}
+                    x2={plotStartX + plotWidth}
+                    y2={y}
+                    stroke={gridColor}
+                    strokeWidth={1}
+                  />
+                  <SvgText
+                    x={plotStartX - 2}
+                    y={y + 4}
+                    fontSize={10}
+                    fill="#666"
+                    textAnchor="end"
+                  >
+                    {formatAxisMinutes(maxValue * ratio, maxValue)}
+                  </SvgText>
+                </G>
+              );
+            })}
+            <Line
+              x1={plotStartX}
+              y1={innerHeight}
+              x2={plotStartX + plotWidth}
+              y2={innerHeight}
+              stroke="#DDE2E8"
+              strokeWidth={1}
+            />
+            {bars.map((bar) => (
+              <G key={bar.item.key}>
                 <Rect
-                  x={x}
-                  y={innerHeight - height}
+                  x={bar.x}
+                  y={bar.y}
                   width={barWidth}
-                  height={height}
+                  height={bar.height}
                   fill="url(#weeklyBarGradient)"
                   rx={6}
                 />
                 <SvgText
-                  x={x + barWidth / 2}
+                  x={bar.x + barWidth / 2}
                   y={innerHeight + 17}
                   fontSize={10}
                   fill={axisTextColor}
                   textAnchor="middle"
                 >
-                  {moment(item.key).format('dd')}
+                  {moment(bar.item.key).format('dd')}
                 </SvgText>
               </G>
-            );
-          })}
-        </G>
-      </Svg>
+            ))}
+            {touchBar && (
+              <G>
+                <Rect
+                  x={touchBar.x}
+                  y={touchFrameY}
+                  width={barWidth}
+                  height={touchFrameHeight}
+                  fill="transparent"
+                  stroke={tutorialDarkColor}
+                  strokeWidth={2}
+                  rx={6}
+                />
+                <SvgText
+                  x={touchLabelX}
+                  y={touchLabelY}
+                  fontSize={12}
+                  fontWeight="bold"
+                  fill={tutorialDarkColor}
+                  textAnchor="middle"
+                >
+                  {touchLabel}
+                </SvgText>
+              </G>
+            )}
+          </G>
+        </Svg>
+      </View>
     </View>
   );
 };
@@ -215,12 +302,15 @@ export const MonthlyUsageLineChart = ({ rows }) => {
   const [touchIndex, setTouchIndex] = useState(null);
   const visibleRows = rows.filter((item) => !item.isFuture);
   const maxValue = Math.max(1, ...visibleRows.map((item) => item.durationMs));
-  const innerWidth = chartWidth - 46;
+  const plotStartX = yAxisLabelWidth;
+  const innerWidth = chartInnerWidth - 46 - yAxisLabelWidth;
   const innerHeight = chartHeight - 66;
-  const step = rows.length > 1 ? innerWidth / (rows.length - 1) : innerWidth;
+  const xRangeStart = plotStartX + horizontalAxisPadding;
+  const xRangeWidth = Math.max(1, innerWidth - horizontalAxisPadding * 2);
+  const step = rows.length > 1 ? xRangeWidth / (rows.length - 1) : xRangeWidth;
   const points = rows
     .map((item, index) => ({
-      x: rows.length > 1 ? index * step : innerWidth / 2,
+      x: rows.length > 1 ? xRangeStart + index * step : plotStartX + innerWidth / 2,
       y: innerHeight - (item.durationMs / maxValue) * innerHeight,
       item,
     }))
@@ -236,7 +326,7 @@ export const MonthlyUsageLineChart = ({ rows }) => {
     .curve(d3Shape.curveMonotoneX)(points);
   const handleTouch = useCallback((x) => {
     const lx = x - 20;
-    if (lx < 0 || lx > innerWidth || points.length === 0) {
+    if (lx < plotStartX || lx > plotStartX + innerWidth || points.length === 0) {
       setTouchIndex(null);
       return;
     }
@@ -251,7 +341,7 @@ export const MonthlyUsageLineChart = ({ rows }) => {
       }
     });
     setTouchIndex(nextIndex);
-  }, [innerWidth, points]);
+  }, [innerWidth, plotStartX, points]);
   const panResponder = useMemo(() => PanResponder.create({
     onStartShouldSetPanResponder: () => true,
     onMoveShouldSetPanResponder: () => true,
@@ -269,7 +359,7 @@ export const MonthlyUsageLineChart = ({ rows }) => {
         <Text style={styles.chartMeta}>单位：分钟</Text>
       </View>
       <View {...panResponder.panHandlers}>
-        <Svg width={chartWidth} height={chartHeight}>
+        <Svg width={chartInnerWidth} height={chartHeight}>
           <Defs>
             <LinearGradient id="monthlyAreaGradient" x1="0" y1="0" x2="0" y2="1">
               <Stop offset="0" stopColor={tutorialLightColor} stopOpacity="0.72" />
@@ -281,14 +371,20 @@ export const MonthlyUsageLineChart = ({ rows }) => {
               const y = innerHeight * (1 - ratio);
               return (
                 <G key={ratio}>
-                  <Line x1={0} y1={y} x2={innerWidth} y2={y} stroke={gridColor} strokeWidth={1} />
-                  <SvgText x={innerWidth + 4} y={y + 4} fontSize={10} fill={axisTextColor}>
+                  <Line x1={plotStartX} y1={y} x2={plotStartX + innerWidth} y2={y} stroke={gridColor} strokeWidth={1} />
+                  <SvgText
+                    x={plotStartX - 2}
+                    y={y + 4}
+                    fontSize={10}
+                    fill={axisTextColor}
+                    textAnchor="end"
+                  >
                     {formatAxisMinutes(maxValue * ratio, maxValue)}
                   </SvgText>
                 </G>
               );
             })}
-            <Line x1={0} y1={innerHeight} x2={innerWidth} y2={innerHeight} stroke="#DDE2E8" strokeWidth={1} />
+            <Line x1={plotStartX} y1={innerHeight} x2={plotStartX + innerWidth} y2={innerHeight} stroke="#DDE2E8" strokeWidth={1} />
             {areaPath && <Path d={areaPath} fill="url(#monthlyAreaGradient)" />}
             {linePath && (
               <Path
@@ -328,7 +424,7 @@ export const MonthlyUsageLineChart = ({ rows }) => {
                 />
                 <SvgText
                   x={Math.min(
-                    innerWidth,
+                    plotStartX + innerWidth,
                     touchPoint.x + monthlyTouchValueLabelOffsetX
                   )}
                   y={Math.max(12, touchPoint.y - 6)}
@@ -346,7 +442,7 @@ export const MonthlyUsageLineChart = ({ rows }) => {
               || index === Math.floor((rows.length - 1) / 2)
             )).map((item) => {
               const index = rows.findIndex((row) => row.key === item.key);
-              const x = rows.length > 1 ? index * step : innerWidth / 2;
+              const x = rows.length > 1 ? xRangeStart + index * step : plotStartX + innerWidth / 2;
               return (
                 <SvgText
                   key={`label-${item.key}`}
