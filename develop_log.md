@@ -1149,3 +1149,21 @@
 - 与使用记录相关的代码文件已重命名，文件名移除了 Experimental/experimental 前缀。
 - App.js 导入路径与 developer_guide.md 项目结构已更新为新文件名。
 - App.js、src 与 developer_guide.md 已验证无旧 experimental 前缀代码文件名或旧文件路径引用。
+
+### 版本记录 Unreleased 内容整理
+- src/screens/VersionHistoryScreen.js 已将 Unreleased 条目整理为面向用户的最终态描述，并移除黑名单功能同版本内的修复和优化拆分，改为新增功能最终态描述。
+- src/screens/VersionHistoryScreen.js 已将各版本节点的版本记录分组顺序调整为新增、修复、优化。
+- 已使用 @babel/parser 对 VersionHistoryScreen.js 执行 JSX 解析检查，结果通过。
+- git diff --check 已通过。
+
+### 版本记录规则文档化
+- AGENTS.md 已补充版本记录不是开发日志、Unreleased 与正式版本同口径、同一版本新增功能不拆写同版本优化或修复的规则。
+- AGENTS.md 已记录版本记录页面按新增、修复、优化分组展示的持久规则。
+- developer_guide.md 已同步补充版本记录相对上一版本最终变化、开发过程内容归入 develop_log.md、版本记录按新增、修复、优化分组展示的规则。
+- 通过 scripts/append-develop-log.ps1 的 -Command 调用方式已验证 Facts 数组可按多条事实逐条追加。
+
+### 当前开发版本功能简介调整
+- src/screens/VersionHistoryScreen.js 已将当前开发版本的使用记录辅助与黑名单功能改为同级功能简介段。
+- src/screens/VersionHistoryScreen.js 已移除新增、修复、优化分组中对使用记录辅助与黑名单功能的重复条目。
+- src/screens/VersionHistoryScreen.js 已将当前开发版本中使用记录辅助与黑名单功能的简介扩展为多条完整能力说明。
+- AGENTS.md 和 developer_guide.md 已修正 Unreleased 规则：Unreleased 本身不天然作为特殊版本，只有当前开发版本有明确主功能时才使用同级功能简介。
