@@ -22,13 +22,13 @@ import {
   DailyUsagePieChart,
   MonthlyUsageLineChart,
   WeeklyUsageBarChart,
-} from '../components/ExperimentalUsageCharts';
+} from '../components/UsageCharts';
 import {
   getExperimentalUsageBlacklist,
   getExperimentalUsageIntervals,
   mergeAdjacentUsageIntervals,
   mergeExperimentalUsageIntervals,
-} from '../utils/experimentalUsageStorage';
+} from '../utils/usageStorage';
 import {
   getUsageAccessStatus,
   queryUsageIntervals,

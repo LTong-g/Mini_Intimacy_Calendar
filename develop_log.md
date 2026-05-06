@@ -1144,3 +1144,8 @@
 - src/screens/ExperimentalUsageBlacklistScreen.js 已在拖动过程中用手指纵向位移推算字母组本地坐标，避免拖出字母组后继续使用不稳定的移动事件 locationY。
 - src/screens/ExperimentalUsageBlacklistScreen.js 已将外层首字母定位栏 pointerEvents 调整为 box-none，并让字母项不作为触摸目标。
 - src/screens/VersionHistoryScreen.js 已在 Unreleased 修复记录中补充黑名单应用页首字母条从内部滑出后误跳到错误字母的问题。
+
+### Rename usage code files
+- 与使用记录相关的代码文件已重命名，文件名移除了 Experimental/experimental 前缀。
+- App.js 导入路径与 developer_guide.md 项目结构已更新为新文件名。
+- App.js、src 与 developer_guide.md 已验证无旧 experimental 前缀代码文件名或旧文件路径引用。

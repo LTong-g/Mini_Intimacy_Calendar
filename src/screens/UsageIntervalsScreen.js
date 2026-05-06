@@ -19,7 +19,7 @@ import {
   getExperimentalUsageBlacklist,
   getExperimentalUsageIntervals,
   mergeAdjacentUsageIntervals,
-} from '../utils/experimentalUsageStorage';
+} from '../utils/usageStorage';
 
 const formatDuration = (durationMs) => {
   const totalMinutes = Math.round(durationMs / 60000);

@@ -20,9 +20,9 @@ import SoftwareIntroScreen from "./src/screens/SoftwareIntroScreen";
 import UsageHelpScreen from "./src/screens/UsageHelpScreen";
 import PrivacyPolicyScreen from "./src/screens/PrivacyPolicyScreen";
 import VersionHistoryScreen from "./src/screens/VersionHistoryScreen";
-import ExperimentalUsageScreen from "./src/screens/ExperimentalUsageScreen";
-import ExperimentalUsageBlacklistScreen from "./src/screens/ExperimentalUsageBlacklistScreen";
-import ExperimentalUsageIntervalsScreen from "./src/screens/ExperimentalUsageIntervalsScreen";
+import ExperimentalUsageScreen from "./src/screens/UsageScreen";
+import ExperimentalUsageBlacklistScreen from "./src/screens/UsageBlacklistScreen";
+import ExperimentalUsageIntervalsScreen from "./src/screens/UsageIntervalsScreen";
 
 const Stack = createNativeStackNavigator();
 

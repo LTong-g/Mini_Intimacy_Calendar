@@ -21,7 +21,7 @@ import {
   getExperimentalUsageBlacklist,
   setExperimentalUsageBlacklist,
   syncExperimentalUsageBlacklistMetadata,
-} from '../utils/experimentalUsageStorage';
+} from '../utils/usageStorage';
 import { getCachedLaunchableApplications } from '../utils/launchableAppCache';
 
 const INDEX_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ#'.split('');

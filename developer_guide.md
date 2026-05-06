@@ -158,21 +158,22 @@
 │  │  ├─ UsageHelpScreen.js
 │  │  ├─ PrivacyPolicyScreen.js
 │  │  ├─ VersionHistoryScreen.js
-│  │  ├─ ExperimentalUsageScreen.js
-│  │  ├─ ExperimentalUsageBlacklistScreen.js
+│  │  ├─ UsageScreen.js
+│  │  ├─ UsageBlacklistScreen.js
+│  │  ├─ UsageIntervalsScreen.js
 │  │  └─ DatePickerScreen.js
 │  ├─ components
 │  │  ├─ CheckInButtons.js
 │  │  ├─ CountAdjustModal.js
 │  │  ├─ CustomTabBar.js
-│  │  ├─ ExperimentalUsageCharts.js
+│  │  ├─ UsageCharts.js
 │  │  └─ LineChartBase.js
 │  ├─ hooks
 │  │  ├─ useCheckinData.js
 │  │  └─ useCheckinAggregation.js
 │  └─ utils
 │     ├─ checkInStorage.js
-│     ├─ experimentalUsageStorage.js
+│     ├─ usageStorage.js
 │     ├─ usageAccessNative.js
 │     └─ statsUtils.js
 └─ android
