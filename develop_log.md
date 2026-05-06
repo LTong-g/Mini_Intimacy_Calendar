@@ -1127,3 +1127,7 @@
 - src/utils/experimentalUsageStorage.js 已将 hydrateExperimentalUsageBlacklist 与黑名单差异判断收口为模块内部实现，不再由页面直接组合调用。
 - ExperimentalUsageBlacklistScreen.js 已改为调用 syncExperimentalUsageBlacklistMetadata 获取已补齐并落库后的黑名单数据。
 - node --check 已通过 src/utils/experimentalUsageStorage.js 和 src/screens/ExperimentalUsageBlacklistScreen.js 的语法检查。
+
+### 更新换行符处理协作规则
+- 已在 AGENTS.md 将换行符协作规则更新为处理文本文件时默认换行符可能不符合要求，不再先检查确认，直接统一修正为 CRLF。
+- 已在 AGENTS.md 将换行符处理范围从文本文件澄清为文本类文件，包含代码、配置和文档等文件。
