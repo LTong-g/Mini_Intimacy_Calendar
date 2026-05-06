@@ -1185,3 +1185,9 @@
 - src/components/DateQuickPickerModal.js 仅在弹窗打开、可选范围变化或用户点按具体项时调用 scrollToIndex，减少滚动过程中的 JS 状态干预。
 - SoftwareIntroScreen、UsageHelpScreen、VersionHistoryScreen、developer_guide.md 和 AGENTS.md 已同步本次顶部日期滚轮快速切换能力与日期选择页年月切换规则。
 - PrivacyPolicyScreen 已核对，本次功能未改变隐私政策中的数据记录、权限或联网说明。
+
+### 日期选择页月份层返回修复
+- 已确认 DatePickerScreen 在月份日期选择阶段未拦截导航返回，导致从年份进入月份后返回会直接退出日期选择页。
+- src/screens/DatePickerScreen.js 已使用 React Navigation 的 usePreventRemove 在月份日期选择阶段拦截返回，并将普通返回操作改为切回年份选择。
+- src/screens/DatePickerScreen.js 已将日期选择完成后的退出路径调整为先解除月份层防移除，再由 effect 执行 navigation.goBack，保持选定具体日期后返回来源页面的行为。
+- UsageHelpScreen.js、VersionHistoryScreen.js 和 developer_guide.md 已同步记录日期选择页月份层返回行为与本次修复。

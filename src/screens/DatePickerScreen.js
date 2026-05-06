@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import YearView from './YearView';
 import MonthView from './MonthView';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, usePreventRemove, useRoute } from '@react-navigation/native';
 import moment from 'moment';
 
 const DatePickerScreen = () => {
@@ -12,6 +12,17 @@ const DatePickerScreen = () => {
   const { mode, onDateSelected } = route.params;
   const [view, setView] = useState('year'); // 'year' or 'month'
   const [tempDate, setTempDate] = useState(moment());
+  const [isCompletingSelection, setIsCompletingSelection] = useState(false);
+
+  usePreventRemove(view === 'month' && !isCompletingSelection, () => {
+    setView('year');
+  });
+
+  useEffect(() => {
+    if (isCompletingSelection) {
+      navigation.goBack();
+    }
+  }, [isCompletingSelection, navigation]);
 
   const handleDateChange = (newDate) => {
     setTempDate(newDate);
@@ -24,7 +35,7 @@ const DatePickerScreen = () => {
 
   const handleFinalDateSelected = (finalDate) => {
     onDateSelected(finalDate.format('YYYY-MM-DD'), mode);
-    navigation.goBack();
+    setIsCompletingSelection(true);
   };
 
   return (
