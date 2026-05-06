@@ -214,7 +214,9 @@
 - 已执行 node --check src/screens/SettingsScreen.js，语法检查通过。
 
 ### 设置页三按钮布局与独立分享入口
-- SettingsScreen 中新增独立 handleShare 流程，分享不再由导出按钮兜底触发。,设置页按钮从导入/导出两按钮改为导入-导出-分享三按钮横排等宽布局，导出位于中间、分享位于右侧。,分享按钮图标已使用 Ionicons 的 share-social-outline，点击后执行系统分享流程。
+- SettingsScreen 中新增独立 handleShare 流程，分享不再由导出按钮兜底触发。
+- 设置页按钮从导入/导出两按钮改为导入-导出-分享三按钮横排等宽布局，导出位于中间、分享位于右侧。
+- 分享按钮图标已使用 Ionicons 的 share-social-outline，点击后执行系统分享流程。
 
 ### 开发者文档与当前实现对齐
 - 已更新 `developer_guide.md`，将数据模型从旧位掩码结构改为当前软件内使用的新格式对象结构。
@@ -225,7 +227,8 @@
 ## 2026-05-03
 
 ### Bare workflow runtimeVersion 配置修复
-- 已将 app.json 中 ios.runtimeVersion 与 android.runtimeVersion 从 policy=appVersion 改为固定字符串 1.1.1。,本次改动用于兼容 bare workflow 下 EAS Update 需要手动设置 runtimeVersion 的约束。
+- 已将 app.json 中 ios.runtimeVersion 与 android.runtimeVersion 从 policy=appVersion 改为固定字符串 1.1.1。
+- 本次改动用于兼容 bare workflow 下 EAS Update 需要手动设置 runtimeVersion 的约束。
 
 ### runtimeVersion 自动联动
 - 已新增 app.config.js，并从 package.json 读取 version。
@@ -267,8 +270,6 @@
 - 日视图记录图标在次数大于一时使用同色数字替换原图案显示次数。
 - 主页面已增加记录变更刷新键，使底部打卡面板写入后日视图可重新读取存储数据。
 - 长按弹窗触发已采用一秒步进与次数阈值实现，连续累计三次后弹出次数编辑弹窗。
-
-### 每日多次记录交互验证
 - App.js、CheckInButtons.js、CustomTabBar.js、CountAdjustModal.js、DayView.js 已通过 node --check 语法检查。
 - git diff --check 已通过空白检查。
 
@@ -344,8 +345,6 @@
 ### 关于页子页面文档同步
 - developer_guide.md 已新增关于信息章节，记录关于、软件介绍、版本记录三个页面能力。
 - developer_guide.md 的代码结构清单已补充 AboutScreen.js、SoftwareIntroScreen.js、VersionHistoryScreen.js。
-
-### 关于页子页面第二阶段验证
 - 已执行 node --check App.js、src/screens/AboutScreen.js、src/screens/SoftwareIntroScreen.js、src/screens/VersionHistoryScreen.js，语法检查通过。
 - 已执行 git diff --check，空白检查通过。
 
@@ -507,8 +506,6 @@
 - src/utils/statsUtils.js 已保持自定义区间月统计行按真实年月从近到远倒序展示。
 - VersionHistoryScreen.js 的 Unreleased 节点已记录本次自定义统计跨年月显示修复。
 - developer_guide.md 已记录自定义区间月统计的真实年月倒序和跨年标签规则。
-
-### 自定义统计跨年月聚合修复验证
 - 已执行 node --check src/utils/statsUtils.js，检查通过。
 - 已执行 node --check src/screens/VersionHistoryScreen.js，检查通过。
 - 已执行临时 Node 验证脚本，确认 2025-08-01 至 2026-04-30 的月统计标签按 2026年4月 到 2025年8月 倒序输出。
@@ -522,8 +519,6 @@
 - src/components/StatsTable.js 已保持左侧表格列整体 flex 占位不变。
 - VersionHistoryScreen.js 的 Unreleased 节点已记录本次统计表行标题对齐优化。
 - AGENTS.md 已记录统计表纯月份标题组内右对齐的语义边界。
-
-### 统计表行标题对齐最终验证
 - 已执行 node --check src/components/StatsTable.js，检查通过。
 - 已执行 node --check src/screens/VersionHistoryScreen.js，检查通过。
 - 已执行 git diff --check，空白检查通过。
@@ -554,8 +549,6 @@
 - src/components/LineChartBase.js 已在倒数第二个横轴标签与最后一个横轴标签距离不足时仅隐藏倒数第二个文字标签，并保持对应短刻度线显示。
 - src/components/LineChartBase.js 已将触摸响应改为随最新 series 和 xScale 更新，避免日期范围变化后触摸命中使用旧点位。
 - src/screens/VersionHistoryScreen.js 的 Unreleased 节点已记录自定义统计图横轴范围显示优化。
-
-### 自定义统计图横轴聚合显示验证
 - 已执行 node --check src/components/CustomLineChart.js，检查通过。
 - 已执行 node --check src/components/LineChartBase.js，检查通过。
 - 已执行 node --check src/screens/VersionHistoryScreen.js，检查通过。
@@ -582,8 +575,6 @@
 - src/components/LineChartBase.js 已新增 touchXLabels 参数，并在触摸聚合点时仅渲染该点对应区间的起止日期横轴刻度和标签。
 - src/screens/VersionHistoryScreen.js 的 Unreleased 节点已记录自定义统计图聚合点触摸横轴区间显示优化。
 - developer_guide.md 已记录自定义统计图聚合点触摸时的横轴显示规则。
-
-### 自定义统计图聚合点触摸横轴显示验证
 - 已使用 Babel parser 解析 src/components/CustomLineChart.js、src/components/LineChartBase.js 和 src/screens/VersionHistoryScreen.js，结果通过。
 - 已执行临时 Node 脚本确认 2026-03-20 至 2026-05-02 共 44 天按 4 天一组聚合时，触摸区间标签包含首组 2026-03-20 至 2026-03-23、第二组 2026-03-24 至 2026-03-27、末组 2026-04-29 至 2026-05-02。
 - 首次执行 develop_log.md 追加脚本时因 PowerShell 数组参数写法错误失败，develop_log.md 未写入内容；已改用显式数组语法成功追加日志。
@@ -594,8 +585,6 @@
 - src/components/LineChartBase.js 已实现首个聚合区间仅移动终点标签、末个聚合区间仅移动起点标签、中间聚合区间两侧标签共同分散。
 - src/screens/VersionHistoryScreen.js 的 Unreleased 节点已更新自定义统计图聚合点触摸横轴区间显示说明。
 - developer_guide.md 已记录自定义统计图聚合区间标签防重叠规则。
-
-### 自定义统计图触摸区间标签防重叠验证
 - 已使用 Babel parser 解析 src/components/CustomLineChart.js、src/components/LineChartBase.js 和 src/screens/VersionHistoryScreen.js，结果通过。
 - 已执行临时 Node 脚本确认触摸态标签重叠时首个聚合区间仅终点标签右移、末个聚合区间仅起点标签左移、中间聚合区间两个标签分别向外移动。
 
@@ -622,7 +611,10 @@
 - 已执行 node --check .\src\screens\VersionHistoryScreen.js，语法检查通过。
 
 ### 关于页隐私政策入口与页面新增
-- 关于页在使用帮助和版本记录之间新增了隐私政策入口。,新增 PrivacyPolicyScreen 页面，说明应用记录数据范围、本地存储、导入导出分享、权限联网和用户控制方式。,使用帮助、版本记录和开发者文档同步补充了隐私政策相关说明。,验证结果：Babel 解析 App.js 和相关 screen 文件通过；git diff --check 通过。
+- 关于页在使用帮助和版本记录之间新增了隐私政策入口。
+- 新增 PrivacyPolicyScreen 页面，说明应用记录数据范围、本地存储、导入导出分享、权限联网和用户控制方式。
+- 使用帮助、版本记录和开发者文档同步补充了隐私政策相关说明。
+- 验证结果：Babel 解析 App.js 和相关 screen 文件通过；git diff --check 通过。
 
 ### 关于页隐私政策入口与页面新增补充记录
 - 关于页在使用帮助和版本记录之间新增了隐私政策入口。
