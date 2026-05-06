@@ -44,6 +44,17 @@ const getDailySliceColor = (item, index) => (
   item.color || getUsageSliceColor(index)
 );
 
+const shouldShowMonthlyPoint = (points, index) => {
+  const point = points[index];
+  if (!point || point.item.durationMs > 0) {
+    return true;
+  }
+
+  const previous = points[index - 1];
+  const next = points[index + 1];
+  return !previous || !next || previous.item.durationMs > 0 || next.item.durationMs > 0;
+};
+
 export const DailyUsagePieChart = ({ rows }) => {
   const total = rows.reduce((sum, item) => sum + item.durationMs, 0);
   const usageTotal = rows
@@ -259,7 +270,7 @@ export const MonthlyUsageLineChart = ({ rows }) => {
               strokeLinejoin="round"
             />
           )}
-          {points.map((point) => (
+          {points.filter((_, index) => shouldShowMonthlyPoint(points, index)).map((point) => (
             <G key={point.item.key}>
               <Circle cx={point.x} cy={point.y} r={4} fill="#fff" stroke={tutorialColor} strokeWidth={2} />
               {point.item.durationMs > 0 && (

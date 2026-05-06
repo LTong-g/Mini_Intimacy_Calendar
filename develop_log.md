@@ -1305,3 +1305,12 @@
 - 已执行 node --check 检查 UsageScreen.js、UsageCharts.js、UsageHelpScreen.js 和 VersionHistoryScreen.js，结果通过。
 - 已执行 git diff --check，结果通过。
 - 已使用本地 @babel/parser 解析 UsageScreen.js、UsageCharts.js、UsageHelpScreen.js 和 VersionHistoryScreen.js，结果通过。
+
+### 黑名单30天趋势空心点显示优化
+- src/components/UsageCharts.js 已新增最近 30 天趋势点位显示判断，连续多天无使用记录时仅绘制连续空心点区间的首尾点。
+- src/components/UsageCharts.js 保留最近 30 天趋势折线和面积路径，中间无记录日期只隐藏空心点。
+- UsageHelpScreen.js、VersionHistoryScreen.js、developer_guide.md 和 AGENTS.md 已同步记录最近 30 天趋势连续无记录时只保留首尾空心点。
+- SoftwareIntroScreen.js 和 PrivacyPolicyScreen.js 已核对，本次图表点位显示调整未改变对应说明。
+- 已执行 node --check 检查 UsageCharts.js、UsageHelpScreen.js 和 VersionHistoryScreen.js，结果通过。
+- 已使用本地 @babel/parser 解析 UsageCharts.js、UsageHelpScreen.js 和 VersionHistoryScreen.js，结果通过。
+- 已执行 git diff --check，结果通过。
