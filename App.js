@@ -20,6 +20,9 @@ import SoftwareIntroScreen from "./src/screens/SoftwareIntroScreen";
 import UsageHelpScreen from "./src/screens/UsageHelpScreen";
 import PrivacyPolicyScreen from "./src/screens/PrivacyPolicyScreen";
 import VersionHistoryScreen from "./src/screens/VersionHistoryScreen";
+import ExperimentalUsageScreen from "./src/screens/ExperimentalUsageScreen";
+import ExperimentalUsageBlacklistScreen from "./src/screens/ExperimentalUsageBlacklistScreen";
+import ExperimentalUsageIntervalsScreen from "./src/screens/ExperimentalUsageIntervalsScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -114,6 +117,9 @@ export default function App() {
             <Stack.Screen name="UsageHelp" component={UsageHelpScreen} />
             <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
             <Stack.Screen name="VersionHistory" component={VersionHistoryScreen} />
+            <Stack.Screen name="ExperimentalUsage" component={ExperimentalUsageScreen} />
+            <Stack.Screen name="ExperimentalUsageBlacklist" component={ExperimentalUsageBlacklistScreen} />
+            <Stack.Screen name="ExperimentalUsageIntervals" component={ExperimentalUsageIntervalsScreen} />
             <Stack.Screen name="Statistics" component={StatisticsScreen} />
             <Stack.Screen name="DatePicker" component={DatePickerScreen} />
           </Stack.Navigator>

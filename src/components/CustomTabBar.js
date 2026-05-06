@@ -28,6 +28,11 @@ import {
   normalizeCheckInRecord,
   setCheckInRecord,
 } from "../utils/checkInStorage";
+import {
+  getUsageAccessStatus,
+  isUsageAccessNativeAvailable,
+  setUsageAccessFeatureEnabled,
+} from "../utils/usageAccessNative";
 import { Portal } from "react-native-paper";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -181,6 +186,38 @@ const CustomTabBar = ({
     return viewMap[currentView];
   };
 
+  const handleOpenBlacklist = async () => {
+    setShowMoreMenu(false);
+
+    if (!isUsageAccessNativeAvailable()) {
+      Alert.alert(
+        "无法打开黑名单",
+        "当前运行环境不支持原生使用记录模块，请使用 Android 开发构建或安装包。"
+      );
+      return;
+    }
+
+    try {
+      const status = await getUsageAccessStatus();
+      const nextStatus =
+        status.usageAccessGranted && !status.featureEnabled
+          ? await setUsageAccessFeatureEnabled(true)
+          : status;
+
+      if (!nextStatus.usageAccessGranted) {
+        Alert.alert(
+          "需要使用记录权限",
+          "请先到设置页开启使用记录辅助，并在系统设置中授予使用情况访问权限。"
+        );
+        return;
+      }
+
+      navigation.navigate("ExperimentalUsage");
+    } catch (error) {
+      Alert.alert("打开失败", error.message || "无法读取使用记录权限状态");
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.tabBar}>
@@ -247,6 +284,18 @@ const CustomTabBar = ({
                       style={{ marginRight: 6 }}
                     />
                     <Text style={styles.menuText}>统计</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.menuItem}
+                    onPress={handleOpenBlacklist}
+                  >
+                    <Ionicons
+                      name="ban-outline"
+                      size={20}
+                      color="#333"
+                      style={{ marginRight: 6 }}
+                    />
+                    <Text style={styles.menuText}>黑名单</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.menuItem}
