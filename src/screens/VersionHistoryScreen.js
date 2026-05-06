@@ -9,6 +9,19 @@ import { useNavigation } from '@react-navigation/native';
 
 const versionHistory = [
   {
+    version: 'Unreleased',
+    title: '关于入口更新',
+    date: '2026-05-05',
+    sections: [
+      {
+        label: '优化：',
+        notes: [
+          '优化关于入口，将其从设置页移至主界面右下角更多菜单最下方。',
+        ],
+      },
+    ],
+  },
+  {
     version: '1.3.0',
     title: '日历、统计与帮助信息更新',
     date: '2026-05-05',

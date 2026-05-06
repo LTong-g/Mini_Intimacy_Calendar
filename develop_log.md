@@ -670,3 +670,14 @@
 - 已使用 release APK 生成归档 dist/MinimalistWeaponEnhancementCalendar-v1.3.0-android-20260505.apk。
 - 归档来源为 android/app/build/outputs/apk/release/app-release.apk。
 - 归档文件大小为 84506502 bytes。
+
+### 设置页关于入口位置调整
+- 设置页将关于入口移动到所有设置内容之后，使其始终作为设置页最下面的入口显示。
+- 使用帮助同步说明关于入口位于设置页最下面。
+
+### 关于入口迁移到更多菜单末尾
+- CustomTabBar 的更多菜单按设置、统计、关于顺序展示，并将关于作为最后一项。
+- SettingsScreen 移除了设置页底部的关于入口和对应未使用样式。
+- UsageHelpScreen、VersionHistoryScreen、developer_guide.md 和 AGENTS.md 已同步记录关于入口位置。
+- node --check 已通过 CustomTabBar.js、SettingsScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js。
+- 本次改动为 JS/UI 与文档改动，未执行 Android 重新安装。

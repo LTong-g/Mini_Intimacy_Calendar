@@ -248,6 +248,21 @@ const CustomTabBar = ({
                     />
                     <Text style={styles.menuText}>统计</Text>
                   </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.menuItem}
+                    onPress={() => {
+                      setShowMoreMenu(false);
+                      navigation.navigate("About");
+                    }}
+                  >
+                    <Ionicons
+                      name="information-circle-outline"
+                      size={20}
+                      color="#333"
+                      style={{ marginRight: 6 }}
+                    />
+                    <Text style={styles.menuText}>关于</Text>
+                  </TouchableOpacity>
                 </View>
               </TouchableWithoutFeedback>
             </View>

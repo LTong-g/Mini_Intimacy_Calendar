@@ -154,10 +154,6 @@ const SettingsScreen = () => {
     }
   };
 
-  const handleOpenAbout = () => {
-    navigation.navigate('About');
-  };
-
   return (
     <View style={styles.container}>
       {/* 顶部返回栏 */}
@@ -184,13 +180,6 @@ const SettingsScreen = () => {
             <Text style={styles.optionText}>分享</Text>
           </TouchableOpacity>
         </View>
-      </View>
-
-      <View style={styles.section}>
-        <TouchableOpacity style={styles.fullWidthOption} onPress={handleOpenAbout}>
-          <Ionicons name="information-circle-outline" size={20} color="#007AFF" />
-          <Text style={styles.optionText}>关于</Text>
-        </TouchableOpacity>
       </View>
     </View>
   );
@@ -245,17 +234,6 @@ const styles = StyleSheet.create({
   },
   optionMiddle: {
     marginHorizontal: 8,
-  },
-  fullWidthOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#007AFF',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    width: '100%',
   },
   optionText: {
     color: '#007AFF',
