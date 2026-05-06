@@ -1251,3 +1251,11 @@
 - 已执行临时 Node 脚本验证 B 20:23-20:26 包含 A 20:24-20:24:45 时会拆分为 B、A、B 三段。
 - 已执行临时 Node 脚本验证同一应用中间没有其他黑名单应用使用时仍会按 2 分钟间隔合并。
 - 已执行 npm run android:build:debug:tempmap 构建 Android Debug APK，结果通过。
+
+### 修复 DatePicker 导航参数警告
+- src/screens/DatePickerScreen.js 已移除 route.params.onDateSelected 函数调用，改为通过 returnTo 和 datePickerResult 返回选中日期。
+- src/screens/StatisticsScreen.js 已改为通过 datePickerResult 接收自定义统计起止日期选择结果，并保留原有起止顺序校验。
+- src/screens/UsageScreen.js 已改为通过 datePickerResult 接收黑名单按日期读取起止日期选择结果，并保留返回后重新显示读取弹窗的行为。
+- rg 已确认 src 和 App.js 中不再存在 DatePicker 路由传入 onDateSelected 函数的调用点。
+- git diff --check 已完成，未发现空白错误。
+- 已使用本地 @babel/parser 解析 src/screens/DatePickerScreen.js、src/screens/StatisticsScreen.js 和 src/screens/UsageScreen.js，结果通过。

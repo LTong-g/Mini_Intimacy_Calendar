@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   ScrollView,
@@ -18,40 +18,51 @@ import YearLineChart from "../components/YearLineChart";
 import CustomStatsTable from "../components/CustomStatsTable"; // 自定义时间范围统计表
 import CustomLineChart from "../components/CustomLineChart"; // 自定义时间范围折线图
 
-const StatisticsScreen = ({ navigation }) => {
+const StatisticsScreen = ({ navigation, route }) => {
   const [mode, setMode] = useState("总"); // “总” | “年” | “自”
   const [currentYear, setCurrentYear] = useState(moment().year());
   const [startDate, setStartDate] = useState("开始日期");
   const [endDate, setEndDate] = useState("结束日期");
   const [showPicker, setShowPicker] = useState(false);
   const [pickTarget, setPickTarget] = useState(null); // 'start' 或 'end'
+  const lastDatePickerResultRef = useRef(null);
+
+  const applyPickedDate = (dateStr, whichOne) => {
+    if (whichOne === "start") {
+      if (endDate !== "结束日期" && moment(dateStr).isAfter(endDate)) {
+        if (Platform.OS === "android") {
+          ToastAndroid.show("开始日期不能晚于结束日期", ToastAndroid.SHORT);
+        } else {
+          Alert.alert("提示", "开始日期不能晚于结束日期");
+        }
+        return;
+      }
+      setStartDate(dateStr);
+    } else {
+      if (startDate !== "开始日期" && moment(dateStr).isBefore(startDate)) {
+        if (Platform.OS === "android") {
+          ToastAndroid.show("结束日期不能早于开始日期", ToastAndroid.SHORT);
+        } else {
+          Alert.alert("提示", "结束日期不能早于开始日期");
+        }
+        return;
+      }
+      setEndDate(dateStr);
+    }
+  };
+
+  useEffect(() => {
+    const result = route.params?.datePickerResult;
+    if (!result || lastDatePickerResultRef.current === result.requestId) return;
+    lastDatePickerResultRef.current = result.requestId;
+    applyPickedDate(result.date, result.mode);
+    navigation.setParams({ datePickerResult: undefined });
+  }, [endDate, navigation, route.params?.datePickerResult, startDate]);
 
   const handlePickDate = (which) => {
     navigation.navigate("DatePicker", {
       mode: which, // 'start' or 'end'
-      onDateSelected: (dateStr, whichOne) => {
-        if (whichOne === "start") {
-          if (endDate !== "结束日期" && moment(dateStr).isAfter(endDate)) {
-            if (Platform.OS === "android") {
-              ToastAndroid.show("开始日期不能晚于结束日期", ToastAndroid.SHORT);
-            } else {
-              Alert.alert("提示", "开始日期不能晚于结束日期");
-            }
-            return;
-          }
-          setStartDate(dateStr);
-        } else {
-          if (startDate !== "开始日期" && moment(dateStr).isBefore(startDate)) {
-            if (Platform.OS === "android") {
-              ToastAndroid.show("结束日期不能早于开始日期", ToastAndroid.SHORT);
-            } else {
-              Alert.alert("提示", "结束日期不能早于开始日期");
-            }
-            return;
-          }
-          setEndDate(dateStr);
-        }
-      },
+      returnTo: "Statistics",
     });
   };
 

@@ -2,7 +2,7 @@
  * 黑名单使用记录界面
  */
 
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
   Modal,
@@ -16,7 +16,7 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import moment from 'moment';
 import {
   DailyUsagePieChart,
@@ -135,7 +135,9 @@ const buildMonthlyRows = (intervals, monthStart, daysInMonth, elapsedDaysInMonth
 
 const ExperimentalUsageScreen = () => {
   const navigation = useNavigation();
+  const route = useRoute();
   const rangePickerActiveRef = useRef(false);
+  const lastDatePickerResultRef = useRef(null);
   const [blacklist, setBlacklist] = useState([]);
   const [intervals, setIntervals] = useState([]);
   const [usageGranted, setUsageGranted] = useState(false);
@@ -269,23 +271,30 @@ const ExperimentalUsageScreen = () => {
     rangePickerActiveRef.current = true;
     navigation.navigate('DatePicker', {
       mode: field,
-      onDateSelected: (date, selectedField) => {
-        if (selectedField === 'start') {
-          if (rangeEndDate && moment(date).isAfter(rangeEndDate)) {
-            showDateError('开始日期不能晚于结束日期');
-            return;
-          }
-          setRangeStartDate(date);
-        } else {
-          if (rangeStartDate && moment(date).isBefore(rangeStartDate)) {
-            showDateError('结束日期不能早于开始日期');
-            return;
-          }
-          setRangeEndDate(date);
-        }
-      },
+      returnTo: 'ExperimentalUsage',
     });
   };
+
+  useEffect(() => {
+    const result = route.params?.datePickerResult;
+    if (!result || lastDatePickerResultRef.current === result.requestId) return;
+    lastDatePickerResultRef.current = result.requestId;
+
+    if (result.mode === 'start') {
+      if (rangeEndDate && moment(result.date).isAfter(rangeEndDate)) {
+        showDateError('开始日期不能晚于结束日期');
+      } else {
+        setRangeStartDate(result.date);
+      }
+    } else {
+      if (rangeStartDate && moment(result.date).isBefore(rangeStartDate)) {
+        showDateError('结束日期不能早于开始日期');
+      } else {
+        setRangeEndDate(result.date);
+      }
+    }
+    navigation.setParams({ datePickerResult: undefined });
+  }, [navigation, rangeEndDate, rangeStartDate, route.params?.datePickerResult]);
 
   const handleConfirmRangeRead = async () => {
     if (!ensureRefreshReady()) return;

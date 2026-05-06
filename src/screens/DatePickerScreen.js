@@ -11,7 +11,7 @@ const DatePickerScreen = () => {
   const outerNavigation = useNavigation();
   const route = useRoute();
 
-  const { mode, onDateSelected } = route.params;
+  const { mode, returnTo } = route.params;
   const [tempDate, setTempDate] = useState(moment());
   const tempDateRef = useRef(tempDate);
 
@@ -22,8 +22,21 @@ const DatePickerScreen = () => {
   };
 
   const handleFinalDateSelected = (finalDate) => {
-    onDateSelected(finalDate.format('YYYY-MM-DD'), mode);
-    outerNavigation.goBack();
+    if (!returnTo) {
+      outerNavigation.goBack();
+      return;
+    }
+    outerNavigation.navigate({
+      name: returnTo,
+      params: {
+        datePickerResult: {
+          date: finalDate.format('YYYY-MM-DD'),
+          mode,
+          requestId: Date.now(),
+        },
+      },
+      merge: true,
+    });
   };
 
   return (
