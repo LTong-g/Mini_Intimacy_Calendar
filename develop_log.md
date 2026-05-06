@@ -1,4 +1,4 @@
-> 提示：请使用 UTF-8 编码读取本文件。
+﻿> 提示：请使用 UTF-8 编码读取本文件。
 
 # 开发日志
 撰写规则：
@@ -1205,3 +1205,11 @@
 - src/components/CustomTabBar.js 已移除月视图中间按钮长按返回日视图和年视图中间按钮短按返回日视图的行为。
 - AGENTS.md、developer_guide.md、UsageHelpScreen.js 和 VersionHistoryScreen.js 已同步记录底部栏视图切换与主按钮行为变化。
 - SoftwareIntroScreen.js 和 PrivacyPolicyScreen.js 已核对，本次变更未改变软件介绍中的功能概览或隐私说明。
+
+### 年度统计表格未来月份隐藏
+- src/utils/statsUtils.js 已将当前年份年度统计表格的月份明细限制为 1 月到当前月。
+- src/utils/statsUtils.js 已将当前年份年度统计月均改为按已到月份数量计算。
+- developer_guide.md、UsageHelpScreen.js 和 VersionHistoryScreen.js 已同步年度统计表格不显示未来月份的口径。
+- SoftwareIntroScreen.js 已核对，本次年度统计表格修复未改变软件介绍中的功能概览。
+- PrivacyPolicyScreen.js 已核对，本次年度统计表格修复未改变隐私政策中的数据、权限或联网说明。
+- AGENTS.md 已核对，本次年度统计表格修复未新增需要持久记录的用户偏好或协作规则。

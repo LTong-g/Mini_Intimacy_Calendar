@@ -60,12 +60,17 @@ export function computeTotalStats(data) {
   return rows;
 }
 
-// 2. 年度统计：总计、月均、12个月
+// 2. 年度统计：总计、月均、月份明细
 export function computeYearStats(data, year) {
   let totalTutorial = 0,
     totalWeapon = 0,
     totalDuo = 0;
   const monthMap = {};
+  const today = new Date();
+  const maxMonth =
+    year === today.getFullYear()
+      ? today.getMonth() + 1
+      : 12;
 
   Object.entries(data).forEach(([dateStr, flag]) => {
     const d = new Date(dateStr);
@@ -82,9 +87,9 @@ export function computeYearStats(data, year) {
     }
   });
 
-  const avgTut = totalTutorial / 12;
-  const avgWea = totalWeapon / 12;
-  const avgDuo = totalDuo / 12;
+  const avgTut = totalTutorial / maxMonth;
+  const avgWea = totalWeapon / maxMonth;
+  const avgDuo = totalDuo / maxMonth;
 
   const rows = [
     {
@@ -101,7 +106,7 @@ export function computeYearStats(data, year) {
     },
   ];
 
-  for (let m = 12; m >= 1; m--) {
+  for (let m = maxMonth; m >= 1; m--) {
     const c = monthMap[m] || { tutorial: 0, weapon: 0, duo: 0 };
     rows.push({
       label: `${m}月`,
