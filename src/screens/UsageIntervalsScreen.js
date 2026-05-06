@@ -86,7 +86,7 @@ const ExperimentalUsageIntervalsScreen = () => {
   const lastDatePickerResultRef = useRef(null);
   const initialPackageName = route.params?.packageName || null;
   const [selectedPackageName, setSelectedPackageName] = useState(initialPackageName);
-  const [rangeIndex, setRangeIndex] = useState(0);
+  const [rangeIndex, setRangeIndex] = useState(1);
   const [filterDateRange, setFilterDateRange] = useState(null);
   const [filterPackageNames, setFilterPackageNames] = useState(null);
   const [filterModalVisible, setFilterModalVisible] = useState(false);

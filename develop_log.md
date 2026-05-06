@@ -1347,3 +1347,9 @@
 - src/screens/UsageScreen.js 已将黑名单主页统计图范围切换按钮组的默认选中项改为 7天，首次进入时默认显示最近 7 天柱状图。
 - AGENTS.md、developer_guide.md、src/screens/UsageHelpScreen.js 和 src/screens/VersionHistoryScreen.js 已同步记录黑名单主页统计图通过按钮组切换显示。
 - 已执行 node --check 检查 src/screens/UsageScreen.js、src/components/UsageCharts.js、src/screens/UsageHelpScreen.js 和 src/screens/VersionHistoryScreen.js，结果通过。
+
+### 查看使用时间段默认范围调整
+- src/screens/UsageIntervalsScreen.js 已将查看使用时间段详情页范围按钮组的默认选中项改为 7天。
+- src/screens/UsageIntervalsScreen.js 已使全部记录详情和单个应用记录详情首次进入时默认显示最近 7 天记录和汇总。
+- AGENTS.md、developer_guide.md、src/screens/UsageHelpScreen.js 和 src/screens/VersionHistoryScreen.js 已同步记录查看使用时间段详情页默认显示 7 天范围。
+- 已执行 node --check 检查 src/screens/UsageIntervalsScreen.js、src/screens/UsageHelpScreen.js 和 src/screens/VersionHistoryScreen.js，结果通过。
