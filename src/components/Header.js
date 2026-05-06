@@ -23,6 +23,7 @@ import { Ionicons } from '@expo/vector-icons';
   * @param {string}   props.title                 — 顶部标题文本
   * @param {Function} props.onPrevious            — 点击左侧“上一页”箭头的回调函数
   * @param {Function} props.onNext                — 点击右侧“下一页”箭头的回调函数
+  * @param {Function} [props.onTitlePress]        — 点击标题文字的回调函数
   * @param {boolean}  [props.showArrows=true]     — 是否显示导航箭头（默认显示）
   * @param {boolean}  [props.disablePrevious=false] — 是否禁用左侧箭头（默认不禁用）
   * @param {boolean}  [props.disableNext=false]     — 是否禁用右侧箭头（默认不禁用）
@@ -32,10 +33,16 @@ const Header = ({
   title,
   onPrevious,
   onNext,
+  onTitlePress,
   showArrows = true,
   disablePrevious = false,
   disableNext = false,
 }) => {
+  const TitleWrapper = onTitlePress ? TouchableOpacity : View;
+  const titleProps = onTitlePress
+    ? { onPress: onTitlePress, activeOpacity: 0.7 }
+    : {};
+
   return (
     <View style={styles.header}>
       {/* 左侧箭头：仅在 showArrows 为 true 时渲染 */}
@@ -58,11 +65,17 @@ const Header = ({
       )}
 
       {/* 标题区域：占据中间位置并水平居中 */}
-      <View style={styles.titleContainer}>
+      <TitleWrapper
+        style={[
+          styles.titleContainer,
+          onTitlePress && styles.titleButton,
+        ]}
+        {...titleProps}
+      >
         <Text style={styles.titleText}>
           {title}
         </Text>
-      </View>
+      </TitleWrapper>
 
       {/* 右侧箭头：仅在 showArrows 为 true 时渲染 */}
       {showArrows && (
@@ -109,6 +122,10 @@ const styles = StyleSheet.create({
   /** 标题容器：占据剩余空间并水平居中 */
   titleContainer: {
     alignItems: 'center',
+  },
+  titleButton: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
   },
   /** 标题文本：字体大小、加粗及颜色 */
   titleText: {

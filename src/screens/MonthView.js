@@ -10,6 +10,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList, PanResponder } from 'react-native';
 import moment from 'moment';
 import Header from '../components/Header';
+import DateQuickPickerModal from '../components/DateQuickPickerModal';
 import { getCheckInStatus, CheckInTypes } from '../utils/checkInStorage';
 import { Svg, Path } from 'react-native-svg';
 
@@ -21,9 +22,16 @@ import { Svg, Path } from 'react-native-svg';
  * @param {number} refreshKey - 刷新键，用于强制重新加载数据
  * @returns {JSX.Element} 月份视图组件
  */
-const MonthView = ({ selectedDate, onDateChange, onViewChange, refreshKey = 0 }) => {
+const MonthView = ({
+  selectedDate,
+  onDateChange,
+  onViewChange,
+  refreshKey = 0,
+  onQuickMonthChange = null,
+}) => {
   const [currentMonth, setCurrentMonth] = useState(selectedDate.clone());
   const [checkInData, setCheckInData] = useState({});
+  const [quickPickerVisible, setQuickPickerVisible] = useState(false);
 
   useEffect(() => {
     loadCheckInData();
@@ -148,6 +156,23 @@ const MonthView = ({ selectedDate, onDateChange, onViewChange, refreshKey = 0 })
     onDateChange(today);
   };
 
+  const handleQuickPickerConfirm = (date) => {
+    setQuickPickerVisible(false);
+
+    const targetMonth = date.clone().startOf('month');
+    const targetDate = targetMonth
+      .clone()
+      .date(Math.min(selectedDate.date(), targetMonth.daysInMonth()))
+      .startOf('day');
+
+    setCurrentMonth(targetMonth);
+    if (onQuickMonthChange) {
+      onQuickMonthChange(targetDate);
+    } else {
+      onDateChange(targetDate);
+    }
+  };
+
   const CheckInDay = ({ item }) => {
     const { checkInStatus } = item;
     const hasType1 = checkInStatus & CheckInTypes.TYPE1;
@@ -245,6 +270,7 @@ const MonthView = ({ selectedDate, onDateChange, onViewChange, refreshKey = 0 })
         title={currentMonth.format('YYYY年MM月')}
         onPrevious={handlePreviousMonth}
         onNext={handleNextMonth}
+        onTitlePress={() => setQuickPickerVisible(true)}
         disableNext={isNextMonthDisabled}
       />
       
@@ -271,6 +297,14 @@ const MonthView = ({ selectedDate, onDateChange, onViewChange, refreshKey = 0 })
           </View>
         </TouchableOpacity>
       )}
+
+      <DateQuickPickerModal
+        visible={quickPickerVisible}
+        mode="month"
+        value={currentMonth}
+        onConfirm={handleQuickPickerConfirm}
+        onCancel={() => setQuickPickerVisible(false)}
+      />
     </View>
   );
 };

@@ -33,9 +33,9 @@ const SoftwareIntroScreen = () => {
 
         <Text style={styles.sectionTitle}>主要功能</Text>
         <View style={styles.list}>
-          <Text style={styles.listItem}>- 日视图：查看当天记录、图标状态和间隔天数。</Text>
-          <Text style={styles.listItem}>- 月视图：按月查看每天是否存在记录。</Text>
-          <Text style={styles.listItem}>- 年视图：按全年维度查看记录分布。</Text>
+          <Text style={styles.listItem}>- 日视图：查看当天记录、图标状态和间隔天数，并可快速切换日期。</Text>
+          <Text style={styles.listItem}>- 月视图：按月查看每天是否存在记录，并可快速切换年月。</Text>
+          <Text style={styles.listItem}>- 年视图：按全年维度查看记录分布，并可快速切换年份。</Text>
           <Text style={styles.listItem}>- 统计分析：查看总览、年度和自定义区间统计。</Text>
           <Text style={styles.listItem}>- 数据管理：支持 JSON 数据导入、导出和分享。</Text>
         </View>

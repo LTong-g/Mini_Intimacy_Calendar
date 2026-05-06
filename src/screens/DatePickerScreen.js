@@ -40,6 +40,7 @@ const DatePickerScreen = () => {
           selectedDate={tempDate}
           onDateChange={handleFinalDateSelected}
           onViewChange={() => setView('year')}
+          onQuickMonthChange={handleDateChange}
         />
       )}
     </View>

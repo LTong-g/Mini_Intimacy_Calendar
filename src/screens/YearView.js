@@ -18,6 +18,7 @@ import {
 } from "react-native";
 import moment from "moment";
 import Header from "../components/Header";
+import DateQuickPickerModal from "../components/DateQuickPickerModal";
 import { Svg, Path } from "react-native-svg";
 import { getCheckInStatus, CheckInTypes } from "../utils/checkInStorage";
 
@@ -30,6 +31,7 @@ const monthHeight = monthWidth;
 const YearView = ({ onDateChange, onViewChange, selectedDate }) => {
   const [currentYear, setCurrentYear] = useState(selectedDate.year());
   const [checkInData, setCheckInData] = useState({});
+  const [quickPickerVisible, setQuickPickerVisible] = useState(false);
 
   const months = [
     { name: "一月", month: 0 },
@@ -150,6 +152,21 @@ const YearView = ({ onDateChange, onViewChange, selectedDate }) => {
     if (currentYear < moment().year()) setCurrentYear(currentYear + 1);
   };
 
+  const handleQuickPickerConfirm = (date) => {
+    const targetYear = date.year();
+    const today = moment().startOf("day");
+    const targetDate = moment(selectedDate)
+      .year(targetYear)
+      .startOf("day");
+    const normalizedDate = targetDate.isAfter(today, "day")
+      ? today
+      : targetDate;
+
+    setQuickPickerVisible(false);
+    setCurrentYear(targetYear);
+    onDateChange(normalizedDate);
+  };
+
   const handleMonthPress = (monthIndex) => {
     const newDate = moment(selectedDate).year(currentYear).month(monthIndex);
     if (newDate.isAfter(moment(), "month")) return;
@@ -228,6 +245,7 @@ const YearView = ({ onDateChange, onViewChange, selectedDate }) => {
         title={`${currentYear}年`}
         onPrevious={handlePreviousYear}
         onNext={handleNextYear}
+        onTitlePress={() => setQuickPickerVisible(true)}
         disableNext={isNextYearDisabled}
       />
       <FlatList
@@ -253,6 +271,14 @@ const YearView = ({ onDateChange, onViewChange, selectedDate }) => {
           </View>
         </TouchableOpacity>
       )}
+
+      <DateQuickPickerModal
+        visible={quickPickerVisible}
+        mode="year"
+        value={moment().year(currentYear)}
+        onConfirm={handleQuickPickerConfirm}
+        onCancel={() => setQuickPickerVisible(false)}
+      />
     </View>
   );
 };

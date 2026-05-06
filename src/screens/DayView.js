@@ -16,6 +16,7 @@ import moment from 'moment';
 import 'moment/locale/zh-cn';
 import Header from '../components/Header';
 import CountAdjustModal from '../components/CountAdjustModal';
+import DateQuickPickerModal from '../components/DateQuickPickerModal';
 import {
   CheckInCountKeys,
   getAllCheckInData,
@@ -66,6 +67,7 @@ const DayView = ({ selectedDate, onDateChange, refreshKey = 0 }) => {
   const [editingVisible, setEditingVisible] = useState(false);
   const [editingType, setEditingType] = useState(null);
   const [editingValue, setEditingValue] = useState('0');
+  const [quickPickerVisible, setQuickPickerVisible] = useState(false);
   const liveRecordRef = useRef({
     tutorial: 0,
     weapon: 0,
@@ -307,6 +309,7 @@ const DayView = ({ selectedDate, onDateChange, refreshKey = 0 }) => {
         title={selectedDate.format('YYYY年MM月DD日')}
         onPrevious={handlePreviousDay}
         onNext={handleNextDay}
+        onTitlePress={() => setQuickPickerVisible(true)}
         disableNext={isNextDayDisabled}
       />
 
@@ -370,6 +373,17 @@ const DayView = ({ selectedDate, onDateChange, refreshKey = 0 }) => {
         }}
         onConfirm={handleConfirmEdit}
         onCancel={handleCancelEdit}
+      />
+
+      <DateQuickPickerModal
+        visible={quickPickerVisible}
+        mode="day"
+        value={selectedDate}
+        onConfirm={(date) => {
+          setQuickPickerVisible(false);
+          onDateChange(date);
+        }}
+        onCancel={() => setQuickPickerVisible(false)}
       />
 
       {!isToday && (

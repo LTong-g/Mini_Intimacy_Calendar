@@ -1167,3 +1167,21 @@
 - src/screens/VersionHistoryScreen.js 已移除新增、修复、优化分组中对使用记录辅助与黑名单功能的重复条目。
 - src/screens/VersionHistoryScreen.js 已将当前开发版本中使用记录辅助与黑名单功能的简介扩展为多条完整能力说明。
 - AGENTS.md 和 developer_guide.md 已修正 Unreleased 规则：Unreleased 本身不天然作为特殊版本，只有当前开发版本有明确主功能时才使用同级功能简介。
+
+### 顶部日期滚轮快速切换实现
+- src/components/DateQuickPickerModal.js 已新增共享滚轮选择弹窗，支持按日期、月份和年份三种粒度选择，年份范围为 1900 至当前年份。
+- src/components/Header.js 已支持点击顶部标题文字触发外部回调，并保持顶部左右箭头原有紧凑居中分布。
+- src/screens/DayView.js 已接入点击顶部日期文字后用滚轮选择年月日并切换日视图日期。
+- src/screens/MonthView.js 已接入点击顶部月份文字后用滚轮选择年月并切换月视图月份。
+- src/screens/YearView.js 已接入点击顶部年份文字后用滚轮选择年份并切换年视图年份。
+
+### 日期选择页顶部年月切换规则
+- src/screens/DatePickerScreen.js 已让月份日期选择阶段复用 MonthView 的顶部年月滚轮。
+- 日期选择页进入某一月后，点击顶部年月只切换当前显示年月，不直接选定具体日期。
+- 日期选择页的最终日期仍通过点击月历中的具体日期选定并返回。
+
+### 顶部日期滚轮交互与文档同步
+- src/components/DateQuickPickerModal.js 已使用原生 snapToOffsets 配置逐项停靠点，并在确认时读取各滚轮的原生滚动偏移计算选中值。
+- src/components/DateQuickPickerModal.js 仅在弹窗打开、可选范围变化或用户点按具体项时调用 scrollToIndex，减少滚动过程中的 JS 状态干预。
+- SoftwareIntroScreen、UsageHelpScreen、VersionHistoryScreen、developer_guide.md 和 AGENTS.md 已同步本次顶部日期滚轮快速切换能力与日期选择页年月切换规则。
+- PrivacyPolicyScreen 已核对，本次功能未改变隐私政策中的数据记录、权限或联网说明。
