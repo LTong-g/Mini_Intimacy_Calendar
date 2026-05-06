@@ -36,9 +36,7 @@ const normalizeIntervals = (value) => {
       packageName: item.packageName,
       startTime: item.startTime,
       endTime: item.endTime,
-      durationMs: Number.isFinite(item.durationMs)
-        ? item.durationMs
-        : item.endTime - item.startTime,
+      durationMs: item.endTime - item.startTime,
     }));
 };
 
@@ -62,8 +60,57 @@ const areBlacklistsEqual = (left, right) => (
   JSON.stringify(normalizeBlacklist(left)) === JSON.stringify(normalizeBlacklist(right))
 );
 
+const buildNonOverlappingSegments = (intervals) => {
+  const boundaries = Array.from(new Set(
+    intervals.flatMap((item) => [item.startTime, item.endTime])
+  )).sort((a, b) => a - b);
+  const segments = [];
+
+  for (let index = 0; index < boundaries.length - 1; index += 1) {
+    const startTime = boundaries[index];
+    const endTime = boundaries[index + 1];
+    if (endTime <= startTime) continue;
+
+    const active = intervals.filter((item) => (
+      item.startTime < endTime && item.endTime > startTime
+    ));
+    if (active.length === 0) continue;
+
+    const winner = active.sort((a, b) => (
+      b.startTime - a.startTime ||
+      (a.endTime - a.startTime) - (b.endTime - b.startTime) ||
+      a.packageName.localeCompare(b.packageName)
+    ))[0];
+    const last = segments[segments.length - 1];
+    if (last && last.packageName === winner.packageName && last.endTime === startTime) {
+      last.endTime = endTime;
+      last.durationMs = last.endTime - last.startTime;
+    } else {
+      segments.push({
+        packageName: winner.packageName,
+        startTime,
+        endTime,
+        durationMs: endTime - startTime,
+      });
+    }
+  }
+
+  return segments;
+};
+
+const hasDifferentPackageUsageBetween = (segments, packageName, startTime, endTime) => {
+  if (endTime <= startTime) return false;
+  return segments.some((item) => (
+    item.packageName !== packageName &&
+    item.startTime < endTime &&
+    item.endTime > startTime
+  ));
+};
+
 export const mergeAdjacentUsageIntervals = (intervals, gapMs = MERGE_GAP_MS) => {
-  const normalized = normalizeIntervals(intervals)
+  const normalized = normalizeIntervals(intervals);
+  const segments = buildNonOverlappingSegments(normalized);
+  const sorted = segments
     .sort((a, b) => (
       a.packageName.localeCompare(b.packageName) ||
       a.startTime - b.startTime ||
@@ -71,12 +118,13 @@ export const mergeAdjacentUsageIntervals = (intervals, gapMs = MERGE_GAP_MS) => 
     ));
   const merged = [];
 
-  normalized.forEach((item) => {
+  sorted.forEach((item) => {
     const last = merged[merged.length - 1];
     if (
       last &&
       last.packageName === item.packageName &&
-      item.startTime - last.endTime <= gapMs
+      item.startTime - last.endTime <= gapMs &&
+      !hasDifferentPackageUsageBetween(segments, item.packageName, last.endTime, item.startTime)
     ) {
       last.endTime = Math.max(last.endTime, item.endTime);
       last.durationMs = last.endTime - last.startTime;

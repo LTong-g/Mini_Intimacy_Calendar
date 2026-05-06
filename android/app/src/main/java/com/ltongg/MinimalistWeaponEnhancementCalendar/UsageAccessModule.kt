@@ -345,21 +345,31 @@ class UsageAccessModule(
     while (usageEvents.hasNextEvent()) {
       usageEvents.getNextEvent(event)
       val packageName = event.packageName ?: continue
-      if (!selectedPackages.contains(packageName)) continue
+      val eventTime = event.timeStamp.coerceIn(beginTime, endTime)
 
       when (event.eventType) {
         UsageEvents.Event.ACTIVITY_RESUMED,
         UsageEvents.Event.MOVE_TO_FOREGROUND -> {
-          if (!activeStarts.containsKey(packageName)) {
-            activeStarts[packageName] = event.timeStamp.coerceAtLeast(beginTime)
+          activeStarts
+            .filterKeys { activePackage -> activePackage != packageName }
+            .forEach { entry ->
+              if (eventTime > entry.value) {
+                intervals.add(UsageInterval(entry.key, entry.value, eventTime))
+              }
+            }
+          activeStarts.keys.removeAll { activePackage -> activePackage != packageName }
+
+          if (selectedPackages.contains(packageName) && !activeStarts.containsKey(packageName)) {
+            activeStarts[packageName] = eventTime
           }
         }
         UsageEvents.Event.ACTIVITY_PAUSED,
         UsageEvents.Event.ACTIVITY_STOPPED,
         UsageEvents.Event.MOVE_TO_BACKGROUND -> {
+          if (!selectedPackages.contains(packageName)) continue
           val startTime = activeStarts.remove(packageName)
           if (startTime != null) {
-            val end = event.timeStamp.coerceAtMost(endTime)
+            val end = eventTime
             if (end > startTime) {
               intervals.add(UsageInterval(packageName, startTime, end))
             }

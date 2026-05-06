@@ -1238,3 +1238,16 @@
 - src/components/LineChartBase.js 已保留触摸态聚合区间标签分散判断的原有安全边距。
 - developer_guide.md 和 VersionHistoryScreen.js 已同步自定义统计图末尾日期标签按实际重叠隐藏的规则。
 - UsageHelpScreen.js、SoftwareIntroScreen.js、PrivacyPolicyScreen.js 和 AGENTS.md 已核对，本次图表标签判断修复未改变对应说明或持久规则。
+
+### 黑名单使用记录重叠聚合修复
+- 已确认原生使用记录接口基于 UsageStatsManager.queryEvents 的前后台事件推导使用时间段，不是 UsageStats 汇总时长。
+- 已确认原生读取实现按包名单独维护 activeStart，另一个应用进入前台时未截断当前已记录应用，原始碎片数据存在跨应用重叠风险。
+- 已确认 JS 端和晚间刷新端的同应用碎片合并按包名单独排序，存在跨过其他黑名单应用使用时间段合并同一应用记录的缺陷。
+- android/app/src/main/java/com/ltongg/MinimalistWeaponEnhancementCalendar/UsageAccessModule.kt 已在任意应用进入前台时截断其他已激活黑名单应用时间段。
+- android/app/src/main/java/com/ltongg/MinimalistWeaponEnhancementCalendar/UsageAccessScheduler.kt 已在晚间刷新读取阶段采用同样的前台切换截断规则。
+- src/utils/usageStorage.js 已在合并前按时间线拆分跨应用重叠区间，并禁止跨过其他黑名单应用使用时间段合并同一应用碎片。
+- UsageHelpScreen.js、VersionHistoryScreen.js、developer_guide.md 和 AGENTS.md 已同步记录同应用碎片合并不得跨越其他黑名单应用使用时间段。
+- 已执行 node --check 检查 src/utils/usageStorage.js、src/screens/UsageHelpScreen.js 和 src/screens/VersionHistoryScreen.js，结果通过。
+- 已执行临时 Node 脚本验证 B 20:23-20:26 包含 A 20:24-20:24:45 时会拆分为 B、A、B 三段。
+- 已执行临时 Node 脚本验证同一应用中间没有其他黑名单应用使用时仍会按 2 分钟间隔合并。
+- 已执行 npm run android:build:debug:tempmap 构建 Android Debug APK，结果通过。

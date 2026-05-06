@@ -239,21 +239,31 @@ object UsageAccessScheduler {
     while (usageEvents.hasNextEvent()) {
       usageEvents.getNextEvent(event)
       val packageName = event.packageName ?: continue
-      if (!selectedPackages.contains(packageName)) continue
+      val eventTime = event.timeStamp.coerceIn(beginTime, endTime)
 
       when (event.eventType) {
         UsageEvents.Event.ACTIVITY_RESUMED,
         UsageEvents.Event.MOVE_TO_FOREGROUND -> {
-          if (!activeStarts.containsKey(packageName)) {
-            activeStarts[packageName] = event.timeStamp.coerceAtLeast(beginTime)
+          activeStarts
+            .filterKeys { activePackage -> activePackage != packageName }
+            .forEach { entry ->
+              if (eventTime > entry.value) {
+                intervals.add(UsageInterval(entry.key, entry.value, eventTime))
+              }
+            }
+          activeStarts.keys.removeAll { activePackage -> activePackage != packageName }
+
+          if (selectedPackages.contains(packageName) && !activeStarts.containsKey(packageName)) {
+            activeStarts[packageName] = eventTime
           }
         }
         UsageEvents.Event.ACTIVITY_PAUSED,
         UsageEvents.Event.ACTIVITY_STOPPED,
         UsageEvents.Event.MOVE_TO_BACKGROUND -> {
+          if (!selectedPackages.contains(packageName)) continue
           val startTime = activeStarts.remove(packageName)
           if (startTime != null) {
-            val end = event.timeStamp.coerceAtMost(endTime)
+            val end = eventTime
             if (end > startTime) {
               intervals.add(UsageInterval(packageName, startTime, end))
             }
@@ -279,8 +289,9 @@ object UsageAccessScheduler {
         deduped["${interval.packageName}:${interval.startTime}:${interval.endTime}"] = interval
       }
 
+    val segments = buildNonOverlappingSegments(deduped.values.toList())
     val merged = mutableListOf<UsageInterval>()
-    deduped.values
+    segments
       .sortedWith(
         compareBy<UsageInterval> { it.packageName }
           .thenBy { it.startTime }
@@ -291,7 +302,8 @@ object UsageAccessScheduler {
         if (
           last != null &&
           last.packageName == interval.packageName &&
-          interval.startTime - last.endTime <= MERGE_GAP_MS
+          interval.startTime - last.endTime <= MERGE_GAP_MS &&
+          !hasDifferentPackageUsageBetween(segments, interval.packageName, last.endTime, interval.startTime)
         ) {
           merged[merged.lastIndex] = UsageInterval(
             last.packageName,
@@ -304,6 +316,52 @@ object UsageAccessScheduler {
       }
 
     return merged.sortedWith(compareBy<UsageInterval> { it.startTime }.thenBy { it.packageName })
+  }
+
+  private fun buildNonOverlappingSegments(intervals: List<UsageInterval>): List<UsageInterval> {
+    val boundaries = intervals
+      .flatMap { listOf(it.startTime, it.endTime) }
+      .distinct()
+      .sorted()
+    val segments = mutableListOf<UsageInterval>()
+
+    for (index in 0 until boundaries.lastIndex) {
+      val startTime = boundaries[index]
+      val endTime = boundaries[index + 1]
+      if (endTime <= startTime) continue
+
+      val winner = intervals
+        .filter { it.startTime < endTime && it.endTime > startTime }
+        .sortedWith(
+          compareByDescending<UsageInterval> { it.startTime }
+            .thenBy { it.endTime - it.startTime }
+            .thenBy { it.packageName }
+        )
+        .firstOrNull()
+        ?: continue
+      val last = segments.lastOrNull()
+      if (last != null && last.packageName == winner.packageName && last.endTime == startTime) {
+        segments[segments.lastIndex] = UsageInterval(last.packageName, last.startTime, endTime)
+      } else {
+        segments.add(UsageInterval(winner.packageName, startTime, endTime))
+      }
+    }
+
+    return segments
+  }
+
+  private fun hasDifferentPackageUsageBetween(
+    intervals: List<UsageInterval>,
+    packageName: String,
+    startTime: Long,
+    endTime: Long
+  ): Boolean {
+    if (endTime <= startTime) return false
+    return intervals.any {
+      it.packageName != packageName &&
+        it.startTime < endTime &&
+        it.endTime > startTime
+    }
   }
 
   private fun readAsyncStorageItem(context: Context, key: String): String? {
