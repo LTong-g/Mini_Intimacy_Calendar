@@ -1269,3 +1269,10 @@
 - 已执行 node --check 检查 UsageIntervalsScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js，结果通过。
 - 已使用本地 @babel/parser 解析 UsageIntervalsScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js，结果通过。
 - 已执行 git diff --check，结果通过。
+
+### 黑名单按日期读取弹窗外部取消修复
+- src/screens/UsageScreen.js 已为按日期读取记录弹窗新增可点击外部遮罩，并复用关闭处理取消弹窗。
+- src/screens/UsageScreen.js 已在读取中阻止外部遮罩和返回键关闭按日期读取记录弹窗，与取消按钮禁用状态保持一致。
+- src/screens/VersionHistoryScreen.js 已在 Unreleased 修复记录中补充黑名单主页按日期读取记录弹窗无法点击外部区域取消的问题。
+- UsageHelpScreen.js、SoftwareIntroScreen.js、PrivacyPolicyScreen.js、developer_guide.md 和 AGENTS.md 已核对，本次修复未改变对应说明或持久规则。
+- 已执行 node --check 检查 UsageScreen.js 和 VersionHistoryScreen.js，结果通过。

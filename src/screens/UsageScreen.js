@@ -7,6 +7,7 @@ import {
   Alert,
   Modal,
   Platform,
+  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -266,6 +267,11 @@ const ExperimentalUsageScreen = () => {
     setRangeModalVisible(true);
   };
 
+  const handleCloseRangeModal = () => {
+    if (isReading) return;
+    setRangeModalVisible(false);
+  };
+
   const handlePickDate = (field) => {
     setRangeModalVisible(false);
     rangePickerActiveRef.current = true;
@@ -412,9 +418,10 @@ const ExperimentalUsageScreen = () => {
         visible={rangeModalVisible}
         animationType="fade"
         transparent
-        onRequestClose={() => setRangeModalVisible(false)}
+        onRequestClose={handleCloseRangeModal}
       >
         <View style={styles.modalOverlay}>
+          <Pressable style={styles.modalBackdrop} onPress={handleCloseRangeModal} />
           <View style={styles.rangeModal}>
             <Text style={styles.modalTitle}>读取使用记录</Text>
             <View style={styles.dateRangeRow}>
@@ -435,7 +442,7 @@ const ExperimentalUsageScreen = () => {
             <View style={styles.modalActions}>
               <TouchableOpacity
                 style={styles.secondaryAction}
-                onPress={() => setRangeModalVisible(false)}
+                onPress={handleCloseRangeModal}
                 disabled={isReading}
               >
                 <Text style={styles.secondaryActionText}>取消</Text>
@@ -555,6 +562,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.35)',
     justifyContent: 'center',
     padding: 20,
+  },
+  modalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
   },
   rangeModal: {
     borderRadius: 8,
