@@ -1198,3 +1198,10 @@
 - src/screens/DatePickerScreen.js 已改为使用嵌套 native stack 承载日期选择页年份层和月份层，并使用 native stack 默认进入/退出动画。
 - src/screens/DatePickerScreen.js 已通过路由参数同步年份层选择的月份，避免月份层动画进入时短暂显示旧月份。
 - AGENTS.md、UsageHelpScreen.js、VersionHistoryScreen.js 和 developer_guide.md 已同步记录日期选择页月份层默认进入/退出动画。
+
+### 底部栏视图切换与主按钮行为调整
+- App.js 已将左侧日历按钮视图切换顺序改为日视图、月视图、年视图轮回。
+- src/components/CustomTabBar.js 已将左侧日历按钮文字改为查看月视图、查看年视图、查看日视图。
+- src/components/CustomTabBar.js 已移除月视图中间按钮长按返回日视图和年视图中间按钮短按返回日视图的行为。
+- AGENTS.md、developer_guide.md、UsageHelpScreen.js 和 VersionHistoryScreen.js 已同步记录底部栏视图切换与主按钮行为变化。
+- SoftwareIntroScreen.js 和 PrivacyPolicyScreen.js 已核对，本次变更未改变软件介绍中的功能概览或隐私说明。

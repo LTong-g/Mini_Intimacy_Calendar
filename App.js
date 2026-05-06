@@ -78,7 +78,7 @@ const CalendarScreen = () => {
     if (currentView === "Month") {
       setCurrentView("Year");
     } else if (currentView === "Year") {
-      setCurrentView("Month");
+      setCurrentView("Day");
     } else {
       setCurrentView("Month");
     }
@@ -93,7 +93,6 @@ const CalendarScreen = () => {
       {renderCurrentView()}
       <CustomTabBar
         currentView={currentView}
-        onViewChange={handleViewChange}
         onCycleViews={handleCycleViews}
         selectedDate={selectedDate}
         onRefreshMonthView={handleRefreshMonthView}

@@ -47,7 +47,6 @@ const clampInteger = (value) => {
 
 const CustomTabBar = ({
   currentView,
-  onViewChange,
   onCycleViews,
   selectedDate,
   onRefreshMonthView,
@@ -165,23 +164,14 @@ const CustomTabBar = ({
   const handleCenterPress = () => {
     if (currentView === "Day" || currentView === "Month") {
       setShowCheckInButtons(true);
-    } else {
-      onViewChange("Day", moment().startOf("day"));
-    }
-  };
-
-  const handleLongPress = () => {
-    if (currentView === "Month") {
-      Vibration.vibrate(30);
-      onViewChange("Day", moment().startOf("day"));
     }
   };
 
   const getCurrentViewText = () => {
     const viewMap = {
-      Day: "月视图",
-      Month: "年视图",
-      Year: "月视图",
+      Day: "查看月视图",
+      Month: "查看年视图",
+      Year: "查看日视图",
     };
     return viewMap[currentView];
   };
@@ -240,8 +230,7 @@ const CustomTabBar = ({
         <TouchableOpacity
           style={styles.centerButton}
           onPress={handleCenterPress}
-          onLongPress={handleLongPress}
-          delayLongPress={500}
+          disabled={currentView === "Year"}
         >
           <View style={styles.centerButtonInner}>
             <Ionicons name="today" size={28} color="#fff" />
