@@ -1505,3 +1505,9 @@
 - src/screens/VersionHistoryScreen.js 已在 Unreleased 修复记录中补充日视图取消最后一条记录后坚持天数短暂显示 0 天的修复说明。
 - 已使用 @babel/parser 解析 src/screens/DayView.js 和 src/screens/VersionHistoryScreen.js，结果通过。
 - 已执行 git diff --check 检查 src/screens/DayView.js 和 src/screens/VersionHistoryScreen.js，结果通过。
+
+### 顶部日期滚轮初始值回退修复
+- 已确认 DateQuickPickerModal 通过滚轮原生滚动偏移反推确认值，快速反复打开时偏移缓存可能仍为 0，导致年份、月份和日期列读取到首项 1900、1、1。
+- src/components/DateQuickPickerModal.js 已在滚轮列重新定位时先同步当前选中项偏移缓存，并在未完成定位前返回当前传入值对应项。
+- src/components/DateQuickPickerModal.js 已为每次弹窗打开生成新的滚动定位键，保证同一日期反复打开时也会重新对齐滚轮。
+- src/screens/VersionHistoryScreen.js 的 Unreleased 修复项已记录顶部日期滚轮初始值回退问题。

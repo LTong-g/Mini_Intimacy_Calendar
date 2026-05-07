@@ -49,6 +49,7 @@ const WheelColumn = forwardRef(({ data, value, labelFormatter, onChange, scrollK
   const previousDataKeyRef = useRef('');
   const offsetRef = useRef(0);
   const selectedIndex = Math.max(0, data.indexOf(value));
+  const selectedOffset = selectedIndex * ITEM_HEIGHT;
   const dataKey = data.join(',');
   const positionKey = `${scrollKey}-${dataKey}`;
   const snapOffsets = useMemo(
@@ -60,14 +61,15 @@ const WheelColumn = forwardRef(({ data, value, labelFormatter, onChange, scrollK
     if (!listRef.current || data.length === 0) return;
     if (previousDataKeyRef.current === positionKey) return;
     previousDataKeyRef.current = positionKey;
+    offsetRef.current = selectedOffset;
     requestAnimationFrame(() => {
       listRef.current?.scrollToIndex({
         index: selectedIndex,
         animated: false,
       });
-      offsetRef.current = selectedIndex * ITEM_HEIGHT;
+      offsetRef.current = selectedOffset;
     });
-  }, [data, positionKey, selectedIndex]);
+  }, [data, positionKey, selectedIndex, selectedOffset]);
 
   const commitNearestItem = (offsetY) => {
     const index = clamp(Math.round(offsetY / ITEM_HEIGHT), 0, data.length - 1);
@@ -76,10 +78,13 @@ const WheelColumn = forwardRef(({ data, value, labelFormatter, onChange, scrollK
 
   useImperativeHandle(ref, () => ({
     getValue: () => {
+      if (previousDataKeyRef.current !== positionKey) {
+        return data[selectedIndex];
+      }
       const index = clamp(Math.round(offsetRef.current / ITEM_HEIGHT), 0, data.length - 1);
       return data[index];
     },
-  }), [data]);
+  }), [data, positionKey, selectedIndex]);
 
   return (
     <View style={styles.wheelColumn}>
@@ -147,6 +152,7 @@ const DateQuickPickerModal = ({
   );
 
   const [draft, setDraft] = useState(normalizedInitial);
+  const [openCount, setOpenCount] = useState(0);
   const yearWheelRef = useRef(null);
   const monthWheelRef = useRef(null);
   const dayWheelRef = useRef(null);
@@ -154,6 +160,7 @@ const DateQuickPickerModal = ({
   useEffect(() => {
     if (visible) {
       setDraft(normalizeDateForMode(value || moment(), mode));
+      setOpenCount((count) => count + 1);
     }
   }, [mode, value, visible]);
 
@@ -235,7 +242,9 @@ const DateQuickPickerModal = ({
     month: '快速切换月份',
     year: '快速切换年份',
   };
-  const scrollKey = visible ? normalizedInitial.format('YYYY-MM-DD') : 'closed';
+  const scrollKey = visible
+    ? `${openCount}-${normalizedInitial.format('YYYY-MM-DD')}`
+    : 'closed';
 
   return (
     <BaseModal
