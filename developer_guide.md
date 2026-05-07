@@ -2,6 +2,13 @@
 
 # Developer Guide
 
+## 0. 项目体积事实
+- 当前仓库体积偏大的主要来源不是业务源码或 Git 历史，而是本机 Android 构建产生的可再生成中间产物。
+- 已确认的主要占用包括：`node_modules` 约 `9.66G`、`android` 约 `4.64G`、`dist` 约 `184MB`、`.git` 约 `6.4MB`。
+- `node_modules` 中的主要占用来自 React Native / Expo 原生模块的 Android 构建目录，例如 `react-native-reanimated/android/build`、`expo-modules-core/android/build`、`react-native-screens/android/build`、`react-native-gesture-handler/android/build` 及对应 `.cxx` 目录。
+- `android` 中的主要占用来自 `android/app/build` 和 `android/app/.cxx`。
+- 上述 `build` 和 `.cxx` 目录属于可再生成构建产物，清理后下次 Android 构建会重新生成；`dist` 中的 Release APK 和导出资产属于发布/分发归档，是否保留取决于发布管理需要。
+
 ## 1. 项目定位
 `MinimalistWeaponEnhancementCalendar` 是一个基于 Expo + React Native 的移动端打卡应用。  
 它围绕“按日期记录三类行为”这个核心目标，提供日历视图、数据统计和数据导入导出能力。
