@@ -33,6 +33,19 @@ object UsageAccessScheduler {
   private const val ASYNC_STORAGE_KEY_COLUMN = "key"
   private const val ASYNC_STORAGE_VALUE_COLUMN = "value"
   private const val MERGE_GAP_MS = 2 * 60 * 1000L
+  private val refreshLock = Any()
+
+  data class RefreshResult(
+    val requestBeginTime: Long,
+    val requestEndTime: Long,
+    val actualBeginTime: Long?,
+    val actualEndTime: Long?,
+    val readIntervalCount: Int,
+    val savedIntervalCount: Int,
+    val packageCount: Int,
+    val selectedCount: Int,
+    val errorMessage: String?
+  )
 
   fun setEnabled(context: Context, enabled: Boolean) {
     context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
@@ -88,51 +101,101 @@ object UsageAccessScheduler {
     }
   }
 
-  fun refreshUsageStats(context: Context, reason: String) {
-    var packageCount = 0
-    var intervalCount = 0
-    var selectedCount = 0
-    var errorMessage: String? = null
+  fun refreshUsageStats(context: Context, reason: String): RefreshResult {
+    val endTime = System.currentTimeMillis()
+    val beginTime = recentRefreshStartTime(endTime)
+    return refreshUsageStats(context, beginTime, endTime, reason)
+  }
 
-    try {
-      if (!hasUsageAccess(context)) {
-        errorMessage = "Usage access is not granted."
-      } else {
-        val endTime = System.currentTimeMillis()
-        val beginTime = recentRefreshStartTime(endTime)
-        val periods = readBlacklistPeriods(context)
-        val selectedPackages = periods
-          .filter { it.overlaps(beginTime, endTime) }
-          .map { it.packageName }
-          .toSet()
-        selectedCount = selectedPackages.size
-
-        if (selectedPackages.isNotEmpty()) {
-          val queriedIntervals = queryUsageIntervals(context, selectedPackages, beginTime, endTime)
-          val clippedIntervals = clipIntervalsToPeriods(queriedIntervals, periods, beginTime, endTime)
-          val mergedIntervals = mergeUsageIntervals(readStoredIntervals(context) + clippedIntervals)
-          writeStoredIntervals(context, mergedIntervals)
-
-          packageCount = clippedIntervals.map { it.packageName }.distinct().size
-          intervalCount = mergedIntervals.size
-        }
-      }
-    } catch (error: Exception) {
-      errorMessage = error.message ?: error.javaClass.simpleName
+  fun refreshUsageStats(
+    context: Context,
+    beginTime: Long,
+    endTime: Long,
+    reason: String
+  ): RefreshResult {
+    if (endTime <= beginTime) {
+      val result = RefreshResult(
+        requestBeginTime = beginTime,
+        requestEndTime = endTime,
+        actualBeginTime = null,
+        actualEndTime = null,
+        readIntervalCount = 0,
+        savedIntervalCount = 0,
+        packageCount = 0,
+        selectedCount = 0,
+        errorMessage = "Invalid refresh range."
+      )
+      writeRefreshState(context, reason, result)
+      return result
     }
 
+    var packageCount = 0
+    var readIntervalCount = 0
+    var savedIntervalCount = 0
+    var selectedCount = 0
+    var actualBeginTime: Long? = null
+    var actualEndTime: Long? = null
+    var errorMessage: String? = null
+
+    synchronized(refreshLock) {
+      try {
+        if (!hasUsageAccess(context)) {
+          errorMessage = "Usage access is not granted."
+        } else {
+          val periods = readBlacklistPeriods(context)
+          val selectedPackages = periods
+            .filter { it.overlaps(beginTime, endTime) }
+            .map { it.packageName }
+            .toSet()
+          selectedCount = selectedPackages.size
+
+          if (selectedPackages.isNotEmpty()) {
+            val queriedIntervals = queryUsageIntervals(context, selectedPackages, beginTime, endTime)
+            val clippedIntervals = clipIntervalsToPeriods(queriedIntervals, periods, beginTime, endTime)
+            val mergedReadIntervals = mergeUsageIntervals(clippedIntervals)
+            val mergedIntervals = mergeUsageIntervals(readStoredIntervals(context) + clippedIntervals)
+            writeStoredIntervals(context, mergedIntervals)
+
+            actualBeginTime = mergedReadIntervals.minOfOrNull { it.startTime }
+            actualEndTime = mergedReadIntervals.maxOfOrNull { it.endTime }
+            packageCount = mergedReadIntervals.map { it.packageName }.distinct().size
+            readIntervalCount = mergedReadIntervals.size
+            savedIntervalCount = mergedIntervals.size
+          }
+        }
+      } catch (error: Exception) {
+        errorMessage = error.message ?: error.javaClass.simpleName
+      }
+    }
+
+    val result = RefreshResult(
+      requestBeginTime = beginTime,
+      requestEndTime = endTime,
+      actualBeginTime = actualBeginTime,
+      actualEndTime = actualEndTime,
+      readIntervalCount = readIntervalCount,
+      savedIntervalCount = savedIntervalCount,
+      packageCount = packageCount,
+      selectedCount = selectedCount,
+      errorMessage = errorMessage
+    )
+    writeRefreshState(context, reason, result)
+    return result
+  }
+
+  private fun writeRefreshState(context: Context, reason: String, result: RefreshResult) {
     context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
       .edit()
       .putLong(KEY_LAST_REFRESH_AT, System.currentTimeMillis())
       .putString(KEY_LAST_REFRESH_REASON, reason)
-      .putInt(KEY_LAST_REFRESH_PACKAGE_COUNT, packageCount)
-      .putInt(KEY_LAST_REFRESH_INTERVAL_COUNT, intervalCount)
-      .putInt(KEY_LAST_REFRESH_SELECTED_COUNT, selectedCount)
+      .putInt(KEY_LAST_REFRESH_PACKAGE_COUNT, result.packageCount)
+      .putInt(KEY_LAST_REFRESH_INTERVAL_COUNT, result.savedIntervalCount)
+      .putInt(KEY_LAST_REFRESH_SELECTED_COUNT, result.selectedCount)
       .apply {
-        if (errorMessage == null) {
+        if (result.errorMessage == null) {
           remove(KEY_LAST_REFRESH_ERROR)
         } else {
-          putString(KEY_LAST_REFRESH_ERROR, errorMessage)
+          putString(KEY_LAST_REFRESH_ERROR, result.errorMessage)
         }
       }
       .apply()

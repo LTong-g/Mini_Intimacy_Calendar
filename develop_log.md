@@ -1516,3 +1516,19 @@
 - 已确认删除应用使用记录会清空已保存黑名单使用时间段、黑名单刷新状态和原生上次刷新摘要。
 - src/screens/SettingsScreen.js 已移除删除应用使用记录确认弹窗中关于不会关闭系统使用情况访问权限的提示。
 - src/screens/SettingsScreen.js 已将删除应用使用记录确认弹窗和删除完成提示改为说明删除已保存的黑名单应用使用时间段记录。
+
+### 使用记录读取机制统一分析
+- 已确认当前应用内刷新由 src/screens/UsageScreen.js 组织读取流程：读取黑名单生效包名、调用原生 queryUsageIntervals、在 JS 中按生效期裁剪、合并并保存使用时间段。
+- 已确认晚间自动刷新由 android/app/src/main/java/com/ltongg/MinimalistWeaponEnhancementCalendar/UsageAccessScheduler.kt 在原生侧完成选包、查询、裁剪、合并和写入 app_data_blacklist。
+- 已确认 UsageAccessModule.kt 与 UsageAccessScheduler.kt 均包含 UsageEvents 转使用时间段的查询逻辑，JS usageStorage.js 与原生 UsageAccessScheduler.kt 均包含裁剪或合并相关规则。
+- 已形成可行统一方向：新增原生刷新事务接口供应用内静默刷新、下拉刷新和按日期读取调用，使晚间刷新与应用内刷新共用同一套原生查询、裁剪、合并和写入逻辑。
+
+### 统一使用记录原生刷新事务
+- UsageAccessScheduler.kt 已新增可指定时间范围的原生刷新事务，统一完成黑名单生效包名选取、UsageEvents 查询、按生效时间段裁剪、碎片合并、写入 app_data_blacklist 和刷新结果统计。
+- UsageAccessScheduler.kt 已为刷新事务增加同步锁，避免应用内刷新与晚间定时刷新并发写入黑名单数据。
+- UsageAccessModule.kt 已移除旧 queryUsageIntervals 桥接查询逻辑，并新增 refreshUsageRecords 原生接口供 JS 发起统一刷新事务。
+- UsageScreen.js 已改为通过 refreshUsageRecords 执行静默刷新、下拉刷新和按日期读取，刷新完成后重新读取已保存的本地使用时间段用于图表和完成弹窗。
+- usageStorage.js 已移除应用内读取专用的选包、裁剪和保存合并辅助函数，保留展示层使用的使用时间段读取与合并函数。
+- developer_guide.md 已记录应用内静默刷新、下拉刷新、按日期读取和晚间定时刷新统一通过 Android 原生刷新事务执行。
+- node --check 已通过 src/screens/UsageScreen.js、src/utils/usageAccessNative.js 和 src/utils/usageStorage.js。
+- 首次执行 npm run android:build:debug:tempmap 因 Gradle wrapper 缓存锁文件访问被拒绝而失败；提升权限后同一 tempmap 构建命令已成功完成 assembleDebug。

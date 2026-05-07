@@ -18,10 +18,6 @@ const getPeriodEnd = (period) => (
   period.endAt === null || period.endAt === undefined ? Number.POSITIVE_INFINITY : period.endAt
 );
 
-const periodOverlapsRange = (period, beginTime, endTime) => (
-  period.startAt < endTime && getPeriodEnd(period) > beginTime
-);
-
 const isPeriodActiveAt = (period, time = Date.now()) => (
   period.startAt <= time && getPeriodEnd(period) > time
 );
@@ -284,25 +280,6 @@ export const getExperimentalUsageIntervals = async () => {
   return normalizeUsageIntervalsPayload(blacklist.intervals);
 };
 
-export const saveExperimentalUsageIntervals = async (intervals) => {
-  const normalized = normalizeUsageIntervalsPayload(intervals);
-  const byIdentity = new Map();
-  normalized.forEach((item) => {
-    byIdentity.set(`${item.packageName}:${item.startTime}:${item.endTime}`, item);
-  });
-  const nextIntervals = mergeAdjacentUsageIntervals(Array.from(byIdentity.values()));
-  const next = await writeBlacklistData({
-    ...(await readBlacklistData()),
-    intervals: nextIntervals,
-  });
-  return next.intervals;
-};
-
-export const mergeExperimentalUsageIntervals = async (intervals) => {
-  const existing = await getExperimentalUsageIntervals();
-  return saveExperimentalUsageIntervals([...existing, ...intervals]);
-};
-
 export const clearExperimentalUsageIntervals = async () => {
   const current = await readBlacklistData();
   await writeBlacklistData({
@@ -310,47 +287,4 @@ export const clearExperimentalUsageIntervals = async () => {
     intervals: [],
     refreshState: {},
   });
-};
-
-export const getExperimentalUsagePackageNamesForRange = async (beginTime, endTime) => {
-  const blacklist = await readBlacklistData();
-  return Array.from(new Set(
-    blacklist.periods
-      .filter((period) => periodOverlapsRange(period, beginTime, endTime))
-      .map((period) => period.packageName)
-  ));
-};
-
-export const clipExperimentalUsageIntervalsToBlacklistPeriods = async (
-  intervals,
-  beginTime,
-  endTime
-) => {
-  const blacklist = await readBlacklistData();
-  const normalized = normalizeUsageIntervalsPayload(intervals);
-  const clipped = [];
-
-  normalized.forEach((interval) => {
-    blacklist.periods
-      .filter((period) => (
-        period.packageName === interval.packageName &&
-        periodOverlapsRange(period, beginTime, endTime) &&
-        period.startAt < interval.endTime &&
-        getPeriodEnd(period) > interval.startTime
-      ))
-      .forEach((period) => {
-        const startTime = Math.max(interval.startTime, period.startAt, beginTime);
-        const endTimeClipped = Math.min(interval.endTime, getPeriodEnd(period), endTime);
-        if (endTimeClipped > startTime) {
-          clipped.push({
-            packageName: interval.packageName,
-            startTime,
-            endTime: endTimeClipped,
-            durationMs: endTimeClipped - startTime,
-          });
-        }
-      });
-  });
-
-  return clipped;
 };

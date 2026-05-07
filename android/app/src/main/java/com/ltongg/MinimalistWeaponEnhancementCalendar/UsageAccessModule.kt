@@ -2,8 +2,6 @@ package com.ltongg.MinimalistWeaponEnhancementCalendar
 
 import android.app.AlarmManager
 import android.app.AppOpsManager
-import android.app.usage.UsageEvents
-import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -18,11 +16,9 @@ import android.provider.Settings
 import android.util.Base64
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.Promise
-import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
-import com.facebook.react.bridge.WritableArray
 import com.facebook.react.bridge.WritableMap
 import java.io.ByteArrayOutputStream
 import java.util.Locale
@@ -198,33 +194,40 @@ class UsageAccessModule(
   }
 
   @ReactMethod
-  fun queryUsageIntervals(packageNames: ReadableArray, beginTime: Double, endTime: Double, promise: Promise) {
-    try {
-      if (!hasUsageAccess()) {
-        promise.reject("USAGE_ACCESS_NOT_GRANTED", "Usage access is not granted.")
-        return
-      }
-
-      val selectedPackages = mutableSetOf<String>()
-      for (index in 0 until packageNames.size()) {
-        packageNames.getString(index)?.let { packageName ->
-          if (packageName.isNotBlank()) selectedPackages.add(packageName)
+  fun refreshUsageRecords(beginTime: Double, endTime: Double, reason: String, promise: Promise) {
+    backgroundExecutor.execute {
+      try {
+        val result = UsageAccessScheduler.refreshUsageStats(
+          reactContext,
+          beginTime.toLong(),
+          endTime.toLong(),
+          reason.ifBlank { "app_manual" }
+        )
+        if (result.errorMessage != null) {
+          promise.reject("REFRESH_USAGE_RECORDS_FAILED", result.errorMessage)
+          return@execute
         }
+        promise.resolve(Arguments.createMap().apply {
+          putDouble("requestBeginTime", result.requestBeginTime.toDouble())
+          putDouble("requestEndTime", result.requestEndTime.toDouble())
+          if (result.actualBeginTime == null) {
+            putNull("actualBeginTime")
+          } else {
+            putDouble("actualBeginTime", result.actualBeginTime.toDouble())
+          }
+          if (result.actualEndTime == null) {
+            putNull("actualEndTime")
+          } else {
+            putDouble("actualEndTime", result.actualEndTime.toDouble())
+          }
+          putInt("readIntervalCount", result.readIntervalCount)
+          putInt("savedIntervalCount", result.savedIntervalCount)
+          putInt("packageCount", result.packageCount)
+          putInt("selectedCount", result.selectedCount)
+        })
+      } catch (error: Exception) {
+        promise.reject("REFRESH_USAGE_RECORDS_FAILED", error)
       }
-
-      if (selectedPackages.isEmpty()) {
-        promise.resolve(Arguments.createArray())
-        return
-      }
-
-      val result = queryIntervals(
-        selectedPackages,
-        beginTime.toLong(),
-        endTime.toLong()
-      )
-      promise.resolve(result)
-    } catch (error: Exception) {
-      promise.reject("QUERY_USAGE_INTERVALS_FAILED", error)
     }
   }
 
@@ -330,79 +333,6 @@ class UsageAccessModule(
     if (maxValue <= 0.0) return 0.0
     return (maxValue - minValue) / maxValue
   }
-
-  private fun queryIntervals(
-    selectedPackages: Set<String>,
-    beginTime: Long,
-    endTime: Long
-  ): WritableArray {
-    val usageStatsManager = reactContext.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
-    val usageEvents = usageStatsManager.queryEvents(beginTime, endTime)
-    val event = UsageEvents.Event()
-    val activeStarts = mutableMapOf<String, Long>()
-    val intervals = mutableListOf<UsageInterval>()
-
-    while (usageEvents.hasNextEvent()) {
-      usageEvents.getNextEvent(event)
-      val packageName = event.packageName ?: continue
-      val eventTime = event.timeStamp.coerceIn(beginTime, endTime)
-
-      when (event.eventType) {
-        UsageEvents.Event.ACTIVITY_RESUMED,
-        UsageEvents.Event.MOVE_TO_FOREGROUND -> {
-          activeStarts
-            .filterKeys { activePackage -> activePackage != packageName }
-            .forEach { entry ->
-              if (eventTime > entry.value) {
-                intervals.add(UsageInterval(entry.key, entry.value, eventTime))
-              }
-            }
-          activeStarts.keys.removeAll { activePackage -> activePackage != packageName }
-
-          if (selectedPackages.contains(packageName) && !activeStarts.containsKey(packageName)) {
-            activeStarts[packageName] = eventTime
-          }
-        }
-        UsageEvents.Event.ACTIVITY_PAUSED,
-        UsageEvents.Event.ACTIVITY_STOPPED,
-        UsageEvents.Event.MOVE_TO_BACKGROUND -> {
-          if (!selectedPackages.contains(packageName)) continue
-          val startTime = activeStarts.remove(packageName)
-          if (startTime != null) {
-            val end = eventTime
-            if (end > startTime) {
-              intervals.add(UsageInterval(packageName, startTime, end))
-            }
-          }
-        }
-      }
-    }
-
-    activeStarts.forEach { entry ->
-      if (endTime > entry.value) {
-        intervals.add(UsageInterval(entry.key, entry.value, endTime))
-      }
-    }
-
-    val result = Arguments.createArray()
-    intervals
-      .sortedWith(compareBy<UsageInterval> { it.startTime }.thenBy { it.packageName })
-      .forEach { interval ->
-        result.pushMap(Arguments.createMap().apply {
-          putString("packageName", interval.packageName)
-          putDouble("startTime", interval.startTime.toDouble())
-          putDouble("endTime", interval.endTime.toDouble())
-          putDouble("durationMs", (interval.endTime - interval.startTime).toDouble())
-        })
-      }
-    return result
-  }
-
-  private data class UsageInterval(
-    val packageName: String,
-    val startTime: Long,
-    val endTime: Long
-  )
 
   private data class LaunchableApp(
     val packageName: String,

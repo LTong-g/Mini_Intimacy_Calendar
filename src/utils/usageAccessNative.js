@@ -58,7 +58,9 @@ export const getLaunchableApplications = async () => {
   return UsageAccessModule.getLaunchableApplications();
 };
 
-export const queryUsageIntervals = async (packageNames, beginTime, endTime) => {
-  if (!isUsageAccessNativeAvailable()) return [];
-  return UsageAccessModule.queryUsageIntervals(packageNames, beginTime, endTime);
+export const refreshUsageRecords = async (beginTime, endTime, reason = 'app_manual') => {
+  if (!isUsageAccessNativeAvailable()) {
+    throw new Error('当前平台不支持读取使用记录');
+  }
+  return UsageAccessModule.refreshUsageRecords(beginTime, endTime, reason);
 };

@@ -28,14 +28,11 @@ import {
   getExperimentalUsageBlacklist,
   getExperimentalUsageKnownApps,
   getExperimentalUsageIntervals,
-  getExperimentalUsagePackageNamesForRange,
-  clipExperimentalUsageIntervalsToBlacklistPeriods,
   mergeAdjacentUsageIntervals,
-  mergeExperimentalUsageIntervals,
 } from '../utils/usageStorage';
 import {
   getUsageAccessStatus,
-  queryUsageIntervals,
+  refreshUsageRecords,
 } from '../utils/usageAccessNative';
 
 const msPerDay = 24 * 60 * 60 * 1000;
@@ -64,10 +61,6 @@ const formatDuration = (durationMs) => {
   return `${minutes}分钟`;
 };
 
-const formatRange = (beginTime, endTime) => (
-  `${moment(beginTime).format('YYYY-MM-DD HH:mm')} 至 ${moment(endTime).format('YYYY-MM-DD HH:mm')}`
-);
-
 const formatModalRange = (beginTime, endTime) => (
   `${moment(beginTime).format('YYYY-MM-DD HH:mm')} -- ${moment(endTime).format('YYYY-MM-DD HH:mm')}`
 );
@@ -78,17 +71,6 @@ const getRecentUsageReadRange = () => {
     beginTime: now.clone().subtract(2, 'days').startOf('day').valueOf(),
     endTime: now.valueOf(),
   };
-};
-
-const getActualRecordRange = (records) => {
-  if (!records.length) return null;
-  return records.reduce((range, item) => ({
-    beginTime: Math.min(range.beginTime, item.startTime),
-    endTime: Math.max(range.endTime, item.endTime),
-  }), {
-    beginTime: records[0].startTime,
-    endTime: records[0].endTime,
-  });
 };
 
 const showDateError = (message) => {
@@ -262,35 +244,27 @@ const ExperimentalUsageScreen = () => {
     const {
       successTitle = '读取完成',
       showResult = true,
+      reason = 'app_manual',
     } = options;
-    const packageNames = await getExperimentalUsagePackageNamesForRange(beginTime, endTime);
-    if (packageNames.length === 0) {
+    const result = await refreshUsageRecords(beginTime, endTime, reason);
+    if (result.selectedCount === 0) {
       throw new Error('所选时间范围内没有处于黑名单状态的应用');
     }
-    const queriedIntervals = await queryUsageIntervals(packageNames, beginTime, endTime);
-    const clippedIntervals = await clipExperimentalUsageIntervalsToBlacklistPeriods(
-      queriedIntervals,
-      beginTime,
-      endTime
-    );
-    const mergedReadIntervals = mergeAdjacentUsageIntervals(clippedIntervals);
-    const merged = await mergeExperimentalUsageIntervals(clippedIntervals);
-    const actualRange = getActualRecordRange(mergedReadIntervals);
-    setIntervals(merged);
+    const nextIntervals = await getExperimentalUsageIntervals();
+    setIntervals(nextIntervals);
     if (showResult) {
       setReadResult({
         title: successTitle,
         requestRange: formatModalRange(beginTime, endTime),
-        actualRange: actualRange
-          ? formatModalRange(actualRange.beginTime, actualRange.endTime)
+        actualRange: result.actualBeginTime !== null && result.actualEndTime !== null
+          ? formatModalRange(result.actualBeginTime, result.actualEndTime)
           : '无',
-        count: mergedReadIntervals.length,
+        count: result.readIntervalCount || 0,
       });
     }
     return {
-      merged,
-      mergedReadIntervals,
-      actualRange,
+      intervals: nextIntervals,
+      result,
     };
   }, []);
 
@@ -375,7 +349,10 @@ const ExperimentalUsageScreen = () => {
     const { beginTime, endTime } = getRecentUsageReadRange();
     try {
       setRefreshing(true);
-      await readUsageRecords(beginTime, endTime, { successTitle: '刷新完成' });
+      await readUsageRecords(beginTime, endTime, {
+        successTitle: '刷新完成',
+        reason: 'app_pull_refresh',
+      });
     } catch (error) {
       showBlacklistAlert('刷新失败', error.message || '无法读取黑名单应用使用记录');
     } finally {
@@ -393,6 +370,7 @@ const ExperimentalUsageScreen = () => {
       silentRefreshingRef.current = true;
       await readUsageRecords(beginTime, endTime, {
         showResult: false,
+        reason: 'app_silent_recent',
       });
     } catch {
       // Silent refresh must not interrupt page entry or show an error dialog.
