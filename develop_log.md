@@ -1498,3 +1498,10 @@
 - UsageScreen.js、UsageIntervalsScreen.js 和 UsageBlacklistScreen.js 已将黑名单功能内 Alert.alert 调用替换为黄橙色主题应用内弹窗。
 - src/screens/VersionHistoryScreen.js 已在 Unreleased 优化项记录应用内提示和确认弹窗样式统一。
 - rg 已确认 src 与 App.js 中除 appAlert.js 原生兜底外不再存在 Alert.alert 调用。
+
+### 日视图取消记录天数闪烁修复
+- src/screens/DayView.js 已将坚持天数计算抽为本地 helper，并在读取日视图状态时统一使用该 helper。
+- src/screens/DayView.js 已在长按递减导致当天最后一条记录清零时，先用排除当天后的本地数据快照计算坚持天数，再渲染未打卡状态。
+- src/screens/VersionHistoryScreen.js 已在 Unreleased 修复记录中补充日视图取消最后一条记录后坚持天数短暂显示 0 天的修复说明。
+- 已使用 @babel/parser 解析 src/screens/DayView.js 和 src/screens/VersionHistoryScreen.js，结果通过。
+- 已执行 git diff --check 检查 src/screens/DayView.js 和 src/screens/VersionHistoryScreen.js，结果通过。

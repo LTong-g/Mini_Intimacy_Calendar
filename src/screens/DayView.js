@@ -57,6 +57,37 @@ const clampInteger = (value) => {
   return Math.max(0, Math.floor(parsed));
 };
 
+const recordHasAnyCheckIn = (item) => {
+  const record = normalizeCheckInRecord(item);
+  return record.tutorial > 0 || record.weapon > 0 || record.duo > 0;
+};
+
+const calculateBreakDays = (data, selectedDateStr) => {
+  const checkInDates = Object.keys(data)
+    .filter((dateStr) => recordHasAnyCheckIn(data[dateStr]))
+    .sort((a, b) => new Date(b) - new Date(a));
+
+  if (checkInDates.length === 0) {
+    return '--';
+  }
+
+  if (checkInDates.includes(selectedDateStr)) {
+    return 0;
+  }
+
+  const lastCheckInDate = checkInDates.find((dateStr) => new Date(dateStr) <= new Date(selectedDateStr));
+
+  if (!lastCheckInDate) {
+    return '--';
+  }
+
+  const d1 = new Date(selectedDateStr);
+  const d2 = new Date(lastCheckInDate);
+  d1.setHours(0, 0, 0, 0);
+  d2.setHours(0, 0, 0, 0);
+  return Math.floor((d1 - d2) / (1000 * 60 * 60 * 24));
+};
+
 const DayView = ({ selectedDate, onDateChange, refreshKey = 0 }) => {
   const [record, setRecord] = useState({
     tutorial: 0,
@@ -73,6 +104,7 @@ const DayView = ({ selectedDate, onDateChange, refreshKey = 0 }) => {
     weapon: 0,
     duo: 0,
   });
+  const allDataRef = useRef({});
 
   const holdRef = useRef({
     active: false,
@@ -86,46 +118,13 @@ const DayView = ({ selectedDate, onDateChange, refreshKey = 0 }) => {
   const loadState = async () => {
     try {
       const data = await getAllCheckInData();
+      allDataRef.current = data;
       const selectedDateStr = selectedDate.format('YYYY-MM-DD');
       const currentRecord = normalizeCheckInRecord(data[selectedDateStr]);
+      const nextBreakDays = calculateBreakDays(data, selectedDateStr);
+      setBreakDays(nextBreakDays);
       setRecord(currentRecord);
       liveRecordRef.current = currentRecord;
-
-      const checkInDates = Object.keys(data)
-        .filter((dateStr) => {
-          const item = normalizeCheckInRecord(data[dateStr]);
-          return item.tutorial > 0 || item.weapon > 0 || item.duo > 0;
-        })
-        .sort((a, b) => new Date(b) - new Date(a));
-
-      if (checkInDates.length === 0) {
-        setBreakDays('--');
-        return;
-      }
-
-      if (checkInDates.includes(selectedDateStr)) {
-        setBreakDays(0);
-        return;
-      }
-
-      let lastCheckInDate = null;
-      for (const dateStr of checkInDates) {
-        if (new Date(dateStr) <= new Date(selectedDateStr)) {
-          lastCheckInDate = dateStr;
-          break;
-        }
-      }
-
-      if (!lastCheckInDate) {
-        setBreakDays('--');
-        return;
-      }
-
-      const d1 = new Date(selectedDateStr);
-      const d2 = new Date(lastCheckInDate);
-      d1.setHours(0, 0, 0, 0);
-      d2.setHours(0, 0, 0, 0);
-      setBreakDays(Math.floor((d1 - d2) / (1000 * 60 * 60 * 24)));
     } catch (error) {
       console.error('Error loading day view state:', error);
       setBreakDays('∞');
@@ -181,6 +180,16 @@ const DayView = ({ selectedDate, onDateChange, refreshKey = 0 }) => {
       ...liveRecordRef.current,
       [typeKey]: Math.max(0, current + direction),
     };
+    const nextTotal = next.tutorial + next.weapon + next.duo;
+    const selectedDateStr = selectedDate.format('YYYY-MM-DD');
+    const nextData = { ...allDataRef.current };
+    if (nextTotal > 0) {
+      nextData[selectedDateStr] = next;
+    } else {
+      delete nextData[selectedDateStr];
+      setBreakDays(calculateBreakDays(nextData, selectedDateStr));
+    }
+    allDataRef.current = nextData;
     liveRecordRef.current = next;
     setRecord(next);
     const saveTask = setCheckInRecord(selectedDate, next);
@@ -189,7 +198,7 @@ const DayView = ({ selectedDate, onDateChange, refreshKey = 0 }) => {
     if (direction < 0 && next[typeKey] === 0) {
       clearHoldTimer();
       holdRef.current.active = false;
-      if (next.tutorial + next.weapon + next.duo === 0) {
+      if (nextTotal === 0) {
         void saveTask.then(loadState);
       }
       return;
