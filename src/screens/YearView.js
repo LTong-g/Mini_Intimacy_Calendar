@@ -20,7 +20,7 @@ import moment from "moment";
 import Header from "../components/Header";
 import DateQuickPickerModal from "../components/DateQuickPickerModal";
 import { Svg, Path } from "react-native-svg";
-import { getCheckInStatus, CheckInTypes } from "../utils/checkInStorage";
+import { getCachedCheckInStatusMap, getCheckInStatusMap, CheckInTypes } from "../utils/checkInStorage";
 
 const screenWidth = Dimensions.get("window").width;
 const screenHeight = Dimensions.get("window").height;
@@ -28,10 +28,34 @@ const monthWidth = (screenWidth - 3 * 2 * 8 - 2 * 10) / 3; // 3列 + 3个间距 
 const dayDotSize = (monthWidth - 2 * 6 - 2 * 4) / 7 - 2; // 每行7个点，减去间距
 const monthHeight = monthWidth;
 
-const YearView = ({ onDateChange, onViewChange, selectedDate }) => {
-  const [currentYear, setCurrentYear] = useState(selectedDate.year());
-  const [checkInData, setCheckInData] = useState({});
+const getYearKey = (year) => String(year);
+
+const getYearRange = (year) => ({
+  start: moment().year(year).startOf("year"),
+  end: moment().year(year).endOf("year"),
+});
+
+const getCachedYearCheckInDataState = (targetYear) => {
+  const { start, end } = getYearRange(targetYear);
+  const data = getCachedCheckInStatusMap(start, end);
+  return data ? { key: getYearKey(targetYear), data } : null;
+};
+
+const YearView = ({ onDateChange, onViewChange, selectedDate, refreshKey = 0 }) => {
+  const initialYear = selectedDate.year();
+  const [currentYear, setCurrentYear] = useState(initialYear);
+  const [checkInDataState, setCheckInDataState] = useState(() =>
+    getCachedYearCheckInDataState(initialYear)
+  );
   const [quickPickerVisible, setQuickPickerVisible] = useState(false);
+  const currentYearKey = getYearKey(currentYear);
+  const checkInDataReady = checkInDataState?.key === currentYearKey;
+  const checkInData = checkInDataReady ? checkInDataState.data : null;
+
+  const applyCurrentYear = (targetYear) => {
+    setCheckInDataState(getCachedYearCheckInDataState(targetYear));
+    setCurrentYear(targetYear);
+  };
 
   const months = [
     { name: "一月", month: 0 },
@@ -49,20 +73,23 @@ const YearView = ({ onDateChange, onViewChange, selectedDate }) => {
   ];
 
   useEffect(() => {
-    loadYearCheckInData();
-  }, [currentYear]);
+    let cancelled = false;
+    const targetYearKey = getYearKey(currentYear);
 
-  const loadYearCheckInData = async () => {
-    const start = moment().year(currentYear).startOf("year");
-    const end = moment().year(currentYear).endOf("year");
-    const data = {};
-    let current = start.clone();
-    while (current.isSameOrBefore(end, "day")) {
-      const status = await getCheckInStatus(current);
-      data[current.format("YYYY-MM-DD")] = status;
-      current.add(1, "day");
-    }
-    setCheckInData(data);
+    loadYearCheckInData(currentYear).then((data) => {
+      if (!cancelled) {
+        setCheckInDataState({ key: targetYearKey, data });
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentYear, refreshKey]);
+
+  const loadYearCheckInData = async (targetYear) => {
+    const { start, end } = getYearRange(targetYear);
+    return getCheckInStatusMap(start, end);
   };
 
   const generateMonthPreview = (monthIndex) => {
@@ -76,7 +103,7 @@ const YearView = ({ onDateChange, onViewChange, selectedDate }) => {
     for (let day = 1; day <= daysInMonth; day++) {
       const date = month.clone().date(day);
       const status =
-        checkInData[date.format("YYYY-MM-DD")] || CheckInTypes.NONE;
+        checkInData?.[date.format("YYYY-MM-DD")] || CheckInTypes.NONE;
       preview.push({
         key: `day-${day}`,
         type: "day",
@@ -147,9 +174,9 @@ const YearView = ({ onDateChange, onViewChange, selectedDate }) => {
     ].join(" ");
   };
 
-  const handlePreviousYear = () => setCurrentYear(currentYear - 1);
+  const handlePreviousYear = () => applyCurrentYear(currentYear - 1);
   const handleNextYear = () => {
-    if (currentYear < moment().year()) setCurrentYear(currentYear + 1);
+    if (currentYear < moment().year()) applyCurrentYear(currentYear + 1);
   };
 
   const handleQuickPickerConfirm = (date) => {
@@ -163,7 +190,7 @@ const YearView = ({ onDateChange, onViewChange, selectedDate }) => {
       : targetDate;
 
     setQuickPickerVisible(false);
-    setCurrentYear(targetYear);
+    applyCurrentYear(targetYear);
     onDateChange(normalizedDate);
   };
 
@@ -263,7 +290,7 @@ const YearView = ({ onDateChange, onViewChange, selectedDate }) => {
             // 切回今天
             const today = moment().startOf("day");
             onDateChange(today);
-            setCurrentYear(today.year());
+            applyCurrentYear(today.year());
           }}
         >
           <View style={styles.calendarBox}>

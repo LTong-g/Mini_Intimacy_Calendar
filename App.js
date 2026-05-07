@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { View, StyleSheet } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -23,6 +23,7 @@ import VersionHistoryScreen from "./src/screens/VersionHistoryScreen";
 import ExperimentalUsageScreen from "./src/screens/UsageScreen";
 import ExperimentalUsageBlacklistScreen from "./src/screens/UsageBlacklistScreen";
 import ExperimentalUsageIntervalsScreen from "./src/screens/UsageIntervalsScreen";
+import { getAllCheckInData } from "./src/utils/checkInStorage";
 
 const Stack = createNativeStackNavigator();
 
@@ -31,6 +32,12 @@ const CalendarScreen = () => {
   const [currentView, setCurrentView] = useState("Day");
   const [selectedDate, setSelectedDate] = useState(moment().startOf("day"));
   const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    getAllCheckInData().catch((error) => {
+      console.error("预加载记录数据失败", error);
+    });
+  }, []);
 
   const handleDateChange = useCallback((date) => {
     setSelectedDate(date.clone().startOf("day"));
@@ -62,6 +69,7 @@ const CalendarScreen = () => {
             selectedDate={selectedDate}
             onDateChange={handleDateChange}
             onViewChange={setCurrentView}
+            refreshKey={refreshKey}
           />
         );
       default:

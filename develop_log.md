@@ -1365,3 +1365,33 @@
 - src/screens/UsageScreen.js 已通过 ref 保存最新黑名单列表和读取状态，避免页面聚焦 effect 因黑名单 state 更新而重复触发。
 - 黑名单主页静默刷新会在已有读取进行中或静默刷新进行中跳过本次后台读取。
 - 受影响 JSX 文件已重新通过 sucrase 解析检查。
+
+### 日历圆点加载延迟分析
+- 已核对 MonthView：当前按当月日期逐日调用 getCheckInStatus 读取圆点状态。
+- 已核对 YearView：当前按全年日期逐日调用 getCheckInStatus 读取圆点状态。
+- 已核对 DatePickerScreen：日期选择页复用 YearView 和 MonthView，因此继承同一圆点读取链路。
+- 已定位 getCheckInStatus 会经 getCheckInRecord 间接调用 getAllCheckInData，导致每个日期都重新读取并解析 checkin_status 整体 JSON。
+- 已确认圆点延迟主要来自重复 AsyncStorage 读取和 JSON 解析，圆点渲染本身不是主要瓶颈。
+- 已确认可通过一次性读取全量 checkin_status 并在内存中按日期范围派生位掩码，或增加内存快照缓存与后台静默刷新机制，缩短月视图、年视图和日期选择页圆点首屏等待。
+
+### 日历圆点批量读取优化实现
+- src/utils/checkInStorage.js 已新增 getCheckInStatusMap，用一次 getAllCheckInData 读取后按日期范围生成位掩码映射。
+- src/screens/MonthView.js 已改为按当前月份一次性读取圆点状态，不再逐日调用 getCheckInStatus。
+- src/screens/YearView.js 已改为按当前年份一次性读取圆点状态，不再逐日调用 getCheckInStatus。
+- App.js 已将 refreshKey 传入 YearView，使年视图在打卡变更后可触发圆点数据刷新。
+- src/screens/DatePickerScreen.js 复用 MonthView 和 YearView，因此日期选择页继承本次批量读取优化。
+- src/screens/VersionHistoryScreen.js 已在 Unreleased 优化项记录月视图、年视图和日期选择页记录圆点加载速度优化。
+- SoftwareIntroScreen.js、UsageHelpScreen.js、PrivacyPolicyScreen.js、developer_guide.md 和 AGENTS.md 已核对，本次读取链路优化未改变对应功能说明或隐私说明。
+- 已使用本地 @babel/parser 解析 App.js、src/utils/checkInStorage.js、src/screens/MonthView.js、src/screens/YearView.js 和 src/screens/VersionHistoryScreen.js，结果通过。
+- 已执行 git diff --check，结果通过。
+
+### 日历圆点闪烁方案修正
+- src/screens/MonthView.js 已移除未就绪时隐藏整个月视图日历网格的处理。
+- src/screens/YearView.js 已移除未就绪时隐藏整个年视图网格的处理。
+- src/utils/checkInStorage.js 已增加运行期 checkin_status 内存快照，并在 getAllCheckInData、importCheckInData 和 setCheckInRecord 后同步更新快照。
+- src/utils/checkInStorage.js 已提供 getCachedCheckInStatusMap，使月视图和年视图可在首帧从内存快照同步派生当前范围圆点状态。
+- App.js 已在 CalendarScreen 挂载后预加载 checkin_status，用于提前建立运行期内存快照。
+- src/screens/MonthView.js 和 src/screens/YearView.js 已在切换月份或年份时先尝试使用内存快照填充当前范围圆点，再执行异步批量读取校准。
+- src/screens/VersionHistoryScreen.js 已将 Unreleased 优化项改为记录圆点加载速度优化并减少圆点加载造成的页面闪烁。
+- 已使用本地 @babel/parser 解析 App.js、src/utils/checkInStorage.js、src/screens/MonthView.js、src/screens/YearView.js 和 src/screens/VersionHistoryScreen.js，结果通过。
+- 已执行 git diff --check，结果通过。

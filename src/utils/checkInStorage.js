@@ -15,6 +15,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export const CHECKIN_KEY = 'checkin_status';
 
 const DATE_KEY_RE = /^\d{4}-\d{2}-\d{2}$/;
+let cachedCheckInData = null;
 
 export const CheckInCountKeys = {
   TYPE1: 'tutorial',
@@ -171,12 +172,14 @@ export const getAllCheckInData = async () => {
     await AsyncStorage.setItem(CHECKIN_KEY, JSON.stringify(data));
   }
 
+  cachedCheckInData = data;
   return data;
 };
 
 export const importCheckInData = async (raw) => {
   const { data } = normalizeCheckInData(raw, { strict: true });
   await AsyncStorage.setItem(CHECKIN_KEY, JSON.stringify(data));
+  cachedCheckInData = data;
   return data;
 };
 
@@ -195,6 +198,37 @@ export const getCheckInRecord = async (date) => {
   }
 };
 
+const buildCheckInStatusMap = (data, startDate, endDate) => {
+  const statusMap = {};
+  const current = startDate.clone().startOf('day');
+  const end = endDate.clone().startOf('day');
+
+  while (current.isSameOrBefore(end, 'day')) {
+    const dateStr = current.format('YYYY-MM-DD');
+    statusMap[dateStr] = data[dateStr]
+      ? checkInRecordToBitmask(data[dateStr])
+      : CheckInTypes.NONE;
+    current.add(1, 'day');
+  }
+
+  return statusMap;
+};
+
+export const getCachedCheckInStatusMap = (startDate, endDate) => {
+  if (!cachedCheckInData) return null;
+  return buildCheckInStatusMap(cachedCheckInData, startDate, endDate);
+};
+
+export const getCheckInStatusMap = async (startDate, endDate) => {
+  try {
+    const data = await getAllCheckInData();
+    return buildCheckInStatusMap(data, startDate, endDate);
+  } catch (error) {
+    console.error('Error getting check-in status map:', error);
+    return {};
+  }
+};
+
 export const setCheckInRecord = async (date, record) => {
   try {
     const dateStr = date.format('YYYY-MM-DD');
@@ -208,6 +242,7 @@ export const setCheckInRecord = async (date, record) => {
     }
 
     await AsyncStorage.setItem(CHECKIN_KEY, JSON.stringify(data));
+    cachedCheckInData = data;
     return true;
   } catch (error) {
     console.error('Error setting check-in record:', error);

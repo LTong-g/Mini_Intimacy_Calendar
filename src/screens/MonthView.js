@@ -11,8 +11,21 @@ import { View, Text, StyleSheet, TouchableOpacity, FlatList, PanResponder } from
 import moment from 'moment';
 import Header from '../components/Header';
 import DateQuickPickerModal from '../components/DateQuickPickerModal';
-import { getCheckInStatus, CheckInTypes } from '../utils/checkInStorage';
+import { getCachedCheckInStatusMap, getCheckInStatusMap, CheckInTypes } from '../utils/checkInStorage';
 import { Svg, Path } from 'react-native-svg';
+
+const getMonthKey = (date) => date.format('YYYY-MM');
+
+const getMonthRange = (date) => ({
+  start: date.clone().startOf('month'),
+  end: date.clone().endOf('month'),
+});
+
+const getCachedMonthCheckInDataState = (targetMonth) => {
+  const { start, end } = getMonthRange(targetMonth);
+  const data = getCachedCheckInStatusMap(start, end);
+  return data ? { key: getMonthKey(targetMonth), data } : null;
+};
 
 /**
  * 月份视图组件
@@ -29,31 +42,43 @@ const MonthView = ({
   refreshKey = 0,
   onQuickMonthChange = null,
 }) => {
-  const [currentMonth, setCurrentMonth] = useState(selectedDate.clone());
-  const [checkInData, setCheckInData] = useState({});
+  const initialMonth = selectedDate.clone();
+  const [currentMonth, setCurrentMonth] = useState(initialMonth);
+  const [checkInDataState, setCheckInDataState] = useState(() =>
+    getCachedMonthCheckInDataState(initialMonth)
+  );
   const [quickPickerVisible, setQuickPickerVisible] = useState(false);
+  const currentMonthKey = getMonthKey(currentMonth);
+  const checkInDataReady = checkInDataState?.key === currentMonthKey;
+  const checkInData = checkInDataReady ? checkInDataState.data : null;
+
+  const applyCurrentMonth = (targetMonth) => {
+    setCheckInDataState(getCachedMonthCheckInDataState(targetMonth));
+    setCurrentMonth(targetMonth);
+  };
 
   useEffect(() => {
-    loadCheckInData();
+    let cancelled = false;
+    const targetMonthKey = getMonthKey(currentMonth);
+
+    loadCheckInData(currentMonth).then((data) => {
+      if (!cancelled) {
+        setCheckInDataState({ key: targetMonthKey, data });
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [currentMonth, refreshKey]);
 
   /**
    * 加载当月的记录数据
    * 获取整个月份每一天的记录状态
    */
-  const loadCheckInData = async () => {
-    const startOfMonth = currentMonth.clone().startOf('month');
-    const endOfMonth = currentMonth.clone().endOf('month');
-    const data = {};
-    
-    let current = startOfMonth.clone();
-    while (current.isSameOrBefore(endOfMonth, 'day')) {
-      const status = await getCheckInStatus(current);
-      data[current.format('YYYY-MM-DD')] = status;
-      current.add(1, 'day');
-    }
-    
-    setCheckInData(data);
+  const loadCheckInData = async (targetMonth) => {
+    const { start, end } = getMonthRange(targetMonth);
+    return getCheckInStatusMap(start, end);
   };
 
   /**
@@ -74,7 +99,7 @@ const MonthView = ({
 
     while (current.isSameOrBefore(endDate, 'day')) {
       const dateStr = current.format('YYYY-MM-DD');
-      const status = checkInData[dateStr] || CheckInTypes.NONE;
+      const status = checkInData?.[dateStr] || CheckInTypes.NONE;
       days.push({
         date: current.clone(),
         isCurrentMonth: current.month() === currentMonth.month(),
@@ -90,7 +115,7 @@ const MonthView = ({
   const [showTodayButton, setShowTodayButton] = useState(false);
 
   useEffect(() => {
-    setCurrentMonth(selectedDate.clone());
+    applyCurrentMonth(selectedDate.clone());
   }, [selectedDate]);
 
   useEffect(() => {
@@ -107,7 +132,7 @@ const MonthView = ({
    * 切换到上个月
    */
   const handlePreviousMonth = () => {
-    setCurrentMonth(currentMonth.clone().subtract(1, 'month'));
+    applyCurrentMonth(currentMonth.clone().subtract(1, 'month'));
   };
 
   /**
@@ -122,7 +147,7 @@ const MonthView = ({
       return;
     }
     
-    setCurrentMonth(nextMonth);
+    applyCurrentMonth(nextMonth);
   };
 
   const handleDatePress = (date) => {
@@ -139,7 +164,7 @@ const MonthView = ({
         return;
       }
 
-      setCurrentMonth(pressedDay.clone().startOf('month'));
+      applyCurrentMonth(pressedDay.clone().startOf('month'));
       onDateChange(pressedDay);
       return;
     }
@@ -152,7 +177,7 @@ const MonthView = ({
 
   const handleTodayPress = () => {
     const today = moment().startOf('day');
-    setCurrentMonth(today);
+    applyCurrentMonth(today);
     onDateChange(today);
   };
 
@@ -165,7 +190,7 @@ const MonthView = ({
       .date(Math.min(selectedDate.date(), targetMonth.daysInMonth()))
       .startOf('day');
 
-    setCurrentMonth(targetMonth);
+    applyCurrentMonth(targetMonth);
     if (onQuickMonthChange) {
       onQuickMonthChange(targetDate);
     } else {
