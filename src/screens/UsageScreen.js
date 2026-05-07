@@ -104,7 +104,7 @@ const buildDailyRows = (intervals, blacklist, dayStart, dayEnd, elapsedMs) => {
     .map(([packageName, durationMs]) => ({
       packageName,
       label: apps.get(packageName)?.label || packageName,
-      color: apps.get(packageName)?.color || null,
+      color: null,
       durationMs,
       isRemainder: false,
     }))
@@ -417,7 +417,7 @@ const ExperimentalUsageScreen = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#007AFF" />
+          <Ionicons name="arrow-back" size={24} color="#F57F17" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>黑名单</Text>
       </View>
@@ -428,8 +428,8 @@ const ExperimentalUsageScreen = () => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRecentRefresh}
-            colors={['#007AFF']}
-            tintColor="#007AFF"
+            colors={['#F57F17']}
+            tintColor="#F57F17"
           />
         )}
       >
@@ -441,11 +441,11 @@ const ExperimentalUsageScreen = () => {
         </View>
 
         <TouchableOpacity
-          style={[styles.primaryButton, isReading && styles.disabledButton]}
+          style={[styles.primaryButton, isReading && styles.primaryButtonDisabled]}
           disabled={isReading}
           onPress={handleOpenRangeModal}
         >
-          <Ionicons name="calendar-outline" size={18} color="#fff" />
+          <Ionicons name="calendar-outline" size={18} color="#8A4B00" />
           <Text style={styles.primaryButtonText}>{isReading ? '读取中' : '按日期读取记录'}</Text>
         </TouchableOpacity>
 
@@ -458,14 +458,14 @@ const ExperimentalUsageScreen = () => {
           <View style={styles.blacklistEntryTextBlock}>
             <Text style={styles.blacklistEntryTitle}>设置黑名单应用</Text>
           </View>
-          <Ionicons name="chevron-forward" size={22} color="#777" />
+          <Ionicons name="chevron-forward" size={22} color="#A66A00" />
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.intervalEntry} onPress={handleOpenIntervals}>
           <View style={styles.blacklistEntryTextBlock}>
             <Text style={styles.blacklistEntryTitle}>查看使用时间段</Text>
           </View>
-          <Ionicons name="chevron-forward" size={22} color="#777" />
+          <Ionicons name="chevron-forward" size={22} color="#A66A00" />
         </TouchableOpacity>
 
         <View style={styles.chartRangeBar}>
@@ -592,7 +592,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: '#F4D79A',
   },
   backButton: {
     marginRight: 12,
@@ -600,7 +600,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#5F4300',
   },
   content: {
     paddingHorizontal: 20,
@@ -630,17 +630,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#F4D79A',
     borderRadius: 8,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#FFF8E1',
     marginTop: 16,
   },
   primaryButtonText: {
-    color: '#fff',
+    color: '#8A4B00',
     fontSize: 14,
+    fontWeight: '700',
     marginLeft: 6,
   },
+  primaryButtonDisabled: {
+    backgroundColor: '#F6E7C4',
+  },
   disabledButton: {
-    backgroundColor: '#8fbff4',
+    backgroundColor: '#F6E7C4',
   },
   modalOverlay: {
     flex: 1,
@@ -664,7 +670,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 17,
     fontWeight: '600',
-    color: '#333',
+    color: '#5F4300',
     marginBottom: 14,
   },
   dateRangeRow: {
@@ -677,19 +683,19 @@ const styles = StyleSheet.create({
     width: 120,
     paddingVertical: 7,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#F4D79A',
     borderRadius: 6,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#FFF8E1',
     alignItems: 'center',
   },
   dateText: {
     fontSize: 14,
-    color: '#000',
+    color: '#5F4300',
   },
   dateSeparator: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#5F4300',
     marginHorizontal: 12,
   },
   modalActions: {
@@ -705,11 +711,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#d8d8d8',
+    borderColor: '#F4D79A',
   },
   secondaryActionText: {
     fontSize: 14,
-    color: '#555',
+    color: '#8A4B00',
   },
   confirmAction: {
     minWidth: 72,
@@ -717,7 +723,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 8,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#F57F17',
   },
   confirmActionText: {
     fontSize: 14,
@@ -729,18 +735,18 @@ const styles = StyleSheet.create({
   resultLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#555',
+    color: '#8A4B00',
     marginBottom: 6,
   },
   resultValue: {
     fontSize: 14,
     lineHeight: 22,
-    color: '#333',
+    color: '#5F4300',
   },
   resultSummary: {
     fontSize: 14,
     lineHeight: 22,
-    color: '#333',
+    color: '#5F4300',
     marginTop: 2,
   },
   summaryRow: {
@@ -750,14 +756,14 @@ const styles = StyleSheet.create({
   },
   summaryText: {
     fontSize: 13,
-    color: '#444',
+    color: '#5F4300',
   },
   blacklistEntry: {
     minHeight: 48,
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#d8d8d8',
+    borderColor: '#F4D79A',
     borderRadius: 8,
     paddingHorizontal: 12,
     marginTop: 14,
@@ -767,7 +773,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#d8d8d8',
+    borderColor: '#F4D79A',
     borderRadius: 8,
     paddingHorizontal: 12,
     marginTop: 8,
@@ -778,11 +784,11 @@ const styles = StyleSheet.create({
   blacklistEntryTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: '#5F4300',
   },
   blacklistEntryText: {
     fontSize: 13,
-    color: '#666',
+    color: '#8A4B00',
   },
   chartRangeBar: {
     minHeight: 28,
@@ -819,7 +825,7 @@ const styles = StyleSheet.create({
   },
   rangeText: {
     fontSize: 13,
-    color: '#777',
+    color: '#A66A00',
   },
   rangeTextActive: {
     fontWeight: '700',
@@ -827,7 +833,7 @@ const styles = StyleSheet.create({
   },
   appList: {
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: '#F4D79A',
     borderRadius: 8,
     overflow: 'hidden',
   },
@@ -837,10 +843,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: '#F6E7C4',
   },
   appRowSelected: {
-    backgroundColor: '#eef6ff',
+    backgroundColor: '#FFF8E1',
   },
   appTextBlock: {
     flex: 1,
@@ -848,12 +854,12 @@ const styles = StyleSheet.create({
   },
   appLabel: {
     fontSize: 14,
-    color: '#333',
+    color: '#5F4300',
     marginBottom: 2,
   },
   packageName: {
     fontSize: 11,
-    color: '#777',
+    color: '#A66A00',
   },
 });
 

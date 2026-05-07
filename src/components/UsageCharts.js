@@ -23,9 +23,9 @@ const tutorialColor = '#F57F17';
 const tutorialLightColor = '#FFE082';
 const tutorialMidColor = '#FFD54F';
 const tutorialDarkColor = '#8A4B00';
-const gridColor = '#ECEFF3';
-const axisTextColor = '#6B7280';
-const remainderColor = '#E2E5EA';
+const gridColor = '#F4D79A';
+const axisTextColor = '#A66A00';
+const remainderColor = '#F6E7C4';
 const msPerMinute = 1000 * 60;
 const monthlyTouchValueLabelOffsetX = 6;
 const yAxisLabelWidth = 0;
@@ -45,9 +45,7 @@ const getUsageSliceColor = (index) => (
   [tutorialColor, tutorialMidColor, tutorialDarkColor, '#FFB300', '#B76E00'][index % 5]
 );
 
-const getDailySliceColor = (item, index) => (
-  item.color || getUsageSliceColor(index)
-);
+const getDailySliceColor = (item, index) => getUsageSliceColor(index);
 
 const shouldShowMonthlyPoint = (points, index) => {
   const point = points[index];
@@ -230,7 +228,7 @@ export const WeeklyUsageBarChart = ({ rows }) => {
                     x={plotStartX - 2}
                     y={y + 4}
                     fontSize={10}
-                    fill="#666"
+                    fill="#8A4B00"
                     textAnchor="end"
                   >
                     {formatAxisMinutes(maxValue * ratio, maxValue)}
@@ -243,7 +241,7 @@ export const WeeklyUsageBarChart = ({ rows }) => {
               y1={innerHeight}
               x2={plotStartX + plotWidth}
               y2={innerHeight}
-              stroke="#DDE2E8"
+              stroke="#F4D79A"
               strokeWidth={1}
             />
             {bars.map((bar) => (
@@ -384,7 +382,7 @@ export const MonthlyUsageLineChart = ({ rows }) => {
                 </G>
               );
             })}
-            <Line x1={plotStartX} y1={innerHeight} x2={plotStartX + innerWidth} y2={innerHeight} stroke="#DDE2E8" strokeWidth={1} />
+            <Line x1={plotStartX} y1={innerHeight} x2={plotStartX + innerWidth} y2={innerHeight} stroke="#F4D79A" strokeWidth={1} />
             {areaPath && <Path d={areaPath} fill="url(#monthlyAreaGradient)" />}
             {linePath && (
               <Path
@@ -411,7 +409,7 @@ export const MonthlyUsageLineChart = ({ rows }) => {
                   y1={0}
                   x2={touchPoint.x}
                   y2={innerHeight}
-                  stroke="#aaa"
+                  stroke="#B76E00"
                   strokeDasharray={[4, 4]}
                 />
                 <Circle
@@ -467,7 +465,7 @@ const styles = StyleSheet.create({
   chartBlock: {
     marginTop: 20,
     borderWidth: 1,
-    borderColor: '#ECEFF3',
+    borderColor: '#F4D79A',
     borderRadius: 8,
     padding: 12,
     backgroundColor: '#fff',
@@ -482,7 +480,7 @@ const styles = StyleSheet.create({
   chartTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: '#5F4300',
   },
   chartMeta: {
     fontSize: 12,
@@ -490,7 +488,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 14,
-    color: '#777',
+    color: '#A66A00',
     lineHeight: 22,
   },
   legend: {
@@ -509,7 +507,7 @@ const styles = StyleSheet.create({
   },
   legendText: {
     fontSize: 13,
-    color: '#444',
+    color: '#5F4300',
     flex: 1,
   },
 });

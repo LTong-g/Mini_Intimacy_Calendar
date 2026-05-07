@@ -315,7 +315,7 @@ const ExperimentalUsageBlacklistScreen = () => {
             <Image source={{ uri: app.icon }} style={styles.appIcon} />
           ) : (
             <View style={styles.appIconFallback}>
-              <Ionicons name="apps-outline" size={18} color="#7A7A7A" />
+              <Ionicons name="apps-outline" size={18} color="#A66A00" />
             </View>
           )}
         </View>
@@ -326,7 +326,7 @@ const ExperimentalUsageBlacklistScreen = () => {
         <Ionicons
           name={selected ? 'checkbox-outline' : 'square-outline'}
           size={22}
-          color={selected ? '#007AFF' : '#777'}
+          color={selected ? '#F57F17' : '#A66A00'}
         />
       </TouchableOpacity>
     );
@@ -336,7 +336,7 @@ const ExperimentalUsageBlacklistScreen = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#007AFF" />
+          <Ionicons name="arrow-back" size={24} color="#F57F17" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>黑名单应用</Text>
       </View>
@@ -349,19 +349,19 @@ const ExperimentalUsageBlacklistScreen = () => {
       </View>
 
       <View style={styles.searchWrap}>
-        <Ionicons name="search-outline" size={18} color="#777" />
+        <Ionicons name="search-outline" size={18} color="#A66A00" />
         <TextInput
           value={searchText}
           onChangeText={setSearchText}
           placeholder="搜索应用名称或包名"
-          placeholderTextColor="#999"
+          placeholderTextColor="#B76E00"
           style={styles.searchInput}
           autoCapitalize="none"
           autoCorrect={false}
         />
         {searchText ? (
           <TouchableOpacity onPress={() => setSearchText('')} style={styles.clearSearchButton}>
-            <Ionicons name="close-circle" size={18} color="#999" />
+            <Ionicons name="close-circle" size={18} color="#B76E00" />
           </TouchableOpacity>
         ) : null}
       </View>
@@ -411,7 +411,7 @@ const ExperimentalUsageBlacklistScreen = () => {
             showsVerticalScrollIndicator={false}
             ListEmptyComponent={isLoading ? (
               <View style={styles.loadingBlock}>
-                <ActivityIndicator size="small" color="#007AFF" />
+                <ActivityIndicator size="small" color="#F57F17" />
                 <Text style={styles.loadingText}>正在读取应用列表...</Text>
               </View>
             ) : (
@@ -485,7 +485,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: '#F4D79A',
   },
   backButton: {
     marginRight: 12,
@@ -493,11 +493,11 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#5F4300',
   },
   summaryCard: {
     borderWidth: 1,
-    borderColor: '#d8d8d8',
+    borderColor: '#F4D79A',
     borderRadius: 8,
     padding: 12,
     marginHorizontal: 20,
@@ -507,20 +507,20 @@ const styles = StyleSheet.create({
   summaryTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#333',
+    color: '#5F4300',
     marginBottom: 4,
   },
   summaryText: {
     fontSize: 13,
     lineHeight: 20,
-    color: '#555',
+    color: '#8A4B00',
   },
   searchWrap: {
     minHeight: 42,
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#d8d8d8',
+    borderColor: '#F4D79A',
     borderRadius: 8,
     paddingHorizontal: 12,
     marginHorizontal: 20,
@@ -532,7 +532,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 8,
     fontSize: 14,
-    color: '#333',
+    color: '#5F4300',
   },
   clearSearchButton: {
     padding: 2,
@@ -550,10 +550,10 @@ const styles = StyleSheet.create({
   },
   filterTabText: {
     fontSize: 12,
-    color: '#777',
+    color: '#A66A00',
   },
   filterTabTextActive: {
-    color: '#007AFF',
+    color: '#F57F17',
     fontWeight: '600',
   },
   listArea: {
@@ -565,7 +565,7 @@ const styles = StyleSheet.create({
     flex: 1,
     marginHorizontal: 20,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: '#F4D79A',
     borderRadius: 8,
     overflow: 'hidden',
   },
@@ -580,7 +580,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 10,
     fontSize: 13,
-    color: '#555',
+    color: '#8A4B00',
   },
   emptyBlock: {
     minHeight: 88,
@@ -590,7 +590,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 13,
-    color: '#777',
+    color: '#A66A00',
   },
   appRow: {
     height: APP_ROW_HEIGHT,
@@ -598,7 +598,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: '#F6E7C4',
     backgroundColor: '#fff',
   },
   appIconWrap: {
@@ -617,12 +617,12 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 6,
-    backgroundColor: '#F1F3F5',
+    backgroundColor: '#FFF8E1',
     alignItems: 'center',
     justifyContent: 'center',
   },
   appRowSelected: {
-    backgroundColor: '#eef6ff',
+    backgroundColor: '#FFF8E1',
   },
   appTextBlock: {
     flex: 1,
@@ -630,12 +630,12 @@ const styles = StyleSheet.create({
   },
   appLabel: {
     fontSize: 14,
-    color: '#333',
+    color: '#5F4300',
     marginBottom: 2,
   },
   packageName: {
     fontSize: 11,
-    color: '#777',
+    color: '#A66A00',
   },
   indexBar: {
     position: 'absolute',
@@ -659,12 +659,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   indexLetterButtonActive: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#F57F17',
   },
   indexLetterText: {
     fontSize: 10,
     fontWeight: '600',
-    color: '#007AFF',
+    color: '#F57F17',
   },
   indexLetterTextActive: {
     color: '#fff',
@@ -676,17 +676,17 @@ const styles = StyleSheet.create({
     width: 58,
     height: 58,
     borderRadius: 29,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#F57F17',
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 8,
-    shadowColor: '#000',
+    shadowColor: '#5F4300',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
   },
   refreshButtonDisabled: {
-    backgroundColor: '#8fbff4',
+    backgroundColor: '#F6E7C4',
   },
 });
 

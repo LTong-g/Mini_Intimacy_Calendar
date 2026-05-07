@@ -1400,3 +1400,12 @@
 - readme.md 将项目描述从正向打卡工具改为记录需要自律控制频率的三类行为。
 - readme.md 将适用人群和功能描述调整为发生后记录、频率复盘和间隔观察。
 - readme.md 修复了 developer_guide.md 的文档导航链接。
+
+### 黑名单功能颜色统一最终态
+- src/screens/UsageScreen.js 已将黑名单主页返回、刷新、按日期读取、弹窗内容、入口卡片、范围按钮和列表选中态统一为观看教程黄橙色系，弹窗外界遮罩保持中性黑色透明遮罩。
+- src/screens/UsageBlacklistScreen.js 已将黑名单应用页返回、搜索、加载、全部/已选切换、勾选、字母索引、刷新按钮和选中态统一为观看教程黄橙色系。
+- src/screens/UsageIntervalsScreen.js 已将使用时间段页返回、筛选、日期框、弹窗内容、应用入口、记录分组和列表文字强调统一为观看教程黄橙色系，弹窗外界遮罩保持中性黑色透明遮罩。
+- src/components/UsageCharts.js 已将黑名单图表网格、坐标、剩余扇区、触摸参考线和当日饼图切片统一为观看教程黄橙色系，不再使用应用图标主色。
+- AGENTS.md 和 developer_guide.md 已记录黑名单功能颜色统一规则及弹窗外界遮罩中性规则，src/screens/VersionHistoryScreen.js 已在 Unreleased 优化分组记录该用户可见变化。
+- SoftwareIntroScreen.js、UsageHelpScreen.js 和 PrivacyPolicyScreen.js 已核对，本次只改变黑名单功能视觉颜色，不改变软件介绍、帮助操作或隐私说明。
+- UsageScreen.js、UsageBlacklistScreen.js、UsageIntervalsScreen.js、UsageCharts.js 和 VersionHistoryScreen.js 已通过 node --check，git diff --check 已通过。

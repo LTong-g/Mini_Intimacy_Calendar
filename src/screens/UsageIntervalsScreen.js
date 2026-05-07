@@ -325,7 +325,7 @@ const ExperimentalUsageIntervalsScreen = () => {
         <Image source={{ uri: app.icon }} style={styles.appIcon} />
       ) : (
         <View style={styles.appIconFallback}>
-          <Ionicons name="apps-outline" size={18} color="#7A7A7A" />
+          <Ionicons name="apps-outline" size={18} color="#A66A00" />
         </View>
       )}
     </View>
@@ -341,7 +341,7 @@ const ExperimentalUsageIntervalsScreen = () => {
         <Image source={{ uri: app.icon }} style={styles.filterAppIcon} />
       ) : (
         <View style={styles.filterAppIconFallback}>
-          <Ionicons name="apps-outline" size={18} color="#7A7A7A" />
+          <Ionicons name="apps-outline" size={18} color="#A66A00" />
         </View>
       )}
     </TouchableOpacity>
@@ -351,7 +351,7 @@ const ExperimentalUsageIntervalsScreen = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#007AFF" />
+          <Ionicons name="arrow-back" size={24} color="#F57F17" />
         </TouchableOpacity>
         <Text style={styles.headerTitle} numberOfLines={1}>{title}</Text>
       </View>
@@ -447,7 +447,7 @@ const ExperimentalUsageIntervalsScreen = () => {
                     {visibleIntervals.length} 条，合计 {formatDuration(visibleIntervals.reduce((sum, item) => sum + item.durationMs, 0))}
                   </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={22} color="#777" />
+                <Ionicons name="chevron-forward" size={22} color="#A66A00" />
               </TouchableOpacity>
 
               {apps.map((app) => (
@@ -463,7 +463,7 @@ const ExperimentalUsageIntervalsScreen = () => {
                       {app.count} 条，合计 {formatDuration(app.durationMs)}
                     </Text>
                   </View>
-                  <Ionicons name="chevron-forward" size={22} color="#777" />
+                  <Ionicons name="chevron-forward" size={22} color="#A66A00" />
                 </TouchableOpacity>
               ))}
             </View>
@@ -592,7 +592,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: '#F4D79A',
   },
   backButton: {
     marginRight: 12,
@@ -601,7 +601,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#5F4300',
   },
   content: {
     paddingHorizontal: 20,
@@ -625,7 +625,7 @@ const styles = StyleSheet.create({
   },
   summaryCard: {
     borderWidth: 1,
-    borderColor: '#ECEFF3',
+    borderColor: '#F4D79A',
     borderRadius: 8,
     padding: 12,
     marginBottom: 12,
@@ -677,7 +677,7 @@ const styles = StyleSheet.create({
   },
   rangeText: {
     fontSize: 13,
-    color: '#777',
+    color: '#A66A00',
   },
   rangeTextActive: {
     fontWeight: '700',
@@ -751,7 +751,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 6,
-    backgroundColor: '#F1F3F5',
+    backgroundColor: '#FFF8E1',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -765,19 +765,19 @@ const styles = StyleSheet.create({
     width: 120,
     paddingVertical: 7,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#F4D79A',
     borderRadius: 6,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#FFF8E1',
     alignItems: 'center',
   },
   dateText: {
     fontSize: 14,
-    color: '#000',
+    color: '#5F4300',
   },
   dateSeparator: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#5F4300',
     marginHorizontal: 12,
   },
   modalActions: {
@@ -793,11 +793,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#d8d8d8',
+    borderColor: '#F4D79A',
   },
   secondaryActionText: {
     fontSize: 14,
-    color: '#555',
+    color: '#8A4B00',
   },
   confirmAction: {
     minWidth: 72,
@@ -805,7 +805,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 8,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#F57F17',
   },
   confirmActionText: {
     fontSize: 14,
@@ -817,7 +817,7 @@ const styles = StyleSheet.create({
   appFilterSectionTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: '#5F4300',
     marginBottom: 8,
   },
   appFilterIconRow: {
@@ -827,7 +827,7 @@ const styles = StyleSheet.create({
   },
   appList: {
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: '#F4D79A',
     borderRadius: 8,
     overflow: 'hidden',
   },
@@ -837,7 +837,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: '#F6E7C4',
   },
   allIcon: {
     width: 36,
@@ -864,7 +864,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 6,
-    backgroundColor: '#F1F3F5',
+    backgroundColor: '#FFF8E1',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -875,16 +875,16 @@ const styles = StyleSheet.create({
   appLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: '#5F4300',
     marginBottom: 2,
   },
   packageName: {
     fontSize: 12,
-    color: '#666',
+    color: '#8A4B00',
   },
   emptyText: {
     fontSize: 14,
-    color: '#777',
+    color: '#A66A00',
     lineHeight: 22,
   },
   dateGroup: {
@@ -915,7 +915,7 @@ const styles = StyleSheet.create({
   intervalRow: {
     minHeight: 50,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: '#F6E7C4',
     paddingVertical: 9,
     flexDirection: 'row',
     alignItems: 'center',
@@ -927,19 +927,19 @@ const styles = StyleSheet.create({
   intervalTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: '#5F4300',
   },
   intervalMeta: {
     alignItems: 'flex-end',
   },
   intervalTime: {
     fontSize: 13,
-    color: '#555',
+    color: '#8A4B00',
     marginBottom: 2,
   },
   intervalDuration: {
     fontSize: 12,
-    color: '#777',
+    color: '#A66A00',
   },
 });
 
