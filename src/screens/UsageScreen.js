@@ -59,6 +59,14 @@ const formatModalRange = (beginTime, endTime) => (
   `${moment(beginTime).format('YYYY-MM-DD HH:mm')} -- ${moment(endTime).format('YYYY-MM-DD HH:mm')}`
 );
 
+const getRecentUsageReadRange = () => {
+  const now = moment();
+  return {
+    beginTime: now.clone().subtract(2, 'days').startOf('day').valueOf(),
+    endTime: now.valueOf(),
+  };
+};
+
 const getActualRecordRange = (records) => {
   if (!records.length) return null;
   return records.reduce((range, item) => ({
@@ -137,6 +145,9 @@ const ExperimentalUsageScreen = () => {
   const route = useRoute();
   const rangePickerActiveRef = useRef(false);
   const lastDatePickerResultRef = useRef(null);
+  const blacklistRef = useRef([]);
+  const readingStateRef = useRef({ loading: false, refreshing: false });
+  const silentRefreshingRef = useRef(false);
   const [blacklist, setBlacklist] = useState([]);
   const [intervals, setIntervals] = useState([]);
   const [usageGranted, setUsageGranted] = useState(false);
@@ -158,22 +169,27 @@ const ExperimentalUsageScreen = () => {
         getExperimentalUsageIntervals(),
       ]);
       setUsageGranted(Boolean(status.usageAccessGranted));
+      blacklistRef.current = nextBlacklist;
       setBlacklist(nextBlacklist);
       setIntervals(nextIntervals);
+      return {
+        usageGranted: Boolean(status.usageAccessGranted),
+        blacklist: nextBlacklist,
+        intervals: nextIntervals,
+      };
     } catch (error) {
       Alert.alert('读取失败', error.message || '无法读取黑名单使用记录状态');
+      return null;
     }
   }, []);
 
-  useFocusEffect(
-    useCallback(() => {
-      loadState();
-      if (rangePickerActiveRef.current) {
-        rangePickerActiveRef.current = false;
-        setRangeModalVisible(true);
-      }
-    }, [loadState])
-  );
+  useEffect(() => {
+    blacklistRef.current = blacklist;
+  }, [blacklist]);
+
+  useEffect(() => {
+    readingStateRef.current = { loading, refreshing };
+  }, [loading, refreshing]);
 
   const selectedPackages = useMemo(
     () => new Set(blacklist.map((item) => item.packageName)),
@@ -236,22 +252,35 @@ const ExperimentalUsageScreen = () => {
     return true;
   }, [blacklist.length, loading, refreshing, usageGranted]);
 
-  const readUsageRecords = useCallback(async (beginTime, endTime, successTitle = '读取完成') => {
-    const packageNames = blacklist.map((item) => item.packageName);
+  const readUsageRecords = useCallback(async (beginTime, endTime, options = {}) => {
+    const {
+      successTitle = '读取完成',
+      showResult = true,
+      targetBlacklist,
+    } = options;
+    const sourceBlacklist = targetBlacklist || blacklistRef.current;
+    const packageNames = sourceBlacklist.map((item) => item.packageName);
     const nextIntervals = await queryUsageIntervals(packageNames, beginTime, endTime);
     const mergedReadIntervals = mergeAdjacentUsageIntervals(nextIntervals);
     const merged = await mergeExperimentalUsageIntervals(nextIntervals);
     const actualRange = getActualRecordRange(mergedReadIntervals);
     setIntervals(merged);
-    setReadResult({
-      title: successTitle,
-      requestRange: formatModalRange(beginTime, endTime),
-      actualRange: actualRange
-        ? formatModalRange(actualRange.beginTime, actualRange.endTime)
-        : '无',
-      count: mergedReadIntervals.length,
-    });
-  }, [blacklist]);
+    if (showResult) {
+      setReadResult({
+        title: successTitle,
+        requestRange: formatModalRange(beginTime, endTime),
+        actualRange: actualRange
+          ? formatModalRange(actualRange.beginTime, actualRange.endTime)
+          : '无',
+        count: mergedReadIntervals.length,
+      });
+    }
+    return {
+      merged,
+      mergedReadIntervals,
+      actualRange,
+    };
+  }, []);
 
   const handleOpenRangeModal = () => {
     const today = moment().format('YYYY-MM-DD');
@@ -331,18 +360,54 @@ const ExperimentalUsageScreen = () => {
   const handleRecentRefresh = useCallback(async () => {
     if (!ensureRefreshReady()) return;
 
-    const now = moment();
-    const beginTime = now.clone().subtract(2, 'days').startOf('day').valueOf();
-    const endTime = now.valueOf();
+    const { beginTime, endTime } = getRecentUsageReadRange();
     try {
       setRefreshing(true);
-      await readUsageRecords(beginTime, endTime, '刷新完成');
+      await readUsageRecords(beginTime, endTime, { successTitle: '刷新完成' });
     } catch (error) {
       Alert.alert('刷新失败', error.message || '无法读取黑名单应用使用记录');
     } finally {
       setRefreshing(false);
     }
   }, [ensureRefreshReady, readUsageRecords]);
+
+  const handleSilentRecentRefresh = useCallback(async (state) => {
+    const readingState = readingStateRef.current;
+    if (silentRefreshingRef.current || readingState.loading || readingState.refreshing) return;
+    if (!state?.usageGranted || state.blacklist.length === 0) return;
+
+    const { beginTime, endTime } = getRecentUsageReadRange();
+    try {
+      silentRefreshingRef.current = true;
+      await readUsageRecords(beginTime, endTime, {
+        showResult: false,
+        targetBlacklist: state.blacklist,
+      });
+    } catch {
+      // Silent refresh must not interrupt page entry or show an error dialog.
+    } finally {
+      silentRefreshingRef.current = false;
+    }
+  }, [readUsageRecords]);
+
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
+      if (rangePickerActiveRef.current) {
+        rangePickerActiveRef.current = false;
+        setRangeModalVisible(true);
+      }
+
+      loadState().then((state) => {
+        if (!isActive || !state) return;
+        handleSilentRecentRefresh(state);
+      });
+
+      return () => {
+        isActive = false;
+      };
+    }, [handleSilentRecentRefresh, loadState])
+  );
 
   const totalToday = stats.dailyRows
     .filter((item) => !item.isRemainder)

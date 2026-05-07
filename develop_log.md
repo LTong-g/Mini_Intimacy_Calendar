@@ -1,4 +1,4 @@
-> 提示：请使用 UTF-8 编码读取本文件。
+﻿> 提示：请使用 UTF-8 编码读取本文件。
 
 # 开发日志
 撰写规则：
@@ -1353,3 +1353,15 @@
 - src/screens/UsageIntervalsScreen.js 已使全部记录详情和单个应用记录详情首次进入时默认显示最近 7 天记录和汇总。
 - AGENTS.md、developer_guide.md、src/screens/UsageHelpScreen.js 和 src/screens/VersionHistoryScreen.js 已同步记录查看使用时间段详情页默认显示 7 天范围。
 - 已执行 node --check 检查 src/screens/UsageIntervalsScreen.js、src/screens/UsageHelpScreen.js 和 src/screens/VersionHistoryScreen.js，结果通过。
+
+## 2026-05-07
+
+### 黑名单主页进入静默刷新
+- 黑名单主页进入焦点时会在本地状态读取完成后触发后台静默读取最近三天黑名单应用使用时间段。
+- 黑名单主页静默读取复用下拉刷新的最近三天请求范围，不设置刷新动画，不显示完成弹窗，失败时不弹出错误提示。
+- 下拉刷新改为复用统一的最近三天读取范围计算，并继续显示刷新动画和完成弹窗。
+- 软件介绍、使用帮助、隐私政策、版本记录、AGENTS 与 developer_guide 已同步黑名单主页进入静默刷新说明。
+- 受影响 JSX 文件已通过 sucrase 解析检查。
+- src/screens/UsageScreen.js 已通过 ref 保存最新黑名单列表和读取状态，避免页面聚焦 effect 因黑名单 state 更新而重复触发。
+- 黑名单主页静默刷新会在已有读取进行中或静默刷新进行中跳过本次后台读取。
+- 受影响 JSX 文件已重新通过 sucrase 解析检查。

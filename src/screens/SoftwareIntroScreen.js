@@ -37,6 +37,7 @@ const SoftwareIntroScreen = () => {
           <Text style={styles.listItem}>- 月视图：按月查看每天是否存在记录，并可快速切换年月。</Text>
           <Text style={styles.listItem}>- 年视图：按全年维度查看记录分布，并可快速切换年份。</Text>
           <Text style={styles.listItem}>- 统计分析：查看总览、年度和自定义区间统计。</Text>
+          <Text style={styles.listItem}>- 使用记录辅助：在 Android 授权后可统计黑名单应用使用时间段，并在进入黑名单主页时静默刷新最近三天记录。</Text>
           <Text style={styles.listItem}>- 数据管理：支持 JSON 数据导入、导出和分享。</Text>
         </View>
 
