@@ -5,7 +5,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Image,
   PanResponder,
@@ -23,6 +22,7 @@ import {
   syncExperimentalUsageBlacklistMetadata,
 } from '../utils/usageStorage';
 import { getCachedLaunchableApplications } from '../utils/launchableAppCache';
+import { showAppAlert } from '../utils/appAlert';
 
 const INDEX_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ#'.split('');
 const APP_ROW_HEIGHT = 54;
@@ -59,6 +59,9 @@ const PINYIN_INITIAL_BOUNDARIES = [
   ['Y', '压'],
   ['Z', '匝'],
 ];
+const showBlacklistAlert = (title, message, buttons, options = {}) => (
+  showAppAlert(title, message, buttons, { ...options, theme: 'blacklist' })
+);
 
 const getIndexLetter = (label) => {
   const first = (label || '').trim().charAt(0);
@@ -166,7 +169,7 @@ const ExperimentalUsageBlacklistScreen = () => {
       setBlacklist(storedBlacklist);
       blacklistRef.current = storedBlacklist;
     } catch (error) {
-      Alert.alert('读取失败', error.message || '无法读取应用列表');
+      showBlacklistAlert('读取失败', error.message || '无法读取应用列表');
     } finally {
       setIsLoading(false);
     }
@@ -298,7 +301,7 @@ const ExperimentalUsageBlacklistScreen = () => {
       if (saveVersionRef.current === saveVersion) {
         blacklistRef.current = previous;
         setBlacklist(previous);
-        Alert.alert('保存失败', error.message || '无法保存黑名单应用');
+        showBlacklistAlert('保存失败', error.message || '无法保存黑名单应用');
       }
     }
   };

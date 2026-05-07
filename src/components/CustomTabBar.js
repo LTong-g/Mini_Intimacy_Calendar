@@ -9,7 +9,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   Vibration,
-  Alert,
   ToastAndroid,
   Platform,
   Dimensions,
@@ -33,6 +32,7 @@ import {
   isUsageAccessNativeAvailable,
   setUsageAccessFeatureEnabled,
 } from "../utils/usageAccessNative";
+import { showAppAlert } from "../utils/appAlert";
 import { Portal } from "react-native-paper";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -79,7 +79,7 @@ const CustomTabBar = ({
     if (Platform.OS === "android") {
       ToastAndroid.show("无法修改未来日期的记录", ToastAndroid.SHORT);
     } else {
-      Alert.alert("提示", "无法修改未来日期的记录");
+      showAppAlert("提示", "无法修改未来日期的记录");
     }
   };
 
@@ -180,7 +180,7 @@ const CustomTabBar = ({
     setShowMoreMenu(false);
 
     if (!isUsageAccessNativeAvailable()) {
-      Alert.alert(
+      showAppAlert(
         "无法打开黑名单",
         "当前运行环境不支持原生使用记录模块，请使用 Android 开发构建或安装包。"
       );
@@ -195,7 +195,7 @@ const CustomTabBar = ({
           : status;
 
       if (!nextStatus.usageAccessGranted) {
-        Alert.alert(
+        showAppAlert(
           "需要使用记录权限",
           "请先到设置页开启使用记录辅助，并在系统设置中授予使用情况访问权限。"
         );
@@ -204,7 +204,7 @@ const CustomTabBar = ({
 
       navigation.navigate("ExperimentalUsage");
     } catch (error) {
-      Alert.alert("打开失败", error.message || "无法读取使用记录权限状态");
+      showAppAlert("打开失败", error.message || "无法读取使用记录权限状态");
     }
   };
 

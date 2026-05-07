@@ -4,11 +4,8 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Alert,
   Image,
-  Modal,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -20,6 +17,9 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import moment from 'moment';
+import BaseModal from '../components/modals/BaseModal';
+import ModalActionRow from '../components/modals/ModalActionRow';
+import { showAppAlert } from '../utils/appAlert';
 import {
   getExperimentalUsageKnownApps,
   getExperimentalUsageIntervals,
@@ -39,13 +39,23 @@ const RANGE_OPTIONS = [
   { key: '7days', label: '7天', days: 7 },
   { key: '30days', label: '30天', days: 30 },
 ];
+const BLACKLIST_MODAL_THEME = {
+  primary: '#F57F17',
+  primaryDisabled: '#F6E7C4',
+  secondary: '#8A4B00',
+  secondaryBorder: '#F4D79A',
+  secondaryBackground: '#fff',
+};
+const showBlacklistAlert = (title, message, buttons, options = {}) => (
+  showAppAlert(title, message, buttons, { ...options, theme: 'blacklist' })
+);
 
 const showDateError = (message) => {
   if (Platform.OS === 'android') {
     ToastAndroid.show(message, ToastAndroid.SHORT);
     return;
   }
-  Alert.alert('提示', message);
+  showBlacklistAlert('提示', message);
 };
 
 const groupIntervalsByDate = (intervals, blacklist) => {
@@ -106,7 +116,7 @@ const ExperimentalUsageIntervalsScreen = () => {
       setBlacklist(nextBlacklist);
       setIntervals(nextIntervals);
     } catch (error) {
-      Alert.alert('读取失败', error.message || '无法读取使用时间段');
+      showBlacklistAlert('读取失败', error.message || '无法读取使用时间段');
     }
   }, []);
 
@@ -275,11 +285,11 @@ const ExperimentalUsageIntervalsScreen = () => {
     const start = moment(pendingStartDate, 'YYYY-MM-DD', true);
     const end = moment(pendingEndDate, 'YYYY-MM-DD', true);
     if (!start.isValid() || !end.isValid()) {
-      Alert.alert('日期无效', '请选择有效的起止日期');
+      showBlacklistAlert('日期无效', '请选择有效的起止日期');
       return;
     }
     if (start.isAfter(end, 'day')) {
-      Alert.alert('日期无效', '开始日期不能晚于结束日期');
+      showBlacklistAlert('日期无效', '开始日期不能晚于结束日期');
       return;
     }
     setFilterDateRange({
@@ -465,111 +475,90 @@ const ExperimentalUsageIntervalsScreen = () => {
         </ScrollView>
       )}
 
-      <Modal
+      <BaseModal
         visible={filterModalVisible}
-        animationType="fade"
-        transparent
         onRequestClose={handleCloseFilterModal}
       >
-        <View style={styles.modalOverlay}>
-          <Pressable style={styles.modalBackdrop} onPress={handleCloseFilterModal} />
-          <View style={styles.filterModal}>
-            <View style={styles.filterAppPreviewRow}>
-              {isAllDetail ? (
-                <>
-                  <View style={styles.previewIconStrip}>
-                    {previewApps.map((app) => renderFilterAppIcon(app, undefined))}
-                  </View>
-                  <TouchableOpacity
-                    style={styles.filterEditButton}
-                    onPress={() => setAppFilterModalVisible(true)}
-                  >
-                    <Ionicons name="create-outline" size={20} color="#8A4B00" />
-                  </TouchableOpacity>
-                </>
-              ) : (
-                renderFilterAppIcon(currentApp, undefined)
-              )}
-            </View>
-
-            <View style={styles.dateRangeRow}>
+        <View style={styles.filterAppPreviewRow}>
+          {isAllDetail ? (
+            <>
+              <View style={styles.previewIconStrip}>
+                {previewApps.map((app) => renderFilterAppIcon(app, undefined))}
+              </View>
               <TouchableOpacity
-                style={styles.dateBox}
-                onPress={() => handlePickDate('filterStart')}
+                style={styles.filterEditButton}
+                onPress={() => setAppFilterModalVisible(true)}
               >
-                <Text style={styles.dateText}>{pendingStartDate}</Text>
+                <Ionicons name="create-outline" size={20} color="#8A4B00" />
               </TouchableOpacity>
-              <Text style={styles.dateSeparator}>-</Text>
-              <TouchableOpacity
-                style={styles.dateBox}
-                onPress={() => handlePickDate('filterEnd')}
-              >
-                <Text style={styles.dateText}>{pendingEndDate}</Text>
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={styles.secondaryAction}
-                onPress={hasAnyFilter ? handleClearFilter : handleCloseFilterModal}
-              >
-                <Text style={styles.secondaryActionText}>
-                  {hasAnyFilter ? '清除筛选' : '取消'}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.confirmAction} onPress={handleConfirmFilter}>
-                <Text style={styles.confirmActionText}>确定</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+            </>
+          ) : (
+            renderFilterAppIcon(currentApp, undefined)
+          )}
         </View>
-      </Modal>
 
-      <Modal
+        <View style={styles.dateRangeRow}>
+          <TouchableOpacity
+            style={styles.dateBox}
+            onPress={() => handlePickDate('filterStart')}
+          >
+            <Text style={styles.dateText}>{pendingStartDate}</Text>
+          </TouchableOpacity>
+          <Text style={styles.dateSeparator}>-</Text>
+          <TouchableOpacity
+            style={styles.dateBox}
+            onPress={() => handlePickDate('filterEnd')}
+          >
+            <Text style={styles.dateText}>{pendingEndDate}</Text>
+          </TouchableOpacity>
+        </View>
+
+        <ModalActionRow
+          theme={BLACKLIST_MODAL_THEME}
+          actions={[
+            {
+              label: hasAnyFilter ? '清除筛选' : '取消',
+              variant: 'secondary',
+              onPress: hasAnyFilter ? handleClearFilter : handleCloseFilterModal,
+            },
+            { label: '确定', onPress: handleConfirmFilter },
+          ]}
+        />
+      </BaseModal>
+
+      <BaseModal
         visible={appFilterModalVisible}
-        animationType="fade"
-        transparent
         onRequestClose={() => setAppFilterModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <Pressable
-            style={styles.modalBackdrop}
-            onPress={() => setAppFilterModalVisible(false)}
-          />
-          <View style={styles.appFilterModal}>
-            <View style={styles.appFilterSection}>
-              <Text style={styles.appFilterSectionTitle}>显示</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <View style={styles.appFilterIconRow}>
-                  {pendingSelectedApps.map((app) => renderFilterAppIcon(
-                    app,
-                    () => movePendingPackage(app.packageName, false)
-                  ))}
-                </View>
-              </ScrollView>
+        <View style={styles.appFilterSection}>
+          <Text style={styles.appFilterSectionTitle}>显示</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View style={styles.appFilterIconRow}>
+              {pendingSelectedApps.map((app) => renderFilterAppIcon(
+                app,
+                () => movePendingPackage(app.packageName, false)
+              ))}
             </View>
-            <View style={styles.appFilterSection}>
-              <Text style={styles.appFilterSectionTitle}>隐藏</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <View style={styles.appFilterIconRow}>
-                  {pendingUnselectedApps.map((app) => renderFilterAppIcon(
-                    app,
-                    () => movePendingPackage(app.packageName, true)
-                  ))}
-                </View>
-              </ScrollView>
-            </View>
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={styles.confirmAction}
-                onPress={() => setAppFilterModalVisible(false)}
-              >
-                <Text style={styles.confirmActionText}>确定</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+          </ScrollView>
         </View>
-      </Modal>
+        <View style={styles.appFilterSection}>
+          <Text style={styles.appFilterSectionTitle}>隐藏</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View style={styles.appFilterIconRow}>
+              {pendingUnselectedApps.map((app) => renderFilterAppIcon(
+                app,
+                () => movePendingPackage(app.packageName, true)
+              ))}
+            </View>
+          </ScrollView>
+        </View>
+        <ModalActionRow
+          theme={BLACKLIST_MODAL_THEME}
+          actions={[
+            { label: '确定', onPress: () => setAppFilterModalVisible(false) },
+          ]}
+        />
+      </BaseModal>
     </View>
   );
 };
@@ -690,25 +679,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  modalBackdrop: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  filterModal: {
-    borderRadius: 8,
-    padding: 16,
-    backgroundColor: '#fff',
-  },
-  appFilterModal: {
-    borderRadius: 8,
-    padding: 16,
-    backgroundColor: '#fff',
-  },
   filterAppPreviewRow: {
     minHeight: 44,
     flexDirection: 'row',
@@ -773,37 +743,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#5F4300',
     marginHorizontal: 12,
-  },
-  modalActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 10,
-    marginTop: 8,
-  },
-  secondaryAction: {
-    minWidth: 72,
-    minHeight: 38,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#F4D79A',
-  },
-  secondaryActionText: {
-    fontSize: 14,
-    color: '#8A4B00',
-  },
-  confirmAction: {
-    minWidth: 72,
-    minHeight: 38,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 8,
-    backgroundColor: '#F57F17',
-  },
-  confirmActionText: {
-    fontSize: 14,
-    color: '#fff',
   },
   appFilterSection: {
     marginBottom: 14,

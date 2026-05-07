@@ -8,13 +8,13 @@ import React, {
 } from 'react';
 import {
   FlatList,
-  Modal,
   Pressable,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 import moment from 'moment';
+import BaseModal from './modals/BaseModal';
 
 const ITEM_HEIGHT = 44;
 const VISIBLE_ROWS = 5;
@@ -238,74 +238,58 @@ const DateQuickPickerModal = ({
   const scrollKey = visible ? normalizedInitial.format('YYYY-MM-DD') : 'closed';
 
   return (
-    <Modal
+    <BaseModal
       visible={visible}
-      transparent
-      animationType="fade"
       onRequestClose={onCancel}
+      placement="bottom"
+      panelStyle={styles.panel}
     >
-      <View style={styles.overlay}>
-        <Pressable style={styles.backdrop} onPress={onCancel} />
-        <View style={styles.panel}>
-          <View style={styles.header}>
-            <Pressable style={styles.headerButton} onPress={onCancel}>
-              <Text style={styles.cancelText}>取消</Text>
-            </Pressable>
-            <Text style={styles.title}>{titleMap[mode]}</Text>
-            <Pressable style={styles.headerButton} onPress={handleConfirm}>
-              <Text style={styles.confirmText}>确定</Text>
-            </Pressable>
-          </View>
-
-          <View style={styles.wheels}>
-            <WheelColumn
-              ref={yearWheelRef}
-              data={years}
-              value={year}
-              scrollKey={scrollKey}
-              labelFormatter={(item) => `${item}年`}
-              onChange={(item) => updateDraft(item, undefined, undefined)}
-            />
-            {(mode === 'day' || mode === 'month') && (
-              <WheelColumn
-                ref={monthWheelRef}
-                data={months}
-                value={month}
-                scrollKey={scrollKey}
-                labelFormatter={(item) => `${item + 1}月`}
-                onChange={(item) => updateDraft(undefined, item, undefined)}
-              />
-            )}
-            {mode === 'day' && (
-              <WheelColumn
-                ref={dayWheelRef}
-                data={days}
-                value={draft.date()}
-                scrollKey={scrollKey}
-                labelFormatter={(item) => `${item}日`}
-                onChange={(item) => updateDraft(undefined, undefined, item)}
-              />
-            )}
-          </View>
-        </View>
+      <View style={styles.header}>
+        <Pressable style={styles.headerButton} onPress={onCancel}>
+          <Text style={styles.cancelText}>取消</Text>
+        </Pressable>
+        <Text style={styles.title}>{titleMap[mode]}</Text>
+        <Pressable style={styles.headerButton} onPress={handleConfirm}>
+          <Text style={styles.confirmText}>确定</Text>
+        </Pressable>
       </View>
-    </Modal>
+
+      <View style={styles.wheels}>
+        <WheelColumn
+          ref={yearWheelRef}
+          data={years}
+          value={year}
+          scrollKey={scrollKey}
+          labelFormatter={(item) => `${item}年`}
+          onChange={(item) => updateDraft(item, undefined, undefined)}
+        />
+        {(mode === 'day' || mode === 'month') && (
+          <WheelColumn
+            ref={monthWheelRef}
+            data={months}
+            value={month}
+            scrollKey={scrollKey}
+            labelFormatter={(item) => `${item + 1}月`}
+            onChange={(item) => updateDraft(undefined, item, undefined)}
+          />
+        )}
+        {mode === 'day' && (
+          <WheelColumn
+            ref={dayWheelRef}
+            data={days}
+            value={draft.date()}
+            scrollKey={scrollKey}
+            labelFormatter={(item) => `${item}日`}
+            onChange={(item) => updateDraft(undefined, undefined, item)}
+          />
+        )}
+      </View>
+    </BaseModal>
   );
 };
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-  },
   panel: {
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
     paddingBottom: 24,
   },
   header: {

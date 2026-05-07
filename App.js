@@ -23,6 +23,7 @@ import VersionHistoryScreen from "./src/screens/VersionHistoryScreen";
 import ExperimentalUsageScreen from "./src/screens/UsageScreen";
 import ExperimentalUsageBlacklistScreen from "./src/screens/UsageBlacklistScreen";
 import ExperimentalUsageIntervalsScreen from "./src/screens/UsageIntervalsScreen";
+import AppAlertProvider from "./src/components/modals/AppAlertProvider";
 import { getAllCheckInData } from "./src/utils/checkInStorage";
 
 const Stack = createNativeStackNavigator();
@@ -115,23 +116,25 @@ export default function App() {
   return (
     <PaperProvider>
       <SafeAreaProvider>
-        <NavigationContainer>
-          <Stack.Navigator screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="Calendar" component={CalendarScreen} />
-            <Stack.Screen name="Settings" component={SettingsScreen} />
-            <Stack.Screen name="About" component={AboutScreen} />
-            <Stack.Screen name="SoftwareIntro" component={SoftwareIntroScreen} />
-            <Stack.Screen name="UsageHelp" component={UsageHelpScreen} />
-            <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
-            <Stack.Screen name="VersionHistory" component={VersionHistoryScreen} />
-            <Stack.Screen name="ExperimentalUsage" component={ExperimentalUsageScreen} />
-            <Stack.Screen name="ExperimentalUsageBlacklist" component={ExperimentalUsageBlacklistScreen} />
-            <Stack.Screen name="ExperimentalUsageIntervals" component={ExperimentalUsageIntervalsScreen} />
-            <Stack.Screen name="Statistics" component={StatisticsScreen} />
-            <Stack.Screen name="DatePicker" component={DatePickerScreen} />
-          </Stack.Navigator>
-          <StatusBar style="auto" />
-        </NavigationContainer>
+        <AppAlertProvider>
+          <NavigationContainer>
+            <Stack.Navigator screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="Calendar" component={CalendarScreen} />
+              <Stack.Screen name="Settings" component={SettingsScreen} />
+              <Stack.Screen name="About" component={AboutScreen} />
+              <Stack.Screen name="SoftwareIntro" component={SoftwareIntroScreen} />
+              <Stack.Screen name="UsageHelp" component={UsageHelpScreen} />
+              <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
+              <Stack.Screen name="VersionHistory" component={VersionHistoryScreen} />
+              <Stack.Screen name="ExperimentalUsage" component={ExperimentalUsageScreen} />
+              <Stack.Screen name="ExperimentalUsageBlacklist" component={ExperimentalUsageBlacklistScreen} />
+              <Stack.Screen name="ExperimentalUsageIntervals" component={ExperimentalUsageIntervalsScreen} />
+              <Stack.Screen name="Statistics" component={StatisticsScreen} />
+              <Stack.Screen name="DatePicker" component={DatePickerScreen} />
+            </Stack.Navigator>
+            <StatusBar style="auto" />
+          </NavigationContainer>
+        </AppAlertProvider>
       </SafeAreaProvider>
     </PaperProvider>
   );

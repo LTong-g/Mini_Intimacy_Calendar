@@ -4,10 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Alert,
-  Modal,
   Platform,
-  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -24,6 +21,9 @@ import {
   MonthlyUsageLineChart,
   WeeklyUsageBarChart,
 } from '../components/UsageCharts';
+import BaseModal from '../components/modals/BaseModal';
+import ModalActionRow from '../components/modals/ModalActionRow';
+import { showAppAlert } from '../utils/appAlert';
 import {
   getExperimentalUsageBlacklist,
   getExperimentalUsageKnownApps,
@@ -45,6 +45,16 @@ const CHART_RANGE_OPTIONS = [
   { key: '7days', label: '7天' },
   { key: '30days', label: '30天' },
 ];
+const BLACKLIST_MODAL_THEME = {
+  primary: '#F57F17',
+  primaryDisabled: '#F6E7C4',
+  secondary: '#8A4B00',
+  secondaryBorder: '#F4D79A',
+  secondaryBackground: '#fff',
+};
+const showBlacklistAlert = (title, message, buttons, options = {}) => (
+  showAppAlert(title, message, buttons, { ...options, theme: 'blacklist' })
+);
 
 const formatDuration = (durationMs) => {
   const totalMinutes = Math.round(durationMs / 60000);
@@ -86,7 +96,7 @@ const showDateError = (message) => {
     ToastAndroid.show(message, ToastAndroid.SHORT);
     return;
   }
-  Alert.alert('提示', message);
+  showBlacklistAlert('提示', message);
 };
 
 const overlapDuration = (interval, rangeStart, rangeEnd) => {
@@ -185,7 +195,7 @@ const ExperimentalUsageScreen = () => {
         intervals: nextIntervals,
       };
     } catch (error) {
-      Alert.alert('读取失败', error.message || '无法读取黑名单使用记录状态');
+      showBlacklistAlert('读取失败', error.message || '无法读取黑名单使用记录状态');
       return null;
     }
   }, []);
@@ -236,7 +246,7 @@ const ExperimentalUsageScreen = () => {
       return false;
     }
     if (!usageGranted) {
-      Alert.alert(
+      showBlacklistAlert(
         '需要使用情况访问权限',
         '请先在系统设置中授予本应用使用情况访问权限。',
         [
@@ -334,15 +344,15 @@ const ExperimentalUsageScreen = () => {
     const end = moment(rangeEndDate, 'YYYY-MM-DD', true);
     const today = moment().endOf('day');
     if (!start.isValid() || !end.isValid()) {
-      Alert.alert('日期无效', '请选择有效的起止日期');
+      showBlacklistAlert('日期无效', '请选择有效的起止日期');
       return;
     }
     if (start.isAfter(end, 'day')) {
-      Alert.alert('日期无效', '开始日期不能晚于结束日期');
+      showBlacklistAlert('日期无效', '开始日期不能晚于结束日期');
       return;
     }
     if (start.isAfter(today) || end.isAfter(today)) {
-      Alert.alert('日期无效', '不能读取未来日期的使用记录');
+      showBlacklistAlert('日期无效', '不能读取未来日期的使用记录');
       return;
     }
 
@@ -353,7 +363,7 @@ const ExperimentalUsageScreen = () => {
       await readUsageRecords(beginTime, endTime);
       setRangeModalVisible(false);
     } catch (error) {
-      Alert.alert('读取失败', error.message || '无法读取黑名单应用使用记录');
+      showBlacklistAlert('读取失败', error.message || '无法读取黑名单应用使用记录');
     } finally {
       setLoading(false);
     }
@@ -367,7 +377,7 @@ const ExperimentalUsageScreen = () => {
       setRefreshing(true);
       await readUsageRecords(beginTime, endTime, { successTitle: '刷新完成' });
     } catch (error) {
-      Alert.alert('刷新失败', error.message || '无法读取黑名单应用使用记录');
+      showBlacklistAlert('刷新失败', error.message || '无法读取黑名单应用使用记录');
     } finally {
       setRefreshing(false);
     }
@@ -500,82 +510,70 @@ const ExperimentalUsageScreen = () => {
         {currentChartRange.key === '30days' && <MonthlyUsageLineChart rows={stats.monthlyRows} />}
       </ScrollView>
 
-      <Modal
+      <BaseModal
         visible={rangeModalVisible}
-        animationType="fade"
-        transparent
         onRequestClose={handleCloseRangeModal}
+        title="读取使用记录"
+        titleStyle={styles.modalTitle}
       >
-        <View style={styles.modalOverlay}>
-          <Pressable style={styles.modalBackdrop} onPress={handleCloseRangeModal} />
-          <View style={styles.rangeModal}>
-            <Text style={styles.modalTitle}>读取使用记录</Text>
-            <View style={styles.dateRangeRow}>
-              <TouchableOpacity
-                style={styles.dateBox}
-                onPress={() => handlePickDate('start')}
-              >
-                <Text style={styles.dateText}>{rangeStartDate}</Text>
-              </TouchableOpacity>
-              <Text style={styles.dateSeparator}>-</Text>
-              <TouchableOpacity
-                style={styles.dateBox}
-                onPress={() => handlePickDate('end')}
-              >
-                <Text style={styles.dateText}>{rangeEndDate}</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={styles.secondaryAction}
-                onPress={handleCloseRangeModal}
-                disabled={isReading}
-              >
-                <Text style={styles.secondaryActionText}>取消</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.confirmAction, isReading && styles.disabledButton]}
-                onPress={handleConfirmRangeRead}
-                disabled={isReading}
-              >
-                <Text style={styles.confirmActionText}>{isReading ? '读取中' : '确认'}</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+        <View style={styles.dateRangeRow}>
+          <TouchableOpacity
+            style={styles.dateBox}
+            onPress={() => handlePickDate('start')}
+          >
+            <Text style={styles.dateText}>{rangeStartDate}</Text>
+          </TouchableOpacity>
+          <Text style={styles.dateSeparator}>-</Text>
+          <TouchableOpacity
+            style={styles.dateBox}
+            onPress={() => handlePickDate('end')}
+          >
+            <Text style={styles.dateText}>{rangeEndDate}</Text>
+          </TouchableOpacity>
         </View>
-      </Modal>
+        <ModalActionRow
+          theme={BLACKLIST_MODAL_THEME}
+          actions={[
+            {
+              label: '取消',
+              variant: 'secondary',
+              onPress: handleCloseRangeModal,
+              disabled: isReading,
+            },
+            {
+              label: isReading ? '读取中' : '确认',
+              onPress: handleConfirmRangeRead,
+              disabled: isReading,
+            },
+          ]}
+        />
+      </BaseModal>
 
-      <Modal
+      <BaseModal
         visible={Boolean(readResult)}
-        animationType="fade"
-        transparent
         onRequestClose={() => setReadResult(null)}
+        closeOnBackdropPress={false}
+        title={readResult?.title || '读取完成'}
+        titleStyle={styles.modalTitle}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.resultModal}>
-            <Text style={styles.modalTitle}>{readResult?.title || '读取完成'}</Text>
-            <View style={styles.resultBlock}>
-              <Text style={styles.resultLabel}>请求读取范围：</Text>
-              <Text style={styles.resultValue}>{readResult?.requestRange}</Text>
-            </View>
-            <View style={styles.resultBlock}>
-              <Text style={styles.resultLabel}>实际读取到记录：</Text>
-              <Text style={styles.resultValue}>{readResult?.actualRange}</Text>
-            </View>
-            <Text style={styles.resultSummary}>
-              读取到 {readResult?.count || 0} 条使用时间段
-            </Text>
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={styles.confirmAction}
-                onPress={() => setReadResult(null)}
-              >
-                <Text style={styles.confirmActionText}>知道了</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+        <View style={styles.resultBlock}>
+          <Text style={styles.resultLabel}>请求读取范围：</Text>
+          <Text style={styles.resultValue}>{readResult?.requestRange}</Text>
         </View>
-      </Modal>
+        <View style={styles.resultBlock}>
+          <Text style={styles.resultLabel}>实际读取到记录：</Text>
+          <Text style={styles.resultValue}>{readResult?.actualRange}</Text>
+        </View>
+        <Text style={styles.resultSummary}>
+          读取到 {readResult?.count || 0} 条使用时间段
+        </Text>
+        <ModalActionRow
+          theme={BLACKLIST_MODAL_THEME}
+          actions={[
+            { label: '知道了', onPress: () => setReadResult(null) },
+          ]}
+        />
+      </BaseModal>
 
     </View>
   );
@@ -646,28 +644,6 @@ const styles = StyleSheet.create({
   primaryButtonDisabled: {
     backgroundColor: '#F6E7C4',
   },
-  disabledButton: {
-    backgroundColor: '#F6E7C4',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  modalBackdrop: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  rangeModal: {
-    borderRadius: 8,
-    padding: 16,
-    backgroundColor: '#fff',
-  },
-  resultModal: {
-    borderRadius: 8,
-    padding: 16,
-    backgroundColor: '#fff',
-  },
   modalTitle: {
     fontSize: 17,
     fontWeight: '600',
@@ -698,37 +674,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#5F4300',
     marginHorizontal: 12,
-  },
-  modalActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 10,
-    marginTop: 8,
-  },
-  secondaryAction: {
-    minWidth: 72,
-    minHeight: 38,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#F4D79A',
-  },
-  secondaryActionText: {
-    fontSize: 14,
-    color: '#8A4B00',
-  },
-  confirmAction: {
-    minWidth: 72,
-    minHeight: 38,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 8,
-    backgroundColor: '#F57F17',
-  },
-  confirmActionText: {
-    fontSize: 14,
-    color: '#fff',
   },
   resultBlock: {
     marginBottom: 12,

@@ -1,12 +1,10 @@
 import React from 'react';
 import {
-  Modal,
-  View,
-  Text,
   TextInput,
-  TouchableOpacity,
   StyleSheet,
 } from 'react-native';
+import BaseModal from './modals/BaseModal';
+import ModalActionRow from './modals/ModalActionRow';
 
 const CountAdjustModal = ({
   visible,
@@ -17,56 +15,41 @@ const CountAdjustModal = ({
   onCancel,
 }) => {
   return (
-    <Modal
-      transparent
-      animationType="fade"
+    <BaseModal
       visible={visible}
       onRequestClose={onCancel}
+      title={title}
+      panelStyle={styles.card}
+      titleStyle={styles.title}
     >
-      <View style={styles.overlay}>
-        <View style={styles.card}>
-          <Text style={styles.title}>{title}</Text>
-          <TextInput
-            value={value}
-            onChangeText={onChangeValue}
-            keyboardType="number-pad"
-            autoFocus
-            style={styles.input}
-            selectionColor="#007AFF"
-          />
-          <View style={styles.actions}>
-            <TouchableOpacity style={styles.cancelButton} onPress={onCancel}>
-              <Text style={styles.cancelText}>取消</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.confirmButton} onPress={onConfirm}>
-              <Text style={styles.confirmText}>确认</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    </Modal>
+      <TextInput
+        value={value}
+        onChangeText={onChangeValue}
+        keyboardType="number-pad"
+        autoFocus
+        style={styles.input}
+        selectionColor="#007AFF"
+      />
+      <ModalActionRow
+        style={styles.actions}
+        buttonStyle={styles.actionButton}
+        textStyle={styles.actionText}
+        actions={[
+          { label: '取消', variant: 'secondary', onPress: onCancel, flex: true },
+          { label: '确认', onPress: onConfirm, flex: true },
+        ]}
+      />
+    </BaseModal>
   );
 };
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.35)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
   card: {
     width: '100%',
     maxWidth: 320,
-    backgroundColor: '#fff',
+    alignSelf: 'center',
     borderRadius: 16,
     padding: 20,
-    elevation: 10,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 12,
   },
   title: {
     fontSize: 18,
@@ -86,32 +69,15 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   actions: {
-    flexDirection: 'row',
     gap: 12,
     marginTop: 18,
   },
-  cancelButton: {
-    flex: 1,
+  actionButton: {
     borderRadius: 10,
-    paddingVertical: 12,
-    backgroundColor: '#f2f2f2',
-    alignItems: 'center',
+    minHeight: 44,
   },
-  confirmButton: {
-    flex: 1,
-    borderRadius: 10,
-    paddingVertical: 12,
-    backgroundColor: '#007AFF',
-    alignItems: 'center',
-  },
-  cancelText: {
+  actionText: {
     fontSize: 16,
-    color: '#444',
-    fontWeight: '600',
-  },
-  confirmText: {
-    fontSize: 16,
-    color: '#fff',
     fontWeight: '600',
   },
 });

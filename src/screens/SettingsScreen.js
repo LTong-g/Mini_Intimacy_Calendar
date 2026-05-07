@@ -10,7 +10,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Alert,
   Platform,
   Switch,
   AppState,
@@ -23,6 +22,7 @@ import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { exportAppData, importAppData, isAppDataEmpty } from '../utils/appDataStorage';
 import { getAllCheckInData } from '../utils/checkInStorage';
+import { showAppAlert } from '../utils/appAlert';
 import {
   clearStoredUsageRecords,
   getUsageAccessStatus,
@@ -130,7 +130,7 @@ const SettingsScreen = () => {
       }
       setUsageStatus(nextStatus);
     } catch (error) {
-      Alert.alert('状态读取失败', error.message || '无法读取使用记录权限状态');
+      showAppAlert('状态读取失败', error.message || '无法读取使用记录权限状态');
     } finally {
       setUsageStatusLoading(false);
     }
@@ -168,14 +168,14 @@ const SettingsScreen = () => {
     try {
       const content = await buildExportContent();
       if (!content) {
-        Alert.alert('导出失败', '没有可导出的数据');
+        showAppAlert('导出失败', '没有可导出的数据');
         return;
       }
 
       if (Platform.OS === 'android') {
         const saveResult = await saveExportToAndroidSharedStorage(content);
         if (saveResult.saved) {
-          Alert.alert('导出成功', '文件已保存到你选择的目录');
+          showAppAlert('导出成功', '文件已保存到你选择的目录');
           return;
         }
         if (saveResult.reason === 'canceled') {
@@ -186,7 +186,7 @@ const SettingsScreen = () => {
       const shareUri = await createTempExportFileForSharing(content);
       const isShareAvailable = await Sharing.isAvailableAsync();
       if (!isShareAvailable) {
-        Alert.alert('导出失败', '当前设备不支持系统分享');
+        showAppAlert('导出失败', '当前设备不支持系统分享');
         return;
       }
 
@@ -195,7 +195,7 @@ const SettingsScreen = () => {
         mimeType: EXPORT_MIME_TYPE,
       });
     } catch (error) {
-      Alert.alert('导出失败', '发生错误：' + error.message);
+      showAppAlert('导出失败', '发生错误：' + error.message);
     }
   };
 
@@ -204,14 +204,14 @@ const SettingsScreen = () => {
     try {
       const content = await buildExportContent();
       if (!content) {
-        Alert.alert('分享失败', '没有可分享的数据');
+        showAppAlert('分享失败', '没有可分享的数据');
         return;
       }
 
       const shareUri = await createTempExportFileForSharing(content);
       const isShareAvailable = await Sharing.isAvailableAsync();
       if (!isShareAvailable) {
-        Alert.alert('分享失败', '当前设备不支持系统分享');
+        showAppAlert('分享失败', '当前设备不支持系统分享');
         return;
       }
 
@@ -220,7 +220,7 @@ const SettingsScreen = () => {
         mimeType: EXPORT_MIME_TYPE,
       });
     } catch (error) {
-      Alert.alert('分享失败', '发生错误：' + error.message);
+      showAppAlert('分享失败', '发生错误：' + error.message);
     }
   };
 
@@ -242,14 +242,14 @@ const SettingsScreen = () => {
 
       const importResult = await importAppData(parsed);
       await getAllCheckInData();
-      Alert.alert(
+      showAppAlert(
         '导入成功',
         importResult.format === 'legacyCheckins'
           ? '已导入旧格式打卡记录，现有黑名单数据和设置已保留'
           : '应用数据已导入'
       );
     } catch (error) {
-      Alert.alert('导入失败', error.message || '无法解析文件内容');
+      showAppAlert('导入失败', error.message || '无法解析文件内容');
     }
   };
 
@@ -259,7 +259,7 @@ const SettingsScreen = () => {
       await openUsageAccessSettings();
     } catch (error) {
       setUsageAccessPending(null);
-      Alert.alert('开启失败', error.message || '无法开启使用记录辅助功能');
+      showAppAlert('开启失败', error.message || '无法开启使用记录辅助功能');
     }
   };
 
@@ -269,7 +269,7 @@ const SettingsScreen = () => {
       await openUsageAccessSettings();
     } catch (error) {
       setUsageAccessPending(null);
-      Alert.alert('打开失败', error.message || '无法打开使用情况访问权限设置');
+      showAppAlert('打开失败', error.message || '无法打开使用情况访问权限设置');
     }
   };
 
@@ -289,7 +289,7 @@ const SettingsScreen = () => {
         await openBatteryOptimizationSettings();
       }
     } catch (error) {
-      Alert.alert('打开失败', error.message || '无法打开电池优化设置');
+      showAppAlert('打开失败', error.message || '无法打开电池优化设置');
     }
   };
 
@@ -298,7 +298,7 @@ const SettingsScreen = () => {
       await openExactAlarmSettings();
       refreshUsageStatus();
     } catch (error) {
-      Alert.alert('打开失败', error.message || '无法打开精确闹钟设置');
+      showAppAlert('打开失败', error.message || '无法打开精确闹钟设置');
     }
   };
 
@@ -306,12 +306,12 @@ const SettingsScreen = () => {
     try {
       await openAppDetailsSettings();
     } catch (error) {
-      Alert.alert('打开失败', error.message || '无法打开应用详情设置');
+      showAppAlert('打开失败', error.message || '无法打开应用详情设置');
     }
   };
 
   const handleClearUsageRecords = () => {
-    Alert.alert(
+    showAppAlert(
       '删除应用使用记录',
       '将删除本应用已保存的应用使用记录和刷新结果。此操作不会关闭系统使用情况访问权限，也不会删除手动打卡记录。',
       [
@@ -323,9 +323,9 @@ const SettingsScreen = () => {
             try {
               const nextStatus = await clearStoredUsageRecords();
               setUsageStatus(nextStatus);
-              Alert.alert('删除完成', '已删除本应用保存的应用使用记录');
+              showAppAlert('删除完成', '已删除本应用保存的应用使用记录');
             } catch (error) {
-              Alert.alert('删除失败', error.message || '无法删除应用使用记录');
+              showAppAlert('删除失败', error.message || '无法删除应用使用记录');
             }
           },
         },

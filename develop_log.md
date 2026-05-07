@@ -1471,3 +1471,30 @@
 ### 清理未使用日期弹窗组件
 - src/screens/StatisticsScreen.js 已移除未被触发的 DatePickerModal 引用、showPicker/pickTarget 状态、handleDateSelected 回调和 JSX 挂载。
 - src/components/DatePickerModal.js 已删除，rg 已确认 src 与 App.js 中不再存在 DatePickerModal/showPicker/pickTarget/handleDateSelected 引用。
+
+### 评估通用弹窗组件提取
+- 已评估当前手写弹窗的共性：多处弹窗共享半透明黑色遮罩、白色圆角面板、居中或底部布局、操作按钮区域等结构。
+- 已形成结论：可提取通用弹窗基础组件，但应保留黑名单黄橙色、日历蓝色、滚轮选择器等业务差异的可配置入口。
+- 已识别风险：若一次性把所有弹窗抽象为同一高层组件，可能导致黑名单筛选、读取结果、日期滚轮和次数编辑等不同交互被过度耦合。
+
+### 制定通用弹窗基础组件提取方案
+- 已形成通用弹窗提取方案：提取居中弹窗和底部弹窗两个基础外壳组件，保留业务弹窗内部内容在各自页面或独立业务组件中实现。
+- 已确定抽象边界：基础组件只负责 Modal、遮罩、关闭行为、面板位置、圆角、间距和通用操作区，不承载日期滚轮、应用筛选、读取结果、次数编辑等业务逻辑。
+- 已确定迁移顺序：优先迁移黑名单读取记录、读取结果、使用时间段筛选、应用显示筛选四处弹窗，再评估次数编辑弹窗和日期滚轮弹窗是否接入同一基础层。
+
+### 抽取手写弹窗基础组件
+- src/components/modals/BaseModal.js 已新增，统一承载 React Native Modal、半透明遮罩、点击遮罩关闭、Android 返回关闭、居中与底部两种面板位置。
+- src/components/modals/ModalActionRow.js 已新增，统一承载弹窗操作按钮行、主按钮、次按钮、禁用态和主题色配置。
+- src/screens/UsageScreen.js 已将按日期读取记录弹窗和读取结果弹窗迁移为 BaseModal 与 ModalActionRow。
+- src/screens/UsageIntervalsScreen.js 已将记录筛选弹窗和应用显示筛选弹窗迁移为 BaseModal 与 ModalActionRow。
+- src/components/CountAdjustModal.js 已复用 BaseModal 与 ModalActionRow，保留数字输入业务逻辑。
+- src/components/DateQuickPickerModal.js 已复用 BaseModal 的底部面板模式，保留日期滚轮业务逻辑。
+
+### 统一默认应用内弹窗样式
+- src/utils/appAlert.js 已新增应用内弹窗调用入口，并保留 Provider 未注册时的原生 Alert 兜底。
+- src/components/modals/AppAlertProvider.js 已新增全局应用内弹窗 Provider，复用 BaseModal 与 ModalActionRow 展示标题、消息、按钮、取消和危险操作。
+- App.js 已在根导航外层挂载 AppAlertProvider。
+- AboutScreen.js、SettingsScreen.js、StatisticsScreen.js 和 CustomTabBar.js 已将默认 Alert.alert 调用替换为默认蓝色主题应用内弹窗。
+- UsageScreen.js、UsageIntervalsScreen.js 和 UsageBlacklistScreen.js 已将黑名单功能内 Alert.alert 调用替换为黄橙色主题应用内弹窗。
+- src/screens/VersionHistoryScreen.js 已在 Unreleased 优化项记录应用内提示和确认弹窗样式统一。
+- rg 已确认 src 与 App.js 中除 appAlert.js 原生兜底外不再存在 Alert.alert 调用。

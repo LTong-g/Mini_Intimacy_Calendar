@@ -4,12 +4,12 @@ import {
   ScrollView,
   Text,
   StyleSheet,
-  Alert,
   ToastAndroid,
   Platform,
 } from "react-native";
 import StatisticsHeader from "../components/StatisticsHeader";
 import moment from "moment";
+import { showAppAlert } from "../utils/appAlert";
 import TotalStatsTable from "../components/TotalStatsTable";
 import TotalLineChart from "../components/TotalLineChart";
 import YearStatsTable from "../components/YearStatsTable";
@@ -30,7 +30,7 @@ const StatisticsScreen = ({ navigation, route }) => {
         if (Platform.OS === "android") {
           ToastAndroid.show("开始日期不能晚于结束日期", ToastAndroid.SHORT);
         } else {
-          Alert.alert("提示", "开始日期不能晚于结束日期");
+          showAppAlert("提示", "开始日期不能晚于结束日期");
         }
         return;
       }
@@ -40,7 +40,7 @@ const StatisticsScreen = ({ navigation, route }) => {
         if (Platform.OS === "android") {
           ToastAndroid.show("结束日期不能早于开始日期", ToastAndroid.SHORT);
         } else {
-          Alert.alert("提示", "结束日期不能早于开始日期");
+          showAppAlert("提示", "结束日期不能早于开始日期");
         }
         return;
       }

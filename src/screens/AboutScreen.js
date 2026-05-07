@@ -3,9 +3,10 @@
  */
 
 import React from 'react';
-import { Alert, Image, Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { showAppAlert } from '../utils/appAlert';
 import pkg from '../../package.json';
 
 const appIcon = require('../../assets/icon.png');
@@ -18,7 +19,7 @@ const AboutScreen = () => {
     try {
       await Linking.openURL(GITHUB_URL);
     } catch (error) {
-      Alert.alert('打开失败', error.message || '无法打开 GitHub 项目主页');
+      showAppAlert('打开失败', error.message || '无法打开 GitHub 项目主页');
     }
   };
 
