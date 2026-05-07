@@ -1511,3 +1511,8 @@
 - src/components/DateQuickPickerModal.js 已在滚轮列重新定位时先同步当前选中项偏移缓存，并在未完成定位前返回当前传入值对应项。
 - src/components/DateQuickPickerModal.js 已为每次弹窗打开生成新的滚动定位键，保证同一日期反复打开时也会重新对齐滚轮。
 - src/screens/VersionHistoryScreen.js 的 Unreleased 修复项已记录顶部日期滚轮初始值回退问题。
+
+### 设置页删除应用使用记录弹窗文案修正
+- 已确认删除应用使用记录会清空已保存黑名单使用时间段、黑名单刷新状态和原生上次刷新摘要。
+- src/screens/SettingsScreen.js 已移除删除应用使用记录确认弹窗中关于不会关闭系统使用情况访问权限的提示。
+- src/screens/SettingsScreen.js 已将删除应用使用记录确认弹窗和删除完成提示改为说明删除已保存的黑名单应用使用时间段记录。

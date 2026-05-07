@@ -313,7 +313,7 @@ const SettingsScreen = () => {
   const handleClearUsageRecords = () => {
     showAppAlert(
       '删除应用使用记录',
-      '将删除本应用已保存的应用使用记录和刷新结果。此操作不会关闭系统使用情况访问权限，也不会删除手动打卡记录。',
+      '将删除已保存的黑名单应用使用时间段记录。黑名单应用选择和手动打卡记录不会被删除。',
       [
         { text: '取消', style: 'cancel' },
         {
@@ -323,7 +323,7 @@ const SettingsScreen = () => {
             try {
               const nextStatus = await clearStoredUsageRecords();
               setUsageStatus(nextStatus);
-              showAppAlert('删除完成', '已删除本应用保存的应用使用记录');
+              showAppAlert('删除完成', '已删除已保存的黑名单应用使用时间段记录');
             } catch (error) {
               showAppAlert('删除失败', error.message || '无法删除应用使用记录');
             }
