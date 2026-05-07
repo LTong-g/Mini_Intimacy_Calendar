@@ -12,6 +12,7 @@ import android.database.sqlite.SQLiteDatabase
 import android.os.Build
 import com.reactnativecommunity.asyncstorage.ReactDatabaseSupplier
 import org.json.JSONArray
+import org.json.JSONObject
 import java.util.Calendar
 
 object UsageAccessScheduler {
@@ -25,8 +26,9 @@ object UsageAccessScheduler {
   private const val KEY_LAST_REFRESH_INTERVAL_COUNT = "last_refresh_interval_count"
   private const val KEY_LAST_REFRESH_SELECTED_COUNT = "last_refresh_selected_count"
   private const val KEY_LAST_REFRESH_ERROR = "last_refresh_error"
-  private const val BLACKLIST_KEY = "experimental_usage_blacklist"
-  private const val INTERVALS_KEY = "experimental_usage_intervals"
+  private const val BLACKLIST_DATA_KEY = "app_data_blacklist"
+  private const val LEGACY_BLACKLIST_KEY = "experimental_usage_blacklist"
+  private const val LEGACY_INTERVALS_KEY = "experimental_usage_intervals"
   private const val ASYNC_STORAGE_TABLE = "catalystLocalStorage"
   private const val ASYNC_STORAGE_KEY_COLUMN = "key"
   private const val ASYNC_STORAGE_VALUE_COLUMN = "value"
@@ -96,17 +98,22 @@ object UsageAccessScheduler {
       if (!hasUsageAccess(context)) {
         errorMessage = "Usage access is not granted."
       } else {
-        val selectedPackages = readBlacklistPackageNames(context)
+        val endTime = System.currentTimeMillis()
+        val beginTime = recentRefreshStartTime(endTime)
+        val periods = readBlacklistPeriods(context)
+        val selectedPackages = periods
+          .filter { it.overlaps(beginTime, endTime) }
+          .map { it.packageName }
+          .toSet()
         selectedCount = selectedPackages.size
 
         if (selectedPackages.isNotEmpty()) {
-          val endTime = System.currentTimeMillis()
-          val beginTime = recentRefreshStartTime(endTime)
           val queriedIntervals = queryUsageIntervals(context, selectedPackages, beginTime, endTime)
-          val mergedIntervals = mergeUsageIntervals(readStoredIntervals(context) + queriedIntervals)
+          val clippedIntervals = clipIntervalsToPeriods(queriedIntervals, periods, beginTime, endTime)
+          val mergedIntervals = mergeUsageIntervals(readStoredIntervals(context) + clippedIntervals)
           writeStoredIntervals(context, mergedIntervals)
 
-          packageCount = queriedIntervals.map { it.packageName }.distinct().size
+          packageCount = clippedIntervals.map { it.packageName }.distinct().size
           intervalCount = mergedIntervals.size
         }
       }
@@ -132,7 +139,10 @@ object UsageAccessScheduler {
   }
 
   fun clearStoredUsageRecords(context: Context) {
-    removeAsyncStorageItem(context, INTERVALS_KEY)
+    val data = readBlacklistData(context)
+    data.put("intervals", JSONArray())
+    data.put("refreshState", JSONObject())
+    writeAsyncStorageItem(context, BLACKLIST_DATA_KEY, data.toString())
     context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
       .edit()
       .remove(KEY_LAST_REFRESH_AT)
@@ -173,25 +183,89 @@ object UsageAccessScheduler {
     }.timeInMillis
   }
 
-  private fun readBlacklistPackageNames(context: Context): Set<String> {
-    val stored = readAsyncStorageItem(context, BLACKLIST_KEY) ?: return emptySet()
-    val result = linkedSetOf<String>()
-    val apps = JSONArray(stored)
-    for (index in 0 until apps.length()) {
-      val packageName = apps.optJSONObject(index)
-        ?.optString("packageName")
-        ?.trim()
-        .orEmpty()
-      if (packageName.isNotEmpty()) {
-        result.add(packageName)
+  private fun readBlacklistData(context: Context): JSONObject {
+    val stored = readAsyncStorageItem(context, BLACKLIST_DATA_KEY)
+    if (!stored.isNullOrBlank()) {
+      try {
+        return JSONObject(stored)
+      } catch (_: Exception) {
+      }
+    }
+
+    val legacyIntervals = readLegacyIntervals(context)
+    val legacyStartByPackage = mutableMapOf<String, Long>()
+    for (index in 0 until legacyIntervals.length()) {
+      val item = legacyIntervals.optJSONObject(index) ?: continue
+      val packageName = item.optString("packageName").trim()
+      val startTime = item.optDouble("startTime", Double.NaN)
+      if (packageName.isNotEmpty() && startTime.isFinite()) {
+        val current = legacyStartByPackage[packageName]
+        legacyStartByPackage[packageName] = if (current == null) {
+          startTime.toLong()
+        } else {
+          minOf(current, startTime.toLong())
+        }
+      }
+    }
+    val now = System.currentTimeMillis()
+    val legacyPeriods = JSONArray()
+    val legacyBlacklist = readAsyncStorageItem(context, LEGACY_BLACKLIST_KEY)
+    if (!legacyBlacklist.isNullOrBlank()) {
+      try {
+        val apps = JSONArray(legacyBlacklist)
+        for (index in 0 until apps.length()) {
+          val packageName = apps.optJSONObject(index)
+            ?.optString("packageName")
+            ?.trim()
+            .orEmpty()
+          if (packageName.isNotEmpty()) {
+            legacyPeriods.put(
+              JSONObject()
+                .put("packageName", packageName)
+                .put("startAt", legacyStartByPackage[packageName] ?: now)
+                .put("endAt", JSONObject.NULL)
+                .put("endReason", JSONObject.NULL)
+            )
+          }
+        }
+      } catch (_: Exception) {
+      }
+    }
+
+    return JSONObject()
+      .put("schemaVersion", 2)
+      .put("appsByPackage", JSONObject())
+      .put("periods", legacyPeriods)
+      .put("intervals", legacyIntervals)
+      .put("refreshState", JSONObject())
+  }
+
+  private fun readBlacklistPeriods(context: Context): List<BlacklistPeriod> {
+    val periods = readBlacklistData(context).optJSONArray("periods") ?: return emptyList()
+    val result = mutableListOf<BlacklistPeriod>()
+    for (index in 0 until periods.length()) {
+      val item = periods.optJSONObject(index) ?: continue
+      val packageName = item.optString("packageName").trim()
+      val startAt = item.optDouble("startAt", Double.NaN)
+      val endAtValue = item.opt("endAt")
+      val endAt = when (endAtValue) {
+        null, JSONObject.NULL -> null
+        is Number -> endAtValue.toLong()
+        else -> item.optDouble("endAt", Double.NaN).takeIf { it.isFinite() }?.toLong()
+      }
+      if (
+        packageName.isNotEmpty() &&
+        startAt.isFinite() &&
+        (endAt == null || endAt > startAt.toLong())
+      ) {
+        result.add(BlacklistPeriod(packageName, startAt.toLong(), endAt))
       }
     }
     return result
   }
 
   private fun readStoredIntervals(context: Context): List<UsageInterval> {
-    val stored = readAsyncStorageItem(context, INTERVALS_KEY) ?: return emptyList()
-    val intervals = JSONArray(stored)
+    val intervals = readBlacklistData(context).optJSONArray("intervals") ?: return readLegacyIntervalsAsList(context)
     val result = mutableListOf<UsageInterval>()
     for (index in 0 until intervals.length()) {
       val item = intervals.optJSONObject(index) ?: continue
@@ -221,7 +295,39 @@ object UsageAccessScheduler {
           .put("durationMs", (interval.endTime - interval.startTime).toDouble())
       )
     }
-    writeAsyncStorageItem(context, INTERVALS_KEY, array.toString())
+    val data = readBlacklistData(context)
+    data.put("schemaVersion", 2)
+    data.put("intervals", array)
+    writeAsyncStorageItem(context, BLACKLIST_DATA_KEY, data.toString())
+  }
+
+  private fun readLegacyIntervals(context: Context): JSONArray {
+    val stored = readAsyncStorageItem(context, LEGACY_INTERVALS_KEY) ?: return JSONArray()
+    return try {
+      JSONArray(stored)
+    } catch (_: Exception) {
+      JSONArray()
+    }
+  }
+
+  private fun readLegacyIntervalsAsList(context: Context): List<UsageInterval> {
+    val intervals = readLegacyIntervals(context)
+    val result = mutableListOf<UsageInterval>()
+    for (index in 0 until intervals.length()) {
+      val item = intervals.optJSONObject(index) ?: continue
+      val packageName = item.optString("packageName").trim()
+      val startTime = item.optDouble("startTime", Double.NaN)
+      val endTime = item.optDouble("endTime", Double.NaN)
+      if (
+        packageName.isNotEmpty() &&
+        startTime.isFinite() &&
+        endTime.isFinite() &&
+        endTime > startTime
+      ) {
+        result.add(UsageInterval(packageName, startTime.toLong(), endTime.toLong()))
+      }
+    }
+    return result
   }
 
   private fun queryUsageIntervals(
@@ -279,6 +385,32 @@ object UsageAccessScheduler {
     }
 
     return intervals
+  }
+
+  private fun clipIntervalsToPeriods(
+    intervals: List<UsageInterval>,
+    periods: List<BlacklistPeriod>,
+    beginTime: Long,
+    endTime: Long
+  ): List<UsageInterval> {
+    val result = mutableListOf<UsageInterval>()
+    intervals.forEach { interval ->
+      periods
+        .filter {
+          it.packageName == interval.packageName &&
+            it.overlaps(beginTime, endTime) &&
+            it.startAt < interval.endTime &&
+            it.endTimeOrMax() > interval.startTime
+        }
+        .forEach { period ->
+          val start = maxOf(interval.startTime, period.startAt, beginTime)
+          val end = minOf(interval.endTime, period.endTimeOrMax(), endTime)
+          if (end > start) {
+            result.add(UsageInterval(interval.packageName, start, end))
+          }
+        }
+    }
+    return result
   }
 
   private fun mergeUsageIntervals(intervals: List<UsageInterval>): List<UsageInterval> {
@@ -449,4 +581,16 @@ object UsageAccessScheduler {
     val startTime: Long,
     val endTime: Long
   )
+
+  private data class BlacklistPeriod(
+    val packageName: String,
+    val startAt: Long,
+    val endAt: Long?
+  ) {
+    fun endTimeOrMax(): Long = endAt ?: Long.MAX_VALUE
+
+    fun overlaps(beginTime: Long, endTime: Long): Boolean {
+      return startAt < endTime && endTimeOrMax() > beginTime
+    }
+  }
 }

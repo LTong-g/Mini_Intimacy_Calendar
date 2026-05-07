@@ -1,7 +1,7 @@
 /**
  * 极简武器强化日历 - 设置界面
  * 功能：展示设置项（如导入/导出），顶部带返回按钮
- * 支持导入导出打卡数据为JSON文件
+ * 支持导入导出应用数据为JSON文件
  */
 
 import React, { useCallback, useEffect, useState } from 'react';
@@ -21,7 +21,8 @@ import { useNavigation } from '@react-navigation/native';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
-import { exportCheckInData, importCheckInData } from '../utils/checkInStorage';
+import { exportAppData, importAppData, isAppDataEmpty } from '../utils/appDataStorage';
+import { getAllCheckInData } from '../utils/checkInStorage';
 import {
   clearStoredUsageRecords,
   getUsageAccessStatus,
@@ -155,14 +156,14 @@ const SettingsScreen = () => {
   }, [refreshUsageStatus]);
 
   const buildExportContent = async () => {
-    const data = await exportCheckInData();
-    if (Object.keys(data).length === 0) {
+    const data = await exportAppData();
+    if (isAppDataEmpty(data)) {
       return null;
     }
     return JSON.stringify(data, null, 2);
   };
 
-  // 导出打卡记录为 JSON
+  // 导出完整应用数据为 JSON
   const handleExport = async () => {
     try {
       const content = await buildExportContent();
@@ -239,8 +240,14 @@ const SettingsScreen = () => {
 
       const parsed = JSON.parse(content);
 
-      await importCheckInData(parsed);
-      Alert.alert('导入成功', '记录已导入');
+      const importResult = await importAppData(parsed);
+      await getAllCheckInData();
+      Alert.alert(
+        '导入成功',
+        importResult.format === 'legacyCheckins'
+          ? '已导入旧格式打卡记录，现有黑名单数据和设置已保留'
+          : '应用数据已导入'
+      );
     } catch (error) {
       Alert.alert('导入失败', error.message || '无法解析文件内容');
     }

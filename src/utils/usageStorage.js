@@ -1,64 +1,111 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import {
+  readBlacklistData,
+  updateBlacklistData,
+  writeBlacklistData,
+  normalizeUsageApps,
+  normalizeUsageIntervalsPayload,
+} from './appDataStorage';
 
-const BLACKLIST_KEY = 'experimental_usage_blacklist';
-const INTERVALS_KEY = 'experimental_usage_intervals';
 const MERGE_GAP_MS = 2 * 60 * 1000;
 
-const normalizeBlacklist = (value) => {
-  if (!Array.isArray(value)) return [];
-  return value
-    .filter((item) => item && typeof item.packageName === 'string')
-    .map((item) => ({
-      packageName: item.packageName,
-      label: typeof item.label === 'string' && item.label.trim()
-        ? item.label.trim()
-        : item.packageName,
-      icon: typeof item.icon === 'string' && item.icon.trim()
-        ? item.icon.trim()
-        : null,
-      color: typeof item.color === 'string' && /^#[0-9A-Fa-f]{6}$/.test(item.color.trim())
-        ? item.color.trim().toUpperCase()
-        : null,
-    }));
-};
+const normalizeBlacklist = (value) => Object.values(normalizeUsageApps(value));
 
-const normalizeIntervals = (value) => {
-  if (!Array.isArray(value)) return [];
-  return value
-    .filter((item) => (
-      item &&
-      typeof item.packageName === 'string' &&
-      Number.isFinite(item.startTime) &&
-      Number.isFinite(item.endTime) &&
-      item.endTime > item.startTime
-    ))
-    .map((item) => ({
-      packageName: item.packageName,
-      startTime: item.startTime,
-      endTime: item.endTime,
-      durationMs: item.endTime - item.startTime,
-    }));
-};
+const sortAppsByLabel = (apps) => [...apps].sort((a, b) => (
+  a.label.localeCompare(b.label) || a.packageName.localeCompare(b.packageName)
+));
 
-const hydrateExperimentalUsageBlacklist = (blacklist, launchableApps) => {
-  const launchableByPackage = new Map(
-    normalizeBlacklist(launchableApps).map((app) => [app.packageName, app])
+const getPeriodEnd = (period) => (
+  period.endAt === null || period.endAt === undefined ? Number.POSITIVE_INFINITY : period.endAt
+);
+
+const periodOverlapsRange = (period, beginTime, endTime) => (
+  period.startAt < endTime && getPeriodEnd(period) > beginTime
+);
+
+const isPeriodActiveAt = (period, time = Date.now()) => (
+  period.startAt <= time && getPeriodEnd(period) > time
+);
+
+const getActiveBlacklistApps = (blacklist, time = Date.now()) => {
+  const activePackages = new Set(
+    blacklist.periods
+      .filter((period) => isPeriodActiveAt(period, time))
+      .map((period) => period.packageName)
   );
 
-  return normalizeBlacklist(blacklist).map((app) => {
-    const launchableApp = launchableByPackage.get(app.packageName);
+  return sortAppsByLabel(
+    Array.from(activePackages)
+      .map((packageName) => blacklist.appsByPackage[packageName] || {
+        packageName,
+        label: packageName,
+        icon: null,
+        color: null,
+        installed: false,
+      })
+  );
+};
+
+const upsertApps = (blacklist, apps, options = {}) => {
+  const now = options.now || Date.now();
+  const installed = options.installed !== false;
+  const nextAppsByPackage = { ...blacklist.appsByPackage };
+
+  normalizeBlacklist(apps).forEach((app) => {
+    const previous = nextAppsByPackage[app.packageName];
+    nextAppsByPackage[app.packageName] = {
+      packageName: app.packageName,
+      label: app.label,
+      icon: app.icon,
+      color: app.color,
+      firstSeenAt: previous?.firstSeenAt ?? now,
+      lastSeenAt: now,
+      installed,
+    };
+  });
+
+  return {
+    ...blacklist,
+    appsByPackage: nextAppsByPackage,
+  };
+};
+
+const getHistoricalPackages = (blacklist) => new Set([
+  ...blacklist.periods.map((period) => period.packageName),
+  ...blacklist.intervals.map((interval) => interval.packageName),
+]);
+
+const closeActivePeriods = (periods, packageNames, endReason, endAt = Date.now()) => {
+  const targetPackages = new Set(packageNames);
+  return periods.map((period) => {
+    if (!targetPackages.has(period.packageName) || !isPeriodActiveAt(period, endAt)) {
+      return period;
+    }
     return {
-      ...app,
-      label: app.label || launchableApp?.label || app.packageName,
-      icon: app.icon || launchableApp?.icon || null,
-      color: launchableApp?.color || app.color || null,
+      ...period,
+      endAt,
+      endReason,
     };
   });
 };
 
-const areBlacklistsEqual = (left, right) => (
-  JSON.stringify(normalizeBlacklist(left)) === JSON.stringify(normalizeBlacklist(right))
-);
+const openMissingPeriods = (periods, packageNames, startAt = Date.now()) => {
+  const activePackages = new Set(
+    periods
+      .filter((period) => isPeriodActiveAt(period, startAt))
+      .map((period) => period.packageName)
+  );
+  const nextPeriods = [...periods];
+  packageNames.forEach((packageName) => {
+    if (activePackages.has(packageName)) return;
+    nextPeriods.push({
+      packageName,
+      startAt,
+      endAt: null,
+      endReason: null,
+    });
+  });
+  return nextPeriods;
+};
 
 const buildNonOverlappingSegments = (intervals) => {
   const boundaries = Array.from(new Set(
@@ -108,7 +155,7 @@ const hasDifferentPackageUsageBetween = (segments, packageName, startTime, endTi
 };
 
 export const mergeAdjacentUsageIntervals = (intervals, gapMs = MERGE_GAP_MS) => {
-  const normalized = normalizeIntervals(intervals);
+  const normalized = normalizeUsageIntervalsPayload(intervals);
   const segments = buildNonOverlappingSegments(normalized);
   const sorted = segments
     .sort((a, b) => (
@@ -138,38 +185,117 @@ export const mergeAdjacentUsageIntervals = (intervals, gapMs = MERGE_GAP_MS) => 
 };
 
 export const getExperimentalUsageBlacklist = async () => {
-  const stored = await AsyncStorage.getItem(BLACKLIST_KEY);
-  return normalizeBlacklist(stored ? JSON.parse(stored) : []);
+  const blacklist = await readBlacklistData();
+  return getActiveBlacklistApps(blacklist);
+};
+
+export const getExperimentalUsageKnownApps = async () => {
+  const blacklist = await readBlacklistData();
+  return sortAppsByLabel(Object.values(blacklist.appsByPackage));
 };
 
 export const setExperimentalUsageBlacklist = async (apps) => {
-  const next = normalizeBlacklist(apps);
-  await AsyncStorage.setItem(BLACKLIST_KEY, JSON.stringify(next));
-  return next;
+  const now = Date.now();
+  const desiredApps = normalizeBlacklist(apps);
+  const desiredPackages = new Set(desiredApps.map((app) => app.packageName));
+  const next = await updateBlacklistData((current) => {
+    const withApps = upsertApps(current, desiredApps, { now, installed: true });
+    const activePackages = new Set(
+      withApps.periods
+        .filter((period) => isPeriodActiveAt(period, now))
+        .map((period) => period.packageName)
+    );
+    const packagesToClose = Array.from(activePackages)
+      .filter((packageName) => !desiredPackages.has(packageName));
+
+    return {
+      ...withApps,
+      periods: openMissingPeriods(
+        closeActivePeriods(withApps.periods, packagesToClose, 'manual', now),
+        desiredPackages,
+        now
+      ),
+    };
+  });
+
+  return getActiveBlacklistApps(next, now);
 };
 
 export const syncExperimentalUsageBlacklistMetadata = async (blacklist, launchableApps) => {
-  const hydrated = hydrateExperimentalUsageBlacklist(blacklist, launchableApps);
-  if (areBlacklistsEqual(blacklist, hydrated)) {
-    return hydrated;
-  }
-  return setExperimentalUsageBlacklist(hydrated);
+  const now = Date.now();
+  const launchable = normalizeBlacklist(launchableApps);
+  const launchablePackages = new Set(launchable.map((app) => app.packageName));
+  const launchableByPackage = new Map(launchable.map((app) => [app.packageName, app]));
+  const next = await updateBlacklistData((current) => {
+    const historicalPackages = getHistoricalPackages(current);
+    const appsToRefresh = Array.from(historicalPackages)
+      .map((packageName) => launchableByPackage.get(packageName))
+      .filter(Boolean);
+    const withApps = upsertApps(current, appsToRefresh, { now, installed: true });
+    const nextAppsByPackage = {};
+    historicalPackages.forEach((packageName) => {
+      const existing = withApps.appsByPackage[packageName];
+      if (existing) {
+        nextAppsByPackage[packageName] = existing;
+      } else {
+        nextAppsByPackage[packageName] = {
+          packageName,
+          label: packageName,
+          icon: null,
+          color: null,
+          firstSeenAt: now,
+          lastSeenAt: now,
+          installed: false,
+        };
+      }
+    });
+    Object.keys(nextAppsByPackage).forEach((packageName) => {
+      if (!launchablePackages.has(packageName)) {
+        nextAppsByPackage[packageName] = {
+          ...nextAppsByPackage[packageName],
+          installed: false,
+        };
+      }
+    });
+
+    const activePackages = withApps.periods
+      .filter((period) => isPeriodActiveAt(period, now))
+      .map((period) => period.packageName);
+    const uninstalledActivePackages = activePackages
+      .filter((packageName) => !launchablePackages.has(packageName));
+
+    return {
+      ...withApps,
+      appsByPackage: nextAppsByPackage,
+      periods: closeActivePeriods(
+        withApps.periods,
+        uninstalledActivePackages,
+        'uninstalled',
+        now
+      ),
+    };
+  });
+
+  return getActiveBlacklistApps(next, now);
 };
 
 export const getExperimentalUsageIntervals = async () => {
-  const stored = await AsyncStorage.getItem(INTERVALS_KEY);
-  return normalizeIntervals(stored ? JSON.parse(stored) : []);
+  const blacklist = await readBlacklistData();
+  return normalizeUsageIntervalsPayload(blacklist.intervals);
 };
 
 export const saveExperimentalUsageIntervals = async (intervals) => {
-  const normalized = normalizeIntervals(intervals);
+  const normalized = normalizeUsageIntervalsPayload(intervals);
   const byIdentity = new Map();
   normalized.forEach((item) => {
     byIdentity.set(`${item.packageName}:${item.startTime}:${item.endTime}`, item);
   });
-  const next = mergeAdjacentUsageIntervals(Array.from(byIdentity.values()));
-  await AsyncStorage.setItem(INTERVALS_KEY, JSON.stringify(next));
-  return next;
+  const nextIntervals = mergeAdjacentUsageIntervals(Array.from(byIdentity.values()));
+  const next = await writeBlacklistData({
+    ...(await readBlacklistData()),
+    intervals: nextIntervals,
+  });
+  return next.intervals;
 };
 
 export const mergeExperimentalUsageIntervals = async (intervals) => {
@@ -178,5 +304,53 @@ export const mergeExperimentalUsageIntervals = async (intervals) => {
 };
 
 export const clearExperimentalUsageIntervals = async () => {
-  await AsyncStorage.removeItem(INTERVALS_KEY);
+  const current = await readBlacklistData();
+  await writeBlacklistData({
+    ...current,
+    intervals: [],
+    refreshState: {},
+  });
+};
+
+export const getExperimentalUsagePackageNamesForRange = async (beginTime, endTime) => {
+  const blacklist = await readBlacklistData();
+  return Array.from(new Set(
+    blacklist.periods
+      .filter((period) => periodOverlapsRange(period, beginTime, endTime))
+      .map((period) => period.packageName)
+  ));
+};
+
+export const clipExperimentalUsageIntervalsToBlacklistPeriods = async (
+  intervals,
+  beginTime,
+  endTime
+) => {
+  const blacklist = await readBlacklistData();
+  const normalized = normalizeUsageIntervalsPayload(intervals);
+  const clipped = [];
+
+  normalized.forEach((interval) => {
+    blacklist.periods
+      .filter((period) => (
+        period.packageName === interval.packageName &&
+        periodOverlapsRange(period, beginTime, endTime) &&
+        period.startAt < interval.endTime &&
+        getPeriodEnd(period) > interval.startTime
+      ))
+      .forEach((period) => {
+        const startTime = Math.max(interval.startTime, period.startAt, beginTime);
+        const endTimeClipped = Math.min(interval.endTime, getPeriodEnd(period), endTime);
+        if (endTimeClipped > startTime) {
+          clipped.push({
+            packageName: interval.packageName,
+            startTime,
+            endTime: endTimeClipped,
+            durationMs: endTimeClipped - startTime,
+          });
+        }
+      });
+  });
+
+  return clipped;
 };

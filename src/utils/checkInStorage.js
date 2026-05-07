@@ -6,13 +6,17 @@
  * @date 2025.7.25
  */
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import {
+  LEGACY_DATA_KEYS,
+  readCheckinsData,
+  writeCheckinsData,
+} from './appDataStorage';
 
 /**
  * 存储键名
  * @constant {string}
  */
-export const CHECKIN_KEY = 'checkin_status';
+export const CHECKIN_KEY = LEGACY_DATA_KEYS.CHECKINS;
 
 const DATE_KEY_RE = /^\d{4}-\d{2}-\d{2}$/;
 let cachedCheckInData = null;
@@ -164,21 +168,15 @@ export const normalizeCheckInData = (raw, options = {}) => {
 };
 
 export const getAllCheckInData = async () => {
-  const stored = await AsyncStorage.getItem(CHECKIN_KEY);
-  const raw = stored ? JSON.parse(stored) : {};
-  const { data, migrated } = normalizeCheckInData(raw);
-
-  if (migrated) {
-    await AsyncStorage.setItem(CHECKIN_KEY, JSON.stringify(data));
-  }
-
+  const payload = await readCheckinsData();
+  const { data } = normalizeCheckInData(payload.recordsByDate);
   cachedCheckInData = data;
   return data;
 };
 
 export const importCheckInData = async (raw) => {
   const { data } = normalizeCheckInData(raw, { strict: true });
-  await AsyncStorage.setItem(CHECKIN_KEY, JSON.stringify(data));
+  await writeCheckinsData(data);
   cachedCheckInData = data;
   return data;
 };
@@ -241,7 +239,7 @@ export const setCheckInRecord = async (date, record) => {
       delete data[dateStr];
     }
 
-    await AsyncStorage.setItem(CHECKIN_KEY, JSON.stringify(data));
+    await writeCheckinsData(data);
     cachedCheckInData = data;
     return true;
   } catch (error) {

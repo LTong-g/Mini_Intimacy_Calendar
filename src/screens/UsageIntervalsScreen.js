@@ -21,7 +21,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import moment from 'moment';
 import {
-  getExperimentalUsageBlacklist,
+  getExperimentalUsageKnownApps,
   getExperimentalUsageIntervals,
   mergeAdjacentUsageIntervals,
 } from '../utils/usageStorage';
@@ -100,7 +100,7 @@ const ExperimentalUsageIntervalsScreen = () => {
   const loadState = useCallback(async () => {
     try {
       const [nextBlacklist, nextIntervals] = await Promise.all([
-        getExperimentalUsageBlacklist(),
+        getExperimentalUsageKnownApps(),
         getExperimentalUsageIntervals(),
       ]);
       setBlacklist(nextBlacklist);
@@ -134,20 +134,14 @@ const ExperimentalUsageIntervalsScreen = () => {
     return unsubscribe;
   }, [navigation, selectedPackageName]);
 
-  const selectedPackages = useMemo(
-    () => new Set(blacklist.map((item) => item.packageName)),
-    [blacklist]
-  );
   const allPackageNames = useMemo(
     () => blacklist.map((item) => item.packageName),
     [blacklist]
   );
 
   const visibleIntervals = useMemo(() => (
-    mergeAdjacentUsageIntervals(
-      intervals.filter((item) => selectedPackages.has(item.packageName))
-    ).sort((a, b) => b.startTime - a.startTime)
-  ), [intervals, selectedPackages]);
+    mergeAdjacentUsageIntervals(intervals).sort((a, b) => b.startTime - a.startTime)
+  ), [intervals]);
 
   const apps = useMemo(() => {
     const byPackage = new Map(blacklist.map((item) => [item.packageName, item]));

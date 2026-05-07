@@ -1409,3 +1409,61 @@
 - AGENTS.md 和 developer_guide.md 已记录黑名单功能颜色统一规则及弹窗外界遮罩中性规则，src/screens/VersionHistoryScreen.js 已在 Unreleased 优化分组记录该用户可见变化。
 - SoftwareIntroScreen.js、UsageHelpScreen.js 和 PrivacyPolicyScreen.js 已核对，本次只改变黑名单功能视觉颜色，不改变软件介绍、帮助操作或隐私说明。
 - UsageScreen.js、UsageBlacklistScreen.js、UsageIntervalsScreen.js、UsageCharts.js 和 VersionHistoryScreen.js 已通过 node --check，git diff --check 已通过。
+
+### 黑名单时间线模型最终方案
+- 已确认黑名单配置不再作为重新解释历史记录的当前筛选器，而是作为带生效时间段的记录规则。
+- 已确认使用记录作为历史事实不随应用卸载、取消黑名单或当前黑名单配置变化自动删除。
+- 已确认黑名单按包名维护唯一应用档案，应用名、图标和主色变化时更新同一档案，不保存多个历史快照。
+- 已确认黑名单状态保存为生效时间段，包含 packageName、startAt、endAt 和 endReason。
+- 已确认刷新、下拉刷新、晚间定时刷新和按日期读取均只保存目标时间处于黑名单生效时间段内的应用使用记录；跨越生效区间边界的系统使用时间段在保存前裁剪到生效区间内。
+- 已确认黑名单主页统计和使用时间段页基于已保存历史黑名单使用记录；使用时间段页应用筛选范围覆盖历史上加入过黑名单或已有使用记录的应用，不局限于当前黑名单应用。
+- 已确认设置黑名单应用页只显示当前可选择应用和当前生效黑名单应用；刷新当前可启动应用列表时，已卸载或不可启动的当前黑名单应用会自动结束当前生效时间段，但不删除应用档案或历史记录。
+
+### 统一应用数据结构与迁移最终方案
+- 已确认新的应用数据模型按 checkins、blacklist、settings 和 meta 分层管理；影响记录语义和读取范围的黑名单应用状态归入 blacklist，纯界面偏好归入 settings。
+- 已确认导入、导出和分享对外使用完整应用数据 JSON，覆盖打卡数据、黑名单数据和用户配置数据；运行期本地存储按顶层领域拆分键保存，避免读取日历圆点时解析黑名单图标和历史使用记录等大数据。
+- 已确认旧 checkin_status 迁移为 checkins.recordsByDate，旧 experimental_usage_blacklist 迁移为按包名维护的黑名单应用档案和当前开放生效时间段，旧 experimental_usage_intervals 迁移为历史黑名单使用记录。
+- 已确认旧数据缺少真实加入黑名单时间时，迁移时间段 startAt 取该应用已有最早使用记录开始时间；没有使用记录时取迁移发生时间。
+- 已确认旧版仅含打卡记录的 JSON 导入时只更新打卡数据，不清空现有黑名单数据或用户配置。
+- 已确认本轮方案属于用户可感知的数据备份、黑名单读取和历史展示行为调整，相关说明同步到 developer_guide、使用帮助、隐私政策、版本记录、AGENTS 和 develop_log。
+
+### 统一应用数据结构与黑名单时间线升级实现
+- src/utils/appDataStorage.js 已新增统一应用数据存储层，定义 schemaVersion 2，并按 checkins、blacklist、settings 和 meta 组织完整应用数据。
+- src/utils/appDataStorage.js 已实现从旧 checkin_status、experimental_usage_blacklist 和 experimental_usage_intervals 自动迁移到 app_data_checkins、app_data_blacklist、app_data_settings 和 app_data_meta。
+- src/utils/appDataStorage.js 已实现完整应用数据导出和导入，并兼容旧版仅含打卡记录的 JSON 导入。
+- src/utils/checkInStorage.js 已切换为通过统一应用数据存储层读写打卡记录，同时保留原有公开函数接口。
+- src/utils/usageStorage.js 已切换为按包名应用档案、黑名单生效时间段和黑名单使用记录读写黑名单数据。
+- src/screens/UsageScreen.js 已将刷新和按日期读取改为只查询并保存目标时间范围内处于黑名单生效时间段的应用记录。
+- src/screens/UsageScreen.js 已将黑名单主页统计改为基于已保存历史黑名单使用记录，不再用当前黑名单列表过滤历史。
+- src/screens/UsageIntervalsScreen.js 已将使用时间段应用列表和筛选范围改为历史上加入过黑名单或已有记录的应用。
+- src/screens/UsageBlacklistScreen.js 通过新的 usageStorage 行为在刷新应用列表时同步应用档案并自动结束已卸载应用的当前黑名单状态。
+- src/screens/SettingsScreen.js 已将导入、导出和分享改为完整应用数据备份，并在导入旧版打卡备份时保留现有黑名单数据和设置。
+- android/app/src/main/java/com/ltongg/MinimalistWeaponEnhancementCalendar/UsageAccessScheduler.kt 已改为读取 app_data_blacklist，并按黑名单生效时间段裁剪晚间刷新到的使用记录。
+- SoftwareIntroScreen、UsageHelpScreen、PrivacyPolicyScreen、VersionHistoryScreen、developer_guide.md 和 AGENTS.md 已同步统一数据备份和黑名单生效时间线行为说明。
+- 已执行 node --check 检查 appDataStorage.js、checkInStorage.js、usageStorage.js、UsageScreen.js、UsageIntervalsScreen.js、UsageBlacklistScreen.js、SettingsScreen.js、UsageHelpScreen.js、PrivacyPolicyScreen.js、SoftwareIntroScreen.js 和 VersionHistoryScreen.js，结果通过。
+- 已执行 git diff --check，结果通过。
+- 首次执行 npm run android:build:debug:tempmap 因沙箱无法创建 subst 映射失败，未进入 Gradle 构建。
+- 已在获得提升权限后执行 npm run android:build:debug:tempmap，Android Debug 构建成功。
+- src/screens/SettingsScreen.js 已在导入完整应用数据或旧版打卡备份后重新读取打卡数据，用于刷新运行期打卡数据缓存。
+- developer_guide.md 的代码结构列表已补充 appDataStorage.js。
+
+### 黑名单应用列表 SQLite_FULL 修复
+- 已定位黑名单应用页读取失败的原因是同步应用列表元数据时将当前可启动应用列表中的全部应用图标写入持久化黑名单应用档案，导致 AsyncStorage SQLite 写入过大并触发 SQLITE_FULL。
+- src/utils/usageStorage.js 已将黑名单应用档案同步范围收窄为历史上加入过黑名单或已有使用记录的应用，不再持久化完整可启动应用列表。
+- src/utils/usageStorage.js 已在同步黑名单应用元数据时按黑名单时间线和使用记录包名集合重建 appsByPackage，用于清理此前错误持久化的非历史应用档案。
+- src/utils/appDataStorage.js 已为 app_data_blacklist 写入增加失败兜底：黑名单数据 setItem 失败时先删除该键再写入瘦身后的数据。
+- 已执行 node --check 检查 appDataStorage.js、usageStorage.js 和 UsageBlacklistScreen.js，结果通过。
+- 已执行 git diff --check，结果通过。
+
+### 统一数据结构升级主动复核与补强
+- 已完成统一数据结构升级后的主动复核，静态搜索覆盖旧 AsyncStorage 键、当前黑名单过滤、应用档案和黑名单时间线相关路径。
+- 已使用内存版 AsyncStorage mock 验证旧 checkin_status、experimental_usage_blacklist 和 experimental_usage_intervals 可迁移为 schemaVersion 2 完整应用数据。
+- 已使用内存版 AsyncStorage mock 验证旧版打卡 JSON 导入只更新打卡数据并保留已有黑名单时间线。
+- 已使用内存版 AsyncStorage mock 验证取消黑名单应用后该应用不再处于当前黑名单状态，但仍保留在历史应用筛选范围。
+- 已使用内存版 AsyncStorage mock 验证黑名单应用元数据同步会清理没有黑名单时间线或使用记录的非历史应用档案，避免再次持久化完整可启动应用列表图标。
+- 已使用内存版 AsyncStorage mock 验证按黑名单生效时间段裁剪跨边界使用记录的结果。
+- src/utils/appDataStorage.js 已在 normalizeBlacklistPayload 中按黑名单时间线和历史使用记录包名集合裁剪 appsByPackage，使读取和导出阶段也不会携带非历史应用档案。
+- android UsageAccessScheduler 的旧数据 fallback 已将 legacy 黑名单 period 起点改为该应用已有最早使用记录时间；没有旧记录时使用 fallback 发生时刻，避免原生刷新先于 JS 迁移时用 startAt=0 回填过早历史。
+- 已重新执行 npm run android:build:debug:tempmap，Android Debug 构建成功。
+- 已重新执行 node --check 检查 appDataStorage.js、usageStorage.js、checkInStorage.js、SettingsScreen.js、UsageScreen.js、UsageIntervalsScreen.js 和 UsageBlacklistScreen.js，结果通过。
+- 已重新执行 git diff --check，结果通过。

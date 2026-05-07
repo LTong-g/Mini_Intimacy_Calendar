@@ -26,7 +26,10 @@ import {
 } from '../components/UsageCharts';
 import {
   getExperimentalUsageBlacklist,
+  getExperimentalUsageKnownApps,
   getExperimentalUsageIntervals,
+  getExperimentalUsagePackageNamesForRange,
+  clipExperimentalUsageIntervalsToBlacklistPeriods,
   mergeAdjacentUsageIntervals,
   mergeExperimentalUsageIntervals,
 } from '../utils/usageStorage';
@@ -149,6 +152,7 @@ const ExperimentalUsageScreen = () => {
   const readingStateRef = useRef({ loading: false, refreshing: false });
   const silentRefreshingRef = useRef(false);
   const [blacklist, setBlacklist] = useState([]);
+  const [knownApps, setKnownApps] = useState([]);
   const [intervals, setIntervals] = useState([]);
   const [usageGranted, setUsageGranted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -168,13 +172,16 @@ const ExperimentalUsageScreen = () => {
         getExperimentalUsageBlacklist(),
         getExperimentalUsageIntervals(),
       ]);
+      const nextKnownApps = await getExperimentalUsageKnownApps();
       setUsageGranted(Boolean(status.usageAccessGranted));
       blacklistRef.current = nextBlacklist;
       setBlacklist(nextBlacklist);
+      setKnownApps(nextKnownApps);
       setIntervals(nextIntervals);
       return {
         usageGranted: Boolean(status.usageAccessGranted),
         blacklist: nextBlacklist,
+        knownApps: nextKnownApps,
         intervals: nextIntervals,
       };
     } catch (error) {
@@ -191,16 +198,9 @@ const ExperimentalUsageScreen = () => {
     readingStateRef.current = { loading, refreshing };
   }, [loading, refreshing]);
 
-  const selectedPackages = useMemo(
-    () => new Set(blacklist.map((item) => item.packageName)),
-    [blacklist]
-  );
-
   const visibleIntervals = useMemo(() => (
-    mergeAdjacentUsageIntervals(
-      intervals.filter((item) => selectedPackages.has(item.packageName))
-    ).sort((a, b) => b.startTime - a.startTime)
-  ), [intervals, selectedPackages]);
+    mergeAdjacentUsageIntervals(intervals).sort((a, b) => b.startTime - a.startTime)
+  ), [intervals]);
 
   const stats = useMemo(() => {
     const now = moment();
@@ -213,7 +213,7 @@ const ExperimentalUsageScreen = () => {
     return {
       dailyRows: buildDailyRows(
         visibleIntervals,
-        blacklist,
+        knownApps,
         todayStart.valueOf(),
         todayEnd.valueOf(),
         elapsedTodayMs
@@ -221,7 +221,7 @@ const ExperimentalUsageScreen = () => {
       weeklyRows: buildRangeRows(visibleIntervals, recent7Start, 7),
       monthlyRows: buildRangeRows(visibleIntervals, recent30Start, 30),
     };
-  }, [visibleIntervals, blacklist]);
+  }, [visibleIntervals, knownApps]);
 
   const handleOpenBlacklistSettings = () => {
     navigation.navigate('ExperimentalUsageBlacklist');
@@ -245,24 +245,26 @@ const ExperimentalUsageScreen = () => {
       );
       return false;
     }
-    if (blacklist.length === 0) {
-      Alert.alert('无法刷新', '请先选择至少一个黑名单应用');
-      return false;
-    }
     return true;
-  }, [blacklist.length, loading, refreshing, usageGranted]);
+  }, [loading, refreshing, usageGranted]);
 
   const readUsageRecords = useCallback(async (beginTime, endTime, options = {}) => {
     const {
       successTitle = '读取完成',
       showResult = true,
-      targetBlacklist,
     } = options;
-    const sourceBlacklist = targetBlacklist || blacklistRef.current;
-    const packageNames = sourceBlacklist.map((item) => item.packageName);
-    const nextIntervals = await queryUsageIntervals(packageNames, beginTime, endTime);
-    const mergedReadIntervals = mergeAdjacentUsageIntervals(nextIntervals);
-    const merged = await mergeExperimentalUsageIntervals(nextIntervals);
+    const packageNames = await getExperimentalUsagePackageNamesForRange(beginTime, endTime);
+    if (packageNames.length === 0) {
+      throw new Error('所选时间范围内没有处于黑名单状态的应用');
+    }
+    const queriedIntervals = await queryUsageIntervals(packageNames, beginTime, endTime);
+    const clippedIntervals = await clipExperimentalUsageIntervalsToBlacklistPeriods(
+      queriedIntervals,
+      beginTime,
+      endTime
+    );
+    const mergedReadIntervals = mergeAdjacentUsageIntervals(clippedIntervals);
+    const merged = await mergeExperimentalUsageIntervals(clippedIntervals);
     const actualRange = getActualRecordRange(mergedReadIntervals);
     setIntervals(merged);
     if (showResult) {
@@ -374,14 +376,13 @@ const ExperimentalUsageScreen = () => {
   const handleSilentRecentRefresh = useCallback(async (state) => {
     const readingState = readingStateRef.current;
     if (silentRefreshingRef.current || readingState.loading || readingState.refreshing) return;
-    if (!state?.usageGranted || state.blacklist.length === 0) return;
+    if (!state?.usageGranted) return;
 
     const { beginTime, endTime } = getRecentUsageReadRange();
     try {
       silentRefreshingRef.current = true;
       await readUsageRecords(beginTime, endTime, {
         showResult: false,
-        targetBlacklist: state.blacklist,
       });
     } catch {
       // Silent refresh must not interrupt page entry or show an error dialog.
