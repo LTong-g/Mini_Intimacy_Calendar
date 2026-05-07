@@ -1395,3 +1395,8 @@
 - src/screens/VersionHistoryScreen.js 已将 Unreleased 优化项改为记录圆点加载速度优化并减少圆点加载造成的页面闪烁。
 - 已使用本地 @babel/parser 解析 App.js、src/utils/checkInStorage.js、src/screens/MonthView.js、src/screens/YearView.js 和 src/screens/VersionHistoryScreen.js，结果通过。
 - 已执行 git diff --check，结果通过。
+
+### README 项目定位说明更新分点记录
+- readme.md 将项目描述从正向打卡工具改为记录需要自律控制频率的三类行为。
+- readme.md 将适用人群和功能描述调整为发生后记录、频率复盘和间隔观察。
+- readme.md 修复了 developer_guide.md 的文档导航链接。
