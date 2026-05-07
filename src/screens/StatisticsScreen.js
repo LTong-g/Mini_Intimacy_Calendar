@@ -10,7 +10,6 @@ import {
 } from "react-native";
 import StatisticsHeader from "../components/StatisticsHeader";
 import moment from "moment";
-import DatePickerModal from "../components/DatePickerModal";
 import TotalStatsTable from "../components/TotalStatsTable";
 import TotalLineChart from "../components/TotalLineChart";
 import YearStatsTable from "../components/YearStatsTable";
@@ -23,8 +22,6 @@ const StatisticsScreen = ({ navigation, route }) => {
   const [currentYear, setCurrentYear] = useState(moment().year());
   const [startDate, setStartDate] = useState("开始日期");
   const [endDate, setEndDate] = useState("结束日期");
-  const [showPicker, setShowPicker] = useState(false);
-  const [pickTarget, setPickTarget] = useState(null); // 'start' 或 'end'
   const lastDatePickerResultRef = useRef(null);
 
   const applyPickedDate = (dateStr, whichOne) => {
@@ -67,12 +64,6 @@ const StatisticsScreen = ({ navigation, route }) => {
     });
   };
 
-  const handleDateSelected = (dateStr) => {
-    if (pickTarget === "start") setStartDate(dateStr);
-    else if (pickTarget === "end") setEndDate(dateStr);
-    setShowPicker(false);
-  };
-
   return (
     <View style={styles.container}>
       <StatisticsHeader
@@ -109,12 +100,6 @@ const StatisticsScreen = ({ navigation, route }) => {
             </>
           )}
       </ScrollView>
-
-      <DatePickerModal
-        visible={showPicker}
-        onClose={() => setShowPicker(false)}
-        onSelect={handleDateSelected}
-      />
     </View>
   );
 };

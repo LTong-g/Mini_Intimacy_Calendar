@@ -1,4 +1,4 @@
-﻿> 提示：请使用 UTF-8 编码读取本文件。
+> 提示：请使用 UTF-8 编码读取本文件。
 
 # 开发日志
 撰写规则：
@@ -1467,3 +1467,7 @@
 - 已重新执行 npm run android:build:debug:tempmap，Android Debug 构建成功。
 - 已重新执行 node --check 检查 appDataStorage.js、usageStorage.js、checkInStorage.js、SettingsScreen.js、UsageScreen.js、UsageIntervalsScreen.js 和 UsageBlacklistScreen.js，结果通过。
 - 已重新执行 git diff --check，结果通过。
+
+### 清理未使用日期弹窗组件
+- src/screens/StatisticsScreen.js 已移除未被触发的 DatePickerModal 引用、showPicker/pickTarget 状态、handleDateSelected 回调和 JSX 挂载。
+- src/components/DatePickerModal.js 已删除，rg 已确认 src 与 App.js 中不再存在 DatePickerModal/showPicker/pickTarget/handleDateSelected 引用。
