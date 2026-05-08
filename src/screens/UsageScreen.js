@@ -18,6 +18,7 @@ import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/nativ
 import moment from 'moment';
 import {
   DailyUsagePieChart,
+  UsageHeatmapChart,
   MonthlyUsageLineChart,
   WeeklyUsageBarChart,
 } from '../components/UsageCharts';
@@ -41,6 +42,7 @@ const CHART_RANGE_OPTIONS = [
   { key: 'today', label: '今日' },
   { key: '7days', label: '7天' },
   { key: '30days', label: '30天' },
+  { key: 'heatmap', label: '热图' },
 ];
 const BLACKLIST_MODAL_THEME = {
   primary: '#F57F17',
@@ -511,6 +513,9 @@ const ExperimentalUsageScreen = () => {
         {currentChartRange.key === 'today' && <DailyUsagePieChart rows={stats.dailyRows} />}
         {currentChartRange.key === '7days' && <WeeklyUsageBarChart rows={stats.weeklyRows} />}
         {currentChartRange.key === '30days' && <MonthlyUsageLineChart rows={stats.monthlyRows} />}
+        {currentChartRange.key === 'heatmap' && (
+          <UsageHeatmapChart intervals={visibleIntervals} />
+        )}
       </ScrollView>
 
       <BaseModal

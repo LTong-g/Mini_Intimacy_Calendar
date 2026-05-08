@@ -26,10 +26,18 @@ const tutorialDarkColor = '#8A4B00';
 const gridColor = '#F4D79A';
 const axisTextColor = '#A66A00';
 const remainderColor = '#F6E7C4';
+const heatmapEmptyColor = '#FFFFFF';
+const heatmapFutureColor = '#F7F7F7';
+const heatmapNeutralBorderColor = '#E0E0E0';
+const heatmapGradientStartColor = '#FFE082';
+const heatmapGradientEndColor = '#8A4B00';
 const msPerMinute = 1000 * 60;
 const monthlyTouchValueLabelOffsetX = 6;
 const yAxisLabelWidth = 0;
 const horizontalAxisPadding = 10;
+const msPerDay = 24 * 60 * 60 * 1000;
+const heatmapLegendGradientWidth = 86;
+const heatmapLegendGradientHeight = 11;
 
 const formatMinutes = (ms) => `${Math.round(ms / msPerMinute)} 分钟`;
 const minutesValue = (ms) => Math.round(ms / msPerMinute);
@@ -56,6 +64,40 @@ const shouldShowMonthlyPoint = (points, index) => {
   const previous = points[index - 1];
   const next = points[index + 1];
   return !previous || !next || previous.item.durationMs > 0 || next.item.durationMs > 0;
+};
+
+const overlapDuration = (interval, rangeStart, rangeEnd) => {
+  const start = Math.max(interval.startTime, rangeStart);
+  const end = Math.min(interval.endTime, rangeEnd);
+  return Math.max(0, end - start);
+};
+
+const parseHexColor = (hex) => ({
+  r: parseInt(hex.slice(1, 3), 16),
+  g: parseInt(hex.slice(3, 5), 16),
+  b: parseInt(hex.slice(5, 7), 16),
+});
+
+const toHexChannel = (value) => Math.round(value).toString(16).padStart(2, '0').toUpperCase();
+
+const interpolateHexColor = (startHex, endHex, ratio) => {
+  const start = parseHexColor(startHex);
+  const end = parseHexColor(endHex);
+  const boundedRatio = Math.max(0, Math.min(1, ratio));
+  return `#${toHexChannel(start.r + (end.r - start.r) * boundedRatio)}${toHexChannel(start.g + (end.g - start.g) * boundedRatio)}${toHexChannel(start.b + (end.b - start.b) * boundedRatio)}`;
+};
+
+const getRoundedHeatmapMaxMinutes = (maxDurationMs) => {
+  const maxMinutes = minutesValue(maxDurationMs);
+  if (maxMinutes <= 0) return 0;
+  return Math.ceil(maxMinutes / 10) * 10;
+};
+
+const getHeatmapColor = (durationMs, maxMinutes) => {
+  if (durationMs <= 0) return heatmapEmptyColor;
+  const durationMinutes = minutesValue(durationMs);
+  const ratio = maxMinutes > 0 ? durationMinutes / maxMinutes : 0;
+  return interpolateHexColor(heatmapGradientStartColor, heatmapGradientEndColor, ratio);
 };
 
 export const DailyUsagePieChart = ({ rows }) => {
@@ -461,6 +503,204 @@ export const MonthlyUsageLineChart = ({ rows }) => {
   );
 };
 
+export const UsageHeatmapChart = ({ intervals }) => {
+  const [layoutWidth, setLayoutWidth] = useState(0);
+  const [touchKey, setTouchKey] = useState(null);
+  const measuredWidth = Math.max(0, layoutWidth - chartBlockPadding * 2);
+  const svgWidth = measuredWidth || chartInnerWidth;
+  const labelWidth = 26;
+  const monthLabelHeight = 18;
+  const bottomPadding = 6;
+  const cellGap = 3;
+  const targetPlotHeight = Math.max(132, Math.min(184, Math.round(svgWidth * 0.42)));
+  const cellSize = Math.max(10, Math.floor((targetPlotHeight - cellGap * 6) / 7));
+  const plotHeight = cellSize * 7 + cellGap * 6;
+  const plotWidth = Math.max(1, svgWidth - labelWidth);
+  const columnCount = Math.max(1, Math.floor((plotWidth + cellGap) / (cellSize + cellGap)));
+  const actualPlotWidth = columnCount * cellSize + Math.max(0, columnCount - 1) * cellGap;
+  const svgHeight = monthLabelHeight + plotHeight + bottomPadding;
+  const startOfToday = moment().startOf('day');
+  const currentWeekStart = startOfToday.clone().day(0);
+  const startDate = currentWeekStart.clone().subtract(columnCount - 1, 'weeks');
+  const maxDurationMs = useMemo(() => {
+    let maxValue = 0;
+    for (let index = 0; index < columnCount * 7; index += 1) {
+      const date = startDate.clone().add(index, 'days');
+      if (date.isAfter(startOfToday, 'day')) continue;
+      const dayStart = date.valueOf();
+      const dayEnd = dayStart + msPerDay;
+      const durationMs = intervals.reduce((sum, interval) => (
+        sum + overlapDuration(interval, dayStart, dayEnd)
+      ), 0);
+      maxValue = Math.max(maxValue, durationMs);
+    }
+    return maxValue;
+  }, [columnCount, intervals, startDate, startOfToday]);
+  const heatmapMaxMinutes = getRoundedHeatmapMaxMinutes(maxDurationMs);
+  const cells = useMemo(() => (
+    Array.from({ length: columnCount * 7 }, (_, index) => {
+      const date = startDate.clone().add(index, 'days');
+      const dayStart = date.valueOf();
+      const dayEnd = dayStart + msPerDay;
+      const durationMs = intervals.reduce((sum, interval) => (
+        sum + overlapDuration(interval, dayStart, dayEnd)
+      ), 0);
+      const column = Math.floor(index / 7);
+      const weekday = date.day();
+      return {
+        key: date.format('YYYY-MM-DD'),
+        label: date.format('M月D日'),
+        durationMs: date.isAfter(startOfToday, 'day') ? 0 : durationMs,
+        isFuture: date.isAfter(startOfToday, 'day'),
+        x: labelWidth + column * (cellSize + cellGap),
+        y: monthLabelHeight + weekday * (cellSize + cellGap),
+      };
+    })
+  ), [cellGap, cellSize, columnCount, intervals, labelWidth, monthLabelHeight, startDate, startOfToday]);
+  const monthLabels = useMemo(() => {
+    const labels = [];
+    let lastMonth = '';
+    for (let column = 0; column < columnCount; column += 1) {
+      const columnCells = cells.slice(column * 7, column * 7 + 7);
+      const firstOfMonth = columnCells.find((cell) => moment(cell.key).date() === 1);
+      const labelCell = firstOfMonth || (column === 0 ? columnCells[0] : null);
+      if (!labelCell) continue;
+      const date = moment(labelCell.key);
+      const monthKey = date.format('YYYY-MM');
+      if (monthKey === lastMonth) continue;
+      labels.push({
+        key: monthKey,
+        label: date.format('M月'),
+        x: labelCell.x,
+      });
+      lastMonth = monthKey;
+    }
+    return labels;
+  }, [cells, columnCount]);
+  const handleTouch = useCallback((x, y) => {
+    const plotX = x - labelWidth;
+    const plotY = y - monthLabelHeight;
+    if (plotX < 0 || plotY < 0 || plotX > actualPlotWidth || plotY > plotHeight) {
+      setTouchKey(null);
+      return;
+    }
+    const column = Math.floor(plotX / (cellSize + cellGap));
+    const weekday = Math.floor(plotY / (cellSize + cellGap));
+    if (plotX - column * (cellSize + cellGap) > cellSize) {
+      setTouchKey(null);
+      return;
+    }
+    if (plotY - weekday * (cellSize + cellGap) > cellSize) {
+      setTouchKey(null);
+      return;
+    }
+    if (column < 0 || column >= columnCount || weekday < 0 || weekday > 6) {
+      setTouchKey(null);
+      return;
+    }
+    const cell = cells[column * 7 + weekday];
+    setTouchKey(cell?.key || null);
+  }, [actualPlotWidth, cellGap, cellSize, cells, columnCount, labelWidth, monthLabelHeight, plotHeight]);
+  const panResponder = useMemo(() => PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onMoveShouldSetPanResponder: () => true,
+    onPanResponderGrant: (event) => handleTouch(
+      event.nativeEvent.locationX,
+      event.nativeEvent.locationY
+    ),
+    onPanResponderMove: (event) => handleTouch(
+      event.nativeEvent.locationX,
+      event.nativeEvent.locationY
+    ),
+    onPanResponderRelease: () => setTouchKey(null),
+    onPanResponderTerminate: () => setTouchKey(null),
+  }), [handleTouch]);
+  const touchCell = touchKey ? cells.find((cell) => cell.key === touchKey) : null;
+  const metaText = touchCell
+    ? `${touchCell.label} ${formatMinutes(touchCell.durationMs)}`
+    : `${columnCount} 周`;
+
+  return (
+    <View
+      style={styles.chartBlock}
+      onLayout={(event) => setLayoutWidth(event.nativeEvent.layout.width)}
+    >
+      <View style={styles.chartTitleRow}>
+        <Text style={styles.chartTitle}>使用热力图</Text>
+        <Text style={styles.chartMeta}>{metaText}</Text>
+      </View>
+      <View {...panResponder.panHandlers}>
+        <Svg width={svgWidth} height={svgHeight}>
+          {['日', '一', '二', '三', '四', '五', '六'].map((label, index) => (
+            <SvgText
+              key={label}
+              x={labelWidth - 7}
+              y={monthLabelHeight + index * (cellSize + cellGap) + cellSize / 2 + 4}
+              fontSize={10}
+              fill={axisTextColor}
+              textAnchor="end"
+            >
+              {label}
+            </SvgText>
+          ))}
+          {monthLabels.map((item) => (
+            <SvgText
+              key={item.key}
+              x={item.x}
+              y={11}
+              fontSize={10}
+              fill={axisTextColor}
+            >
+              {item.label}
+            </SvgText>
+          ))}
+          {cells.map((cell) => {
+            const isTouched = cell.key === touchKey;
+            return (
+              <Rect
+                key={cell.key}
+                x={cell.x}
+                y={cell.y}
+                width={cellSize}
+                height={cellSize}
+                rx={2}
+                fill={cell.isFuture ? heatmapFutureColor : getHeatmapColor(cell.durationMs, heatmapMaxMinutes)}
+                stroke={isTouched ? tutorialDarkColor : heatmapNeutralBorderColor}
+                strokeWidth={isTouched ? 2 : 1}
+              />
+            );
+          })}
+        </Svg>
+      </View>
+      <View style={styles.heatmapLegend}>
+        <Text style={styles.heatmapLegendLabel}>0</Text>
+        <View style={styles.heatmapLegendGradient}>
+          <Svg width={heatmapLegendGradientWidth} height={heatmapLegendGradientHeight}>
+            <Defs>
+              <LinearGradient id="heatmapLegendGradient" x1="0" y1="0" x2="1" y2="0">
+                <Stop offset="0" stopColor={heatmapEmptyColor} stopOpacity="1" />
+                <Stop offset="0.12" stopColor={heatmapGradientStartColor} stopOpacity="1" />
+                <Stop offset="1" stopColor={heatmapGradientEndColor} stopOpacity="1" />
+              </LinearGradient>
+            </Defs>
+            <Rect
+              x={0}
+              y={0}
+              width={heatmapLegendGradientWidth}
+              height={heatmapLegendGradientHeight}
+              rx={2}
+              fill="url(#heatmapLegendGradient)"
+              stroke={heatmapNeutralBorderColor}
+              strokeWidth={1}
+            />
+          </Svg>
+        </View>
+        <Text style={styles.heatmapLegendLabel}>{heatmapMaxMinutes}</Text>
+      </View>
+    </View>
+  );
+};
+
 const styles = StyleSheet.create({
   chartBlock: {
     marginTop: 20,
@@ -509,5 +749,25 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#5F4300',
     flex: 1,
+  },
+  heatmapLegend: {
+    alignSelf: 'flex-end',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 4,
+    marginRight: 14,
+  },
+  heatmapLegendLabel: {
+    minWidth: 18,
+    fontSize: 10,
+    color: axisTextColor,
+    textAlign: 'center',
+  },
+  heatmapLegendGradient: {
+    width: heatmapLegendGradientWidth,
+    height: heatmapLegendGradientHeight,
+    borderRadius: 2,
+    overflow: 'hidden',
   },
 });
