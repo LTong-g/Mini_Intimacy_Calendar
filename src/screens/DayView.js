@@ -12,6 +12,7 @@ import {
   Vibration,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
 import moment from 'moment';
 import 'moment/locale/zh-cn';
 import Header from '../components/Header';
@@ -92,6 +93,7 @@ const calculateBreakDays = (data, selectedDateStr) => {
 };
 
 const DayView = ({ selectedDate, onDateChange, refreshKey = 0 }) => {
+  const navigation = useNavigation();
   const [record, setRecord] = useState({
     tutorial: 0,
     weapon: 0,
@@ -189,9 +191,22 @@ const DayView = ({ selectedDate, onDateChange, refreshKey = 0 }) => {
   };
 
   const showAutoMinimumNotice = () => {
+    const selectedDateStr = selectedDate.format('YYYY-MM-DD');
     showAppAlert(
       '无法取消自动记录',
-      '该观看教程记录由黑名单应用使用记录自动生成，当前次数不能低于自动记录次数。'
+      '该观看教程记录由黑名单应用使用记录自动生成，当前次数不能低于自动记录次数。',
+      [
+        {
+          text: '查看记录',
+          onPress: () => {
+            navigation.navigate('ExperimentalUsageIntervals', {
+              packageName: '__all__',
+              filterDate: selectedDateStr,
+            });
+          },
+        },
+        { text: '知道了' },
+      ]
     );
   };
 

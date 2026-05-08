@@ -1594,3 +1594,12 @@
 - 已使用 Babel parser 检查 checkInStorage.js、SoftwareIntroScreen.js、UsageHelpScreen.js、PrivacyPolicyScreen.js 和 VersionHistoryScreen.js，结果通过。
 - 已执行 git diff --check，结果通过。
 - 首次执行 npm run android:build:debug:tempmap 因 Gradle wrapper 缓存锁文件访问被拒绝失败；提升权限后重新执行同一命令，Android Debug 构建成功。
+
+### 自动记录不可取消提示跳转使用记录实现
+- src/screens/DayView.js 已在无法取消观看教程自动记录的提示弹窗中新增“查看记录”按钮，位于“知道了”按钮左侧。
+- 点击“查看记录”会跳转到使用时间段页面的全部记录详情，并将日期筛选自动设置为触发提示的日期。
+- src/screens/UsageIntervalsScreen.js 已支持通过路由参数 packageName=__all__ 与 filterDate 直接进入全部记录详情并应用指定日期筛选。
+- UsageHelpScreen.js、VersionHistoryScreen.js、developer_guide.md 和 AGENTS.md 已同步无法取消自动记录提示可查看当天使用记录的口径。
+- 已使用 Babel parser 检查 DayView.js、UsageIntervalsScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js，结果通过。
+- 已执行 git diff --check，结果通过。
+- 首次执行 npm run android:build:debug:tempmap 因 Gradle wrapper 缓存锁文件访问被拒绝失败；提升权限后重新执行同一命令，Android Debug 构建成功。

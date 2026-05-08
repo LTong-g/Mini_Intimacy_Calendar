@@ -95,9 +95,13 @@ const ExperimentalUsageIntervalsScreen = () => {
   const filterPickerActiveRef = useRef(false);
   const lastDatePickerResultRef = useRef(null);
   const initialPackageName = route.params?.packageName || null;
+  const initialFilterDate = route.params?.filterDate || null;
+  const initialFilterDateRange = initialFilterDate
+    ? { startDate: initialFilterDate, endDate: initialFilterDate }
+    : null;
   const [selectedPackageName, setSelectedPackageName] = useState(initialPackageName);
   const [rangeIndex, setRangeIndex] = useState(1);
-  const [filterDateRange, setFilterDateRange] = useState(null);
+  const [filterDateRange, setFilterDateRange] = useState(initialFilterDateRange);
   const [filterPackageNames, setFilterPackageNames] = useState(null);
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [appFilterModalVisible, setAppFilterModalVisible] = useState(false);
@@ -106,6 +110,20 @@ const ExperimentalUsageIntervalsScreen = () => {
   const [pendingPackageNames, setPendingPackageNames] = useState([]);
   const [blacklist, setBlacklist] = useState([]);
   const [intervals, setIntervals] = useState([]);
+
+  useEffect(() => {
+    const nextPackageName = route.params?.packageName;
+    const nextFilterDate = route.params?.filterDate;
+    if (nextPackageName) {
+      setSelectedPackageName(nextPackageName);
+    }
+    if (nextFilterDate) {
+      setFilterDateRange({
+        startDate: nextFilterDate,
+        endDate: nextFilterDate,
+      });
+    }
+  }, [route.params?.filterDate, route.params?.packageName]);
 
   const loadState = useCallback(async () => {
     try {
