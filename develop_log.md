@@ -1407,3 +1407,9 @@
 - SoftwareIntroScreen 已补充黑名单主页可按热力图查看使用时长。
 - VersionHistoryScreen 的 Unreleased 节点已补充黑名单热图能力。
 - developer_guide.md 和 AGENTS.md 已同步黑名单主页热力图规则。
+
+### 黑名单热图按钮周数文案
+- src/components/UsageCharts.js 已抽出热图布局周数计算并在热图布局变化后回传当前可显示周数。
+- src/screens/UsageScreen.js 已将黑名单主页热图范围按钮文案改为按当前屏幕可显示热图周数显示。
+- src/screens/SoftwareIntroScreen.js、src/screens/UsageHelpScreen.js、src/screens/VersionHistoryScreen.js 和 developer_guide.md 已同步热图按钮动态周数说明。
+- 已通过 Babel parser 校验相关 JS 文件语法，并通过 git diff --check 检查空白格式。

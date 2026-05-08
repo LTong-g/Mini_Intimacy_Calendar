@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Dimensions, PanResponder, StyleSheet, Text, View } from 'react-native';
 import Svg, {
   Circle,
@@ -99,6 +99,39 @@ const getHeatmapColor = (durationMs, maxMinutes) => {
   const ratio = maxMinutes > 0 ? durationMinutes / maxMinutes : 0;
   return interpolateHexColor(heatmapGradientStartColor, heatmapGradientEndColor, ratio);
 };
+
+const getUsageHeatmapLayoutMetrics = (layoutWidth = chartWidth) => {
+  const blockWidth = Number.isFinite(layoutWidth) && layoutWidth > 0 ? layoutWidth : chartWidth;
+  const measuredWidth = Math.max(0, blockWidth - chartBlockPadding * 2);
+  const svgWidth = measuredWidth || chartInnerWidth;
+  const labelWidth = 26;
+  const monthLabelHeight = 18;
+  const bottomPadding = 6;
+  const cellGap = 3;
+  const targetPlotHeight = Math.max(132, Math.min(184, Math.round(svgWidth * 0.42)));
+  const cellSize = Math.max(10, Math.floor((targetPlotHeight - cellGap * 6) / 7));
+  const plotHeight = cellSize * 7 + cellGap * 6;
+  const plotWidth = Math.max(1, svgWidth - labelWidth);
+  const columnCount = Math.max(1, Math.floor((plotWidth + cellGap) / (cellSize + cellGap)));
+  const actualPlotWidth = columnCount * cellSize + Math.max(0, columnCount - 1) * cellGap;
+  const svgHeight = monthLabelHeight + plotHeight + bottomPadding;
+
+  return {
+    actualPlotWidth,
+    cellGap,
+    cellSize,
+    columnCount,
+    labelWidth,
+    monthLabelHeight,
+    plotHeight,
+    svgHeight,
+    svgWidth,
+  };
+};
+
+export const getUsageHeatmapVisibleWeeks = (layoutWidth) => (
+  getUsageHeatmapLayoutMetrics(layoutWidth).columnCount
+);
 
 export const DailyUsagePieChart = ({ rows }) => {
   const total = rows.reduce((sum, item) => sum + item.durationMs, 0);
@@ -503,25 +536,30 @@ export const MonthlyUsageLineChart = ({ rows }) => {
   );
 };
 
-export const UsageHeatmapChart = ({ intervals }) => {
+export const UsageHeatmapChart = ({ intervals, onVisibleWeeksChange }) => {
   const [layoutWidth, setLayoutWidth] = useState(0);
   const [touchKey, setTouchKey] = useState(null);
-  const measuredWidth = Math.max(0, layoutWidth - chartBlockPadding * 2);
-  const svgWidth = measuredWidth || chartInnerWidth;
-  const labelWidth = 26;
-  const monthLabelHeight = 18;
-  const bottomPadding = 6;
-  const cellGap = 3;
-  const targetPlotHeight = Math.max(132, Math.min(184, Math.round(svgWidth * 0.42)));
-  const cellSize = Math.max(10, Math.floor((targetPlotHeight - cellGap * 6) / 7));
-  const plotHeight = cellSize * 7 + cellGap * 6;
-  const plotWidth = Math.max(1, svgWidth - labelWidth);
-  const columnCount = Math.max(1, Math.floor((plotWidth + cellGap) / (cellSize + cellGap)));
-  const actualPlotWidth = columnCount * cellSize + Math.max(0, columnCount - 1) * cellGap;
-  const svgHeight = monthLabelHeight + plotHeight + bottomPadding;
+  const {
+    actualPlotWidth,
+    cellGap,
+    cellSize,
+    columnCount,
+    labelWidth,
+    monthLabelHeight,
+    plotHeight,
+    svgHeight,
+    svgWidth,
+  } = useMemo(() => getUsageHeatmapLayoutMetrics(layoutWidth), [layoutWidth]);
   const startOfToday = moment().startOf('day');
   const currentWeekStart = startOfToday.clone().day(0);
   const startDate = currentWeekStart.clone().subtract(columnCount - 1, 'weeks');
+
+  useEffect(() => {
+    if (onVisibleWeeksChange) {
+      onVisibleWeeksChange(columnCount);
+    }
+  }, [columnCount, onVisibleWeeksChange]);
+
   const maxDurationMs = useMemo(() => {
     let maxValue = 0;
     for (let index = 0; index < columnCount * 7; index += 1) {

@@ -11,6 +11,7 @@ import {
   Text,
   ToastAndroid,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,6 +19,7 @@ import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/nativ
 import moment from 'moment';
 import {
   DailyUsagePieChart,
+  getUsageHeatmapVisibleWeeks,
   UsageHeatmapChart,
   MonthlyUsageLineChart,
   WeeklyUsageBarChart,
@@ -149,6 +151,7 @@ const buildRangeRows = (intervals, startMoment, days) => (
 const ExperimentalUsageScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
+  const { width: windowWidth } = useWindowDimensions();
   const rangePickerActiveRef = useRef(false);
   const lastDatePickerResultRef = useRef(null);
   const blacklistRef = useRef([]);
@@ -166,8 +169,13 @@ const ExperimentalUsageScreen = () => {
   const [rangeStartDate, setRangeStartDate] = useState(moment().format('YYYY-MM-DD'));
   const [rangeEndDate, setRangeEndDate] = useState(moment().format('YYYY-MM-DD'));
   const [chartRangeIndex, setChartRangeIndex] = useState(1);
+  const [heatmapVisibleWeeks, setHeatmapVisibleWeeks] = useState(() => getUsageHeatmapVisibleWeeks());
   const isReading = loading || refreshing;
   const currentChartRange = CHART_RANGE_OPTIONS[chartRangeIndex];
+
+  useEffect(() => {
+    setHeatmapVisibleWeeks(getUsageHeatmapVisibleWeeks(windowWidth - 40));
+  }, [windowWidth]);
 
   const loadState = useCallback(async () => {
     try {
@@ -238,6 +246,10 @@ const ExperimentalUsageScreen = () => {
   const handleShowAutoRecordRules = () => {
     setAutoRecordRulesVisible(true);
   };
+
+  const handleHeatmapVisibleWeeksChange = useCallback((weeks) => {
+    setHeatmapVisibleWeeks((current) => (current === weeks ? current : weeks));
+  }, []);
 
   const ensureRefreshReady = useCallback(() => {
     if (loading || refreshing) {
@@ -503,7 +515,7 @@ const ExperimentalUsageScreen = () => {
                     option.key === currentChartRange.key && styles.rangeTextActive,
                   ]}
                 >
-                  {option.label}
+                  {option.key === 'heatmap' ? `${heatmapVisibleWeeks}周` : option.label}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -514,7 +526,10 @@ const ExperimentalUsageScreen = () => {
         {currentChartRange.key === '7days' && <WeeklyUsageBarChart rows={stats.weeklyRows} />}
         {currentChartRange.key === '30days' && <MonthlyUsageLineChart rows={stats.monthlyRows} />}
         {currentChartRange.key === 'heatmap' && (
-          <UsageHeatmapChart intervals={visibleIntervals} />
+          <UsageHeatmapChart
+            intervals={visibleIntervals}
+            onVisibleWeeksChange={handleHeatmapVisibleWeeksChange}
+          />
         )}
       </ScrollView>
 
