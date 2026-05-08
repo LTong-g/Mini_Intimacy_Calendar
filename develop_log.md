@@ -1412,7 +1412,6 @@
 - src/components/UsageCharts.js 已抽出热图布局周数计算并在热图布局变化后回传当前可显示周数。
 - src/screens/UsageScreen.js 已将黑名单主页热图范围按钮文案改为按当前屏幕可显示热图周数显示。
 - src/screens/SoftwareIntroScreen.js、src/screens/UsageHelpScreen.js、src/screens/VersionHistoryScreen.js 和 developer_guide.md 已同步热图按钮动态周数说明。
-- 已通过 Babel parser 校验相关 JS 文件语法，并通过 git diff --check 检查空白格式。
 
 ### 版本记录 Unreleased 最终态整理
 - src/screens/VersionHistoryScreen.js 已将 Unreleased 的使用记录辅助与黑名单功能专题简介整理为三条功能说明。
