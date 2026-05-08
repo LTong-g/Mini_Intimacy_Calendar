@@ -1,4 +1,4 @@
-> 提示：请使用 UTF-8 编码读取本文件。
+﻿> 提示：请使用 UTF-8 编码读取本文件。
 
 # 开发日志
 撰写规则：
@@ -1418,3 +1418,8 @@
 - src/screens/VersionHistoryScreen.js 已将 Unreleased 的使用记录辅助与黑名单功能专题简介整理为三条功能说明。
 - src/screens/VersionHistoryScreen.js 已将黑名单相关内容限制在独立专题简介中，新增、修复、优化分组不再包含黑名单相关表述。
 - src/screens/VersionHistoryScreen.js 已移除黑名单专题简介中的入口位置、操作方式、读取反馈和查看路径等使用帮助式细节。
+
+### 使用帮助内容校准
+- 重写 src/screens/UsageHelpScreen.js 的帮助条目，使日视图、月视图、年视图、记录编辑、底部栏、设置页、使用记录辅助、黑名单和关于页说明与当前实现一致。
+- src/screens/UsageHelpScreen.js 将黑名单和使用记录辅助从设置页说明中拆出为独立章节，并删除过长的界面细节描述。
+- src/screens/VersionHistoryScreen.js 的 Unreleased 优化项新增使用帮助内容校准记录。
