@@ -1,13 +1,13 @@
 // useCheckinData.js
 import { useState, useEffect } from 'react';
-import { getAllCheckInData } from '../utils/checkInStorage';
+import { getEffectiveCheckInData } from '../utils/checkInStorage';
 
 export default function useCheckinData() {
   const [data, setData] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
-    getAllCheckInData()
+    getEffectiveCheckInData()
       .then(checkInData => {
         if (!isMounted) return;
         setData(checkInData);

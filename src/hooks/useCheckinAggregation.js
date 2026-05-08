@@ -1,14 +1,14 @@
 // useCheckinAggregation.js
 import { useState, useEffect } from "react";
 import moment from "moment";
-import { getAllCheckInData, normalizeCheckInRecord } from "../utils/checkInStorage";
+import { getEffectiveCheckInData, normalizeCheckInRecord } from "../utils/checkInStorage";
 
 export default function useCheckinAggregation({ startDate, endDate, year }) {
   const [aggData, setAggData] = useState(null);
 
   useEffect(() => {
     (async () => {
-      const raw = await getAllCheckInData();
+      const raw = await getEffectiveCheckInData();
       // 生成时间点列表
       let points = [];
       if (year) {

@@ -17,9 +17,12 @@ import 'moment/locale/zh-cn';
 import Header from '../components/Header';
 import CountAdjustModal from '../components/CountAdjustModal';
 import DateQuickPickerModal from '../components/DateQuickPickerModal';
+import { showAppAlert } from '../utils/appAlert';
 import {
   CheckInCountKeys,
-  getAllCheckInData,
+  getAutoTutorialMinimum,
+  getEffectiveCheckInData,
+  getCheckInRecord,
   getCheckInRecordCount,
   normalizeCheckInRecord,
   setCheckInRecord,
@@ -98,13 +101,20 @@ const DayView = ({ selectedDate, onDateChange, refreshKey = 0 }) => {
   const [editingVisible, setEditingVisible] = useState(false);
   const [editingType, setEditingType] = useState(null);
   const [editingValue, setEditingValue] = useState('0');
+  const [tutorialMinimum, setTutorialMinimum] = useState(0);
   const [quickPickerVisible, setQuickPickerVisible] = useState(false);
   const liveRecordRef = useRef({
     tutorial: 0,
     weapon: 0,
     duo: 0,
   });
+  const manualRecordRef = useRef({
+    tutorial: 0,
+    weapon: 0,
+    duo: 0,
+  });
   const allDataRef = useRef({});
+  const tutorialMinimumRef = useRef(0);
 
   const holdRef = useRef({
     active: false,
@@ -117,10 +127,17 @@ const DayView = ({ selectedDate, onDateChange, refreshKey = 0 }) => {
 
   const loadState = async () => {
     try {
-      const data = await getAllCheckInData();
+      const [data, minimum, manualRecord] = await Promise.all([
+        getEffectiveCheckInData(),
+        getAutoTutorialMinimum(selectedDate),
+        getCheckInRecord(selectedDate),
+      ]);
       allDataRef.current = data;
+      tutorialMinimumRef.current = minimum;
+      setTutorialMinimum(minimum);
       const selectedDateStr = selectedDate.format('YYYY-MM-DD');
       const currentRecord = normalizeCheckInRecord(data[selectedDateStr]);
+      manualRecordRef.current = normalizeCheckInRecord(manualRecord);
       const nextBreakDays = calculateBreakDays(data, selectedDateStr);
       setBreakDays(nextBreakDays);
       setRecord(currentRecord);
@@ -171,14 +188,31 @@ const DayView = ({ selectedDate, onDateChange, refreshKey = 0 }) => {
     holdRef.current.active = false;
   };
 
+  const showAutoMinimumNotice = () => {
+    showAppAlert(
+      '无法取消自动记录',
+      '该观看教程记录由黑名单应用使用记录自动生成，当前次数不能低于自动记录次数。'
+    );
+  };
+
   const runHoldStep = () => {
     const { typeKey, direction } = holdRef.current;
     if (!typeKey) return;
 
     const current = clampInteger(liveRecordRef.current[typeKey]);
+    const minimum = typeKey === CheckInCountKeys.TYPE1 ? tutorialMinimumRef.current : 0;
+
+    if (direction < 0 && minimum > 0 && current <= minimum) {
+      Vibration.vibrate(VIBRATION_MS);
+      clearHoldTimer();
+      holdRef.current.active = false;
+      showAutoMinimumNotice();
+      return;
+    }
+
     const next = {
       ...liveRecordRef.current,
-      [typeKey]: Math.max(0, current + direction),
+      [typeKey]: Math.max(minimum, current + direction),
     };
     const nextTotal = next.tutorial + next.weapon + next.duo;
     const selectedDateStr = selectedDate.format('YYYY-MM-DD');
@@ -192,7 +226,12 @@ const DayView = ({ selectedDate, onDateChange, refreshKey = 0 }) => {
     allDataRef.current = nextData;
     liveRecordRef.current = next;
     setRecord(next);
-    const saveTask = setCheckInRecord(selectedDate, next);
+    const nextManualRecord = {
+      ...normalizeCheckInRecord(manualRecordRef.current),
+      [typeKey]: next[typeKey],
+    };
+    manualRecordRef.current = nextManualRecord;
+    const saveTask = setCheckInRecord(selectedDate, nextManualRecord);
     Vibration.vibrate(VIBRATION_MS);
 
     if (direction < 0 && next[typeKey] === 0) {
@@ -234,12 +273,14 @@ const DayView = ({ selectedDate, onDateChange, refreshKey = 0 }) => {
     holdRef.current.active = false;
   };
 
-  const handleConfirmEdit = async () => {
+  const handleConfirmEdit = async (selectedValue) => {
     if (!editingType) return;
+    const minimum = editingType === CheckInCountKeys.TYPE1 ? tutorialMinimumRef.current : 0;
+    const targetValue = selectedValue ?? editingValue;
 
     const nextRecord = {
-      ...normalizeCheckInRecord(liveRecordRef.current),
-      [editingType]: clampInteger(editingValue),
+      ...normalizeCheckInRecord(manualRecordRef.current),
+      [editingType]: Math.max(minimum, clampInteger(targetValue)),
     };
 
     await setCheckInRecord(selectedDate, nextRecord);
@@ -371,6 +412,7 @@ const DayView = ({ selectedDate, onDateChange, refreshKey = 0 }) => {
         visible={editingVisible}
         title="编辑次数"
         value={editingValue}
+        minValue={editingType === CheckInCountKeys.TYPE1 ? tutorialMinimum : 0}
         onChangeValue={(text) => {
           if (text === '') {
             setEditingValue('');

@@ -9,6 +9,7 @@
 import {
   LEGACY_DATA_KEYS,
   readCheckinsData,
+  readBlacklistData,
   writeCheckinsData,
 } from './appDataStorage';
 
@@ -19,7 +20,9 @@ import {
 export const CHECKIN_KEY = LEGACY_DATA_KEYS.CHECKINS;
 
 const DATE_KEY_RE = /^\d{4}-\d{2}-\d{2}$/;
+const AUTO_TUTORIAL_GAP_MS = 60 * 60 * 1000;
 let cachedCheckInData = null;
+let cachedEffectiveCheckInData = null;
 
 export const CheckInCountKeys = {
   TYPE1: 'tutorial',
@@ -88,6 +91,14 @@ export const hasAnyCheckIn = (record) =>
   record[CheckInCountKeys.TYPE1] > 0 ||
   record[CheckInCountKeys.TYPE2] > 0 ||
   record[CheckInCountKeys.TYPE3] > 0;
+
+const getLocalDateKey = (time) => {
+  const date = new Date(time);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 export const bitmaskToCheckInRecord = (status) => {
   const flag = typeof status === 'number' ? status : parseInt(status, 10) || 0;
@@ -174,10 +185,92 @@ export const getAllCheckInData = async () => {
   return data;
 };
 
+const normalizeUsageInterval = (value) => {
+  if (!value || typeof value !== 'object') return null;
+  const startTime = Number(value.startTime);
+  const endTime = Number(value.endTime);
+  if (!Number.isFinite(startTime) || !Number.isFinite(endTime) || endTime <= startTime) {
+    return null;
+  }
+  return { startTime, endTime };
+};
+
+export const calculateAutoTutorialMinimums = (intervals) => {
+  const sorted = (Array.isArray(intervals) ? intervals : [])
+    .map(normalizeUsageInterval)
+    .filter(Boolean)
+    .sort((a, b) => a.startTime - b.startTime || a.endTime - b.endTime);
+  const minimums = {};
+  let current = null;
+
+  const commitCurrent = () => {
+    if (!current) return;
+    const dateKey = getLocalDateKey(current.startTime);
+    minimums[dateKey] = (minimums[dateKey] || 0) + 1;
+  };
+
+  sorted.forEach((interval) => {
+    if (!current) {
+      current = { ...interval };
+      return;
+    }
+
+    if (interval.startTime - current.endTime <= AUTO_TUTORIAL_GAP_MS) {
+      current.endTime = Math.max(current.endTime, interval.endTime);
+      return;
+    }
+
+    commitCurrent();
+    current = { ...interval };
+  });
+
+  commitCurrent();
+  return minimums;
+};
+
+export const getAutoTutorialMinimums = async () => {
+  const blacklist = await readBlacklistData();
+  return calculateAutoTutorialMinimums(blacklist.intervals);
+};
+
+export const applyAutoTutorialMinimums = (manualData, minimums) => {
+  const result = {};
+  const dateKeys = new Set([
+    ...Object.keys(manualData || {}),
+    ...Object.keys(minimums || {}),
+  ]);
+
+  dateKeys.forEach((dateStr) => {
+    const manualRecord = normalizeCheckInRecord(manualData?.[dateStr]);
+    const minimum = normalizeCount(minimums?.[dateStr] || 0);
+    const effective = {
+      ...manualRecord,
+      [CheckInCountKeys.TYPE1]: Math.max(manualRecord[CheckInCountKeys.TYPE1], minimum),
+    };
+
+    if (hasAnyCheckIn(effective)) {
+      result[dateStr] = effective;
+    }
+  });
+
+  return result;
+};
+
+export const getEffectiveCheckInData = async () => {
+  const [manualData, minimums] = await Promise.all([
+    getAllCheckInData(),
+    getAutoTutorialMinimums(),
+  ]);
+  const data = applyAutoTutorialMinimums(manualData, minimums);
+  cachedEffectiveCheckInData = data;
+  return data;
+};
+
 export const importCheckInData = async (raw) => {
   const { data } = normalizeCheckInData(raw, { strict: true });
   await writeCheckinsData(data);
   cachedCheckInData = data;
+  cachedEffectiveCheckInData = null;
   return data;
 };
 
@@ -193,6 +286,28 @@ export const getCheckInRecord = async (date) => {
   } catch (error) {
     console.error('Error getting check-in record:', error);
     return createEmptyCheckInRecord();
+  }
+};
+
+export const getEffectiveCheckInRecord = async (date) => {
+  try {
+    const dateStr = date.format('YYYY-MM-DD');
+    const data = await getEffectiveCheckInData();
+    return data[dateStr] || createEmptyCheckInRecord();
+  } catch (error) {
+    console.error('Error getting effective check-in record:', error);
+    return createEmptyCheckInRecord();
+  }
+};
+
+export const getAutoTutorialMinimum = async (date) => {
+  try {
+    const dateStr = date.format('YYYY-MM-DD');
+    const minimums = await getAutoTutorialMinimums();
+    return minimums[dateStr] || 0;
+  } catch (error) {
+    console.error('Error getting auto tutorial minimum:', error);
+    return 0;
   }
 };
 
@@ -213,13 +328,13 @@ const buildCheckInStatusMap = (data, startDate, endDate) => {
 };
 
 export const getCachedCheckInStatusMap = (startDate, endDate) => {
-  if (!cachedCheckInData) return null;
-  return buildCheckInStatusMap(cachedCheckInData, startDate, endDate);
+  if (!cachedEffectiveCheckInData) return null;
+  return buildCheckInStatusMap(cachedEffectiveCheckInData, startDate, endDate);
 };
 
 export const getCheckInStatusMap = async (startDate, endDate) => {
   try {
-    const data = await getAllCheckInData();
+    const data = await getEffectiveCheckInData();
     return buildCheckInStatusMap(data, startDate, endDate);
   } catch (error) {
     console.error('Error getting check-in status map:', error);
@@ -241,6 +356,7 @@ export const setCheckInRecord = async (date, record) => {
 
     await writeCheckinsData(data);
     cachedCheckInData = data;
+    cachedEffectiveCheckInData = null;
     return true;
   } catch (error) {
     console.error('Error setting check-in record:', error);
@@ -275,7 +391,7 @@ export const decrementCheckInType = async (date, typeKey, amount = 1) => {
  */
 export const getCheckInStatus = async (date) => {
   try {
-    const record = await getCheckInRecord(date);
+    const record = await getEffectiveCheckInRecord(date);
     return checkInRecordToBitmask(record);
   } catch (error) {
     console.error('Error getting check-in status:', error);

@@ -22,7 +22,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { exportAppData, importAppData, isAppDataEmpty } from '../utils/appDataStorage';
-import { getAllCheckInData } from '../utils/checkInStorage';
+import { getEffectiveCheckInData } from '../utils/checkInStorage';
 import { showAppAlert } from '../utils/appAlert';
 import { hasDiagnosticLogs, openDiagnosticLogFolder } from '../utils/diagnosticLogs';
 import {
@@ -259,7 +259,7 @@ const SettingsScreen = () => {
       const parsed = JSON.parse(content);
 
       const importResult = await importAppData(parsed);
-      await getAllCheckInData();
+      await getEffectiveCheckInData();
       showAppAlert(
         '导入成功',
         importResult.format === 'legacyCheckins'

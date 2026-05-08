@@ -21,9 +21,11 @@ import CheckInButtons from "./CheckInButtons";
 import CountAdjustModal from "./CountAdjustModal";
 import {
   checkInTypeToCountKey,
+  CheckInCountKeys,
+  getAutoTutorialMinimum,
+  getEffectiveCheckInRecord,
   getCheckInRecord,
   getCheckInRecordCount,
-  incrementCheckInType,
   normalizeCheckInRecord,
   setCheckInRecord,
 } from "../utils/checkInStorage";
@@ -57,6 +59,7 @@ const CustomTabBar = ({
   const [editingVisible, setEditingVisible] = useState(false);
   const [editingTypeKey, setEditingTypeKey] = useState(null);
   const [editingValue, setEditingValue] = useState("0");
+  const [editingMinValue, setEditingMinValue] = useState(0);
   const holdBaselineRef = useRef(null);
   const navigation = useNavigation();
 
@@ -87,7 +90,20 @@ const CustomTabBar = ({
     const typeKey = checkInTypeToCountKey(type);
     if (!typeKey) return;
 
-    await incrementCheckInType(selectedDate, typeKey, amount);
+    const [manualRecord, effectiveRecord, minimum] = await Promise.all([
+      getCheckInRecord(selectedDate),
+      getEffectiveCheckInRecord(selectedDate),
+      typeKey === CheckInCountKeys.TYPE1 ? getAutoTutorialMinimum(selectedDate) : 0,
+    ]);
+    const nextRecord = {
+      ...normalizeCheckInRecord(manualRecord),
+      [typeKey]: Math.max(
+        minimum,
+        getCheckInRecordCount(effectiveRecord, typeKey) + amount
+      ),
+    };
+
+    await setCheckInRecord(selectedDate, nextRecord);
     notifyCheckInChanged();
   };
 
@@ -117,8 +133,12 @@ const CustomTabBar = ({
     const typeKey = checkInTypeToCountKey(type);
     if (!typeKey) return;
 
-    const currentRecord = normalizeCheckInRecord(await getCheckInRecord(selectedDate));
+    const [currentRecord, minimum] = await Promise.all([
+      getEffectiveCheckInRecord(selectedDate),
+      typeKey === CheckInCountKeys.TYPE1 ? getAutoTutorialMinimum(selectedDate) : 0,
+    ]);
     setEditingTypeKey(typeKey);
+    setEditingMinValue(minimum);
     setEditingValue(String(getCheckInRecordCount(currentRecord, typeKey)));
     setShowCheckInButtons(false);
     setEditingVisible(true);
@@ -129,20 +149,25 @@ const CustomTabBar = ({
     if (!typeKey) return;
 
     Vibration.vibrate(VIBRATION_MS);
-    const currentRecord = normalizeCheckInRecord(await getCheckInRecord(selectedDate));
+    const [currentRecord, minimum] = await Promise.all([
+      getEffectiveCheckInRecord(selectedDate),
+      typeKey === CheckInCountKeys.TYPE1 ? getAutoTutorialMinimum(selectedDate) : 0,
+    ]);
     setEditingTypeKey(typeKey);
+    setEditingMinValue(minimum);
     setEditingValue(String(getCheckInRecordCount(currentRecord, typeKey)));
     setShowCheckInButtons(false);
     setEditingVisible(true);
   };
 
-  const handleConfirmEdit = async () => {
+  const handleConfirmEdit = async (selectedValue) => {
     if (!editingTypeKey) return;
 
     const currentRecord = normalizeCheckInRecord(await getCheckInRecord(selectedDate));
+    const targetValue = selectedValue ?? editingValue;
     const nextRecord = {
       ...currentRecord,
-      [editingTypeKey]: clampInteger(editingValue),
+      [editingTypeKey]: Math.max(editingMinValue, clampInteger(targetValue)),
     };
 
     await setCheckInRecord(selectedDate, nextRecord);
@@ -150,6 +175,7 @@ const CustomTabBar = ({
     setEditingVisible(false);
     setEditingTypeKey(null);
     setEditingValue("0");
+    setEditingMinValue(0);
     notifyCheckInChanged();
   };
 
@@ -158,6 +184,7 @@ const CustomTabBar = ({
     setEditingVisible(false);
     setEditingTypeKey(null);
     setEditingValue("0");
+    setEditingMinValue(0);
     notifyCheckInChanged();
   };
 
@@ -327,6 +354,7 @@ const CustomTabBar = ({
         visible={editingVisible}
         title="编辑次数"
         value={editingValue}
+        minValue={editingMinValue}
         onChangeValue={(text) => {
           if (text === "") {
             setEditingValue("");

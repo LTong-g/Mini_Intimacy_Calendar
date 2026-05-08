@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { View, StyleSheet } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
+import { useFocusEffect } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
@@ -24,7 +25,7 @@ import ExperimentalUsageScreen from "./src/screens/UsageScreen";
 import ExperimentalUsageBlacklistScreen from "./src/screens/UsageBlacklistScreen";
 import ExperimentalUsageIntervalsScreen from "./src/screens/UsageIntervalsScreen";
 import AppAlertProvider from "./src/components/modals/AppAlertProvider";
-import { getAllCheckInData } from "./src/utils/checkInStorage";
+import { getEffectiveCheckInData } from "./src/utils/checkInStorage";
 
 const Stack = createNativeStackNavigator();
 
@@ -35,10 +36,20 @@ const CalendarScreen = () => {
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
-    getAllCheckInData().catch((error) => {
+    getEffectiveCheckInData().catch((error) => {
       console.error("预加载记录数据失败", error);
     });
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      getEffectiveCheckInData()
+        .then(() => setRefreshKey((prev) => prev + 1))
+        .catch((error) => {
+          console.error("刷新记录数据失败", error);
+        });
+    }, [])
+  );
 
   const handleDateChange = useCallback((date) => {
     setSelectedDate(date.clone().startOf("day"));
