@@ -13,6 +13,7 @@ import {
   Platform,
   Switch,
   AppState,
+  ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -23,6 +24,7 @@ import * as Sharing from 'expo-sharing';
 import { exportAppData, importAppData, isAppDataEmpty } from '../utils/appDataStorage';
 import { getAllCheckInData } from '../utils/checkInStorage';
 import { showAppAlert } from '../utils/appAlert';
+import { hasDiagnosticLogs, openDiagnosticLogFolder } from '../utils/diagnosticLogs';
 import {
   clearStoredUsageRecords,
   getUsageAccessStatus,
@@ -109,6 +111,7 @@ const SettingsScreen = () => {
   });
   const [usageStatusLoading, setUsageStatusLoading] = useState(false);
   const [usageAccessPending, setUsageAccessPending] = useState(null);
+  const [diagnosticLogsAvailable, setDiagnosticLogsAvailable] = useState(false);
   const usageAccessAvailable = isUsageAccessNativeAvailable();
   const usageSwitchOn = usageAccessPending ?? usageStatus.usageAccessGranted;
 
@@ -140,20 +143,35 @@ const SettingsScreen = () => {
     refreshUsageStatus();
   }, [refreshUsageStatus]);
 
+  const refreshDiagnosticLogStatus = useCallback(async () => {
+    try {
+      const hasLogs = await hasDiagnosticLogs();
+      setDiagnosticLogsAvailable(hasLogs);
+    } catch {
+      setDiagnosticLogsAvailable(false);
+    }
+  }, []);
+
   useFocusEffect(
     useCallback(() => {
       refreshUsageStatus();
-    }, [refreshUsageStatus])
+      refreshDiagnosticLogStatus();
+    }, [refreshDiagnosticLogStatus, refreshUsageStatus])
   );
+
+  useEffect(() => {
+    refreshDiagnosticLogStatus();
+  }, [refreshDiagnosticLogStatus]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (state) => {
       if (state === 'active') {
         refreshUsageStatus();
+        refreshDiagnosticLogStatus();
       }
     });
     return () => subscription.remove();
-  }, [refreshUsageStatus]);
+  }, [refreshDiagnosticLogStatus, refreshUsageStatus]);
 
   const buildExportContent = async () => {
     const data = await exportAppData();
@@ -310,6 +328,14 @@ const SettingsScreen = () => {
     }
   };
 
+  const handleOpenDiagnosticLogFolder = async () => {
+    try {
+      await openDiagnosticLogFolder();
+    } catch (error) {
+      showAppAlert('打开失败', error.message || '无法打开问题日志文件夹');
+    }
+  };
+
   const handleClearUsageRecords = () => {
     showAppAlert(
       '删除应用使用记录',
@@ -343,122 +369,135 @@ const SettingsScreen = () => {
         <Text style={styles.headerTitle}>设置</Text>
       </View>
 
-      {/* 导入/导出/分享功能 */}
-      <View style={styles.section}>
-        <View style={styles.settingCard}>
-          <Text style={styles.sectionTitle}>数据管理</Text>
-          <View style={styles.row}>
-            <TouchableOpacity style={styles.option} onPress={handleImport}>
-              <Ionicons name="cloud-download-outline" size={20} color="#007AFF" />
-              <Text style={styles.optionText}>导入</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.option, styles.optionMiddle]} onPress={handleExport}>
-              <Ionicons name="cloud-upload-outline" size={20} color="#007AFF" />
-              <Text style={styles.optionText}>导出</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.option} onPress={handleShare}>
-              <Ionicons name="share-social-outline" size={20} color="#007AFF" />
-              <Text style={styles.optionText}>分享</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-
-      {Platform.OS === 'android' && (
+      <ScrollView contentContainerStyle={styles.content}>
+        {/* 导入/导出/分享功能 */}
         <View style={styles.section}>
           <View style={styles.settingCard}>
-            <View style={styles.settingHeader}>
-              <View style={styles.settingTitleRow}>
-                <Ionicons name="shield-half-outline" size={20} color="#333" />
-                <Text style={styles.settingTitle}>使用记录辅助</Text>
-              </View>
-              <Switch
-                value={usageSwitchOn}
-                disabled={!usageAccessAvailable || usageStatusLoading}
-                onValueChange={handleToggleUsageAccess}
-                {...getSwitchColorProps(usageSwitchOn)}
-              />
-            </View>
-            <Text style={styles.settingDescription}>
-              开启后应用会准备读取系统使用记录，并安排每天 23:55 至 23:59 同步使用记录。
-            </Text>
-            {!usageAccessAvailable && (
-              <Text style={styles.warningText}>
-                当前运行环境不支持原生使用记录模块，请使用 Android 开发构建或安装包。
-              </Text>
-            )}
-            {usageAccessAvailable && usageSwitchOn && (
-              <View style={styles.permissionList}>
-                <Text style={styles.statusText}>
-                  使用情况访问权限：{usageStatus.usageAccessGranted ? '已授权' : '未授权'}
-                </Text>
-                <Text style={styles.statusText}>
-                  忽略电池优化：{usageStatus.ignoringBatteryOptimizations ? '已允许' : '未允许'}
-                </Text>
-                <Text style={styles.statusText}>
-                  精确定时能力：{usageStatus.canScheduleExactAlarms ? '可用' : '未允许'}
-                </Text>
-                <View style={styles.permissionSwitchList}>
-                  <View style={styles.permissionSwitchRow}>
-                    <View style={styles.permissionSwitchTextBlock}>
-                      <Text style={styles.permissionSwitchTitle}>忽略电池优化</Text>
-                      <Text style={styles.permissionSwitchDescription}>
-                        提高晚间刷新使用记录的稳定性
-                      </Text>
-                    </View>
-                    <Switch
-                      value={usageStatus.ignoringBatteryOptimizations}
-                      onValueChange={handleToggleBatteryOptimization}
-                      {...getSwitchColorProps(usageStatus.ignoringBatteryOptimizations)}
-                    />
-                  </View>
-                  <View style={styles.permissionSwitchRow}>
-                    <View style={styles.permissionSwitchTextBlock}>
-                      <Text style={styles.permissionSwitchTitle}>精确定时权限</Text>
-                      <Text style={styles.permissionSwitchDescription}>
-                        支持 23:55 至 23:59 的定时同步
-                      </Text>
-                    </View>
-                    <Switch
-                      value={usageStatus.canScheduleExactAlarms}
-                      onValueChange={handleOpenExactAlarmSettings}
-                      {...getSwitchColorProps(usageStatus.canScheduleExactAlarms)}
-                    />
-                  </View>
-                </View>
-                <TouchableOpacity style={styles.linkButton} onPress={handleOpenAppSettings}>
-                  <Text style={styles.linkButtonText}>打开应用详情设置</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-            {usageAccessAvailable && (
-              <TouchableOpacity
-                style={[
-                  styles.deleteUsageButton,
-                  usageSwitchOn && styles.deleteUsageButtonDisabled,
-                ]}
-                disabled={usageSwitchOn}
-                onPress={handleClearUsageRecords}
-              >
-                <Ionicons
-                  name="trash-outline"
-                  size={18}
-                  color={usageSwitchOn ? '#999' : '#C62828'}
-                />
-                <Text
-                  style={[
-                    styles.deleteUsageButtonText,
-                    usageSwitchOn && styles.deleteUsageButtonTextDisabled,
-                  ]}
-                >
-                  删除应用使用记录
-                </Text>
+            <Text style={styles.sectionTitle}>数据管理</Text>
+            <View style={styles.row}>
+              <TouchableOpacity style={styles.option} onPress={handleImport}>
+                <Ionicons name="cloud-download-outline" size={20} color="#007AFF" />
+                <Text style={styles.optionText}>导入</Text>
               </TouchableOpacity>
-            )}
+              <TouchableOpacity style={[styles.option, styles.optionMiddle]} onPress={handleExport}>
+                <Ionicons name="cloud-upload-outline" size={20} color="#007AFF" />
+                <Text style={styles.optionText}>导出</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.option} onPress={handleShare}>
+                <Ionicons name="share-social-outline" size={20} color="#007AFF" />
+                <Text style={styles.optionText}>分享</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
-      )}
 
+        {Platform.OS === 'android' && (
+          <View style={styles.section}>
+            <View style={styles.settingCard}>
+              <View style={styles.settingHeader}>
+                <View style={styles.settingTitleRow}>
+                  <Ionicons name="shield-half-outline" size={20} color="#333" />
+                  <Text style={styles.settingTitle}>使用记录辅助</Text>
+                </View>
+                <Switch
+                  value={usageSwitchOn}
+                  disabled={!usageAccessAvailable || usageStatusLoading}
+                  onValueChange={handleToggleUsageAccess}
+                  {...getSwitchColorProps(usageSwitchOn)}
+                />
+              </View>
+              <Text style={styles.settingDescription}>
+                开启后应用会准备读取系统使用记录，并安排每天 23:55 至 23:59 同步使用记录。
+              </Text>
+              {!usageAccessAvailable && (
+                <Text style={styles.warningText}>
+                  当前运行环境不支持原生使用记录模块，请使用 Android 开发构建或安装包。
+                </Text>
+              )}
+              {usageAccessAvailable && usageSwitchOn && (
+                <View style={styles.permissionList}>
+                  <Text style={styles.statusText}>
+                    使用情况访问权限：{usageStatus.usageAccessGranted ? '已授权' : '未授权'}
+                  </Text>
+                  <Text style={styles.statusText}>
+                    忽略电池优化：{usageStatus.ignoringBatteryOptimizations ? '已允许' : '未允许'}
+                  </Text>
+                  <Text style={styles.statusText}>
+                    精确定时能力：{usageStatus.canScheduleExactAlarms ? '可用' : '未允许'}
+                  </Text>
+                  <View style={styles.permissionSwitchList}>
+                    <View style={styles.permissionSwitchRow}>
+                      <View style={styles.permissionSwitchTextBlock}>
+                        <Text style={styles.permissionSwitchTitle}>忽略电池优化</Text>
+                        <Text style={styles.permissionSwitchDescription}>
+                          提高晚间刷新使用记录的稳定性
+                        </Text>
+                      </View>
+                      <Switch
+                        value={usageStatus.ignoringBatteryOptimizations}
+                        onValueChange={handleToggleBatteryOptimization}
+                        {...getSwitchColorProps(usageStatus.ignoringBatteryOptimizations)}
+                      />
+                    </View>
+                    <View style={styles.permissionSwitchRow}>
+                      <View style={styles.permissionSwitchTextBlock}>
+                        <Text style={styles.permissionSwitchTitle}>精确定时权限</Text>
+                        <Text style={styles.permissionSwitchDescription}>
+                          支持 23:55 至 23:59 的定时同步
+                        </Text>
+                      </View>
+                      <Switch
+                        value={usageStatus.canScheduleExactAlarms}
+                        onValueChange={handleOpenExactAlarmSettings}
+                        {...getSwitchColorProps(usageStatus.canScheduleExactAlarms)}
+                      />
+                    </View>
+                  </View>
+                  <TouchableOpacity style={styles.linkButton} onPress={handleOpenAppSettings}>
+                    <Text style={styles.linkButtonText}>打开应用详情设置</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+              {usageAccessAvailable && (
+                <TouchableOpacity
+                  style={[
+                    styles.deleteUsageButton,
+                    usageSwitchOn && styles.deleteUsageButtonDisabled,
+                  ]}
+                  disabled={usageSwitchOn}
+                  onPress={handleClearUsageRecords}
+                >
+                  <Ionicons
+                    name="trash-outline"
+                    size={18}
+                    color={usageSwitchOn ? '#999' : '#C62828'}
+                  />
+                  <Text
+                    style={[
+                      styles.deleteUsageButtonText,
+                      usageSwitchOn && styles.deleteUsageButtonTextDisabled,
+                    ]}
+                  >
+                    删除应用使用记录
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        )}
+
+        {diagnosticLogsAvailable && (
+          <View style={styles.section}>
+            <TouchableOpacity
+              style={styles.logFolderButton}
+              onPress={handleOpenDiagnosticLogFolder}
+            >
+              <Ionicons name="folder-open-outline" size={20} color="#007AFF" />
+              <Text style={styles.logFolderButtonText}>打开问题日志文件夹</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </ScrollView>
     </View>
   );
 };
@@ -468,6 +507,9 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 44, // 适配顶部安全区
     backgroundColor: '#fff',
+  },
+  content: {
+    paddingBottom: 32,
   },
   header: {
     flexDirection: 'row',
@@ -619,6 +661,22 @@ const styles = StyleSheet.create({
   },
   deleteUsageButtonTextDisabled: {
     color: '#999',
+  },
+  logFolderButton: {
+    minHeight: 44,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#007AFF',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
+  logFolderButtonText: {
+    color: '#007AFF',
+    fontSize: 14,
+    marginLeft: 8,
   },
 });
 

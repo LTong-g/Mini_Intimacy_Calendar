@@ -1,4 +1,4 @@
-> 提示：请使用 UTF-8 编码读取本文件。
+﻿> 提示：请使用 UTF-8 编码读取本文件。
 
 # 开发日志
 撰写规则：
@@ -1532,3 +1532,15 @@
 - developer_guide.md 已记录应用内静默刷新、下拉刷新、按日期读取和晚间定时刷新统一通过 Android 原生刷新事务执行。
 - node --check 已通过 src/screens/UsageScreen.js、src/utils/usageAccessNative.js 和 src/utils/usageStorage.js。
 - 首次执行 npm run android:build:debug:tempmap 因 Gradle wrapper 缓存锁文件访问被拒绝而失败；提升权限后同一 tempmap 构建命令已成功完成 assembleDebug。
+
+## 2026-05-08
+
+### 诊断日志功能恢复
+- 实现 Android 本机问题日志写入、JS 异常记录、设置页日志文件夹入口和相关说明文档。
+- 已使用 Babel parser 检查 index.js、diagnosticLogs.js、SettingsScreen.js、PrivacyPolicyScreen.js、UsageHelpScreen.js、VersionHistoryScreen.js 和 SoftwareIntroScreen.js，JS 语法解析通过。
+- 已执行 npm run android:build:debug:tempmap，Android Debug 构建成功。
+
+### 诊断日志文件夹打开方式修正
+- 已确认原诊断日志文件夹入口使用 ACTION_VIEW 与 FileProvider 目录 URI，会触发系统打开方式选择弹窗而不是直接进入文件管理器目录。
+- DiagnosticLogModule.kt 已改为使用 DocumentsUI 目录 URI 并显式尝试启动系统文件管理器打开 diagnostic-logs 目录。
+- AndroidManifest.xml 已移除诊断日志 FileProvider 配置，android/app/build.gradle 已移除为 FileProvider 补充的 AndroidX core 依赖，diagnostic_file_paths.xml 已删除。
