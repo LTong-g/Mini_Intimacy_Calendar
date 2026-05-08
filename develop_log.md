@@ -1603,3 +1603,14 @@
 - 已使用 Babel parser 检查 DayView.js、UsageIntervalsScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js，结果通过。
 - 已执行 git diff --check，结果通过。
 - 首次执行 npm run android:build:debug:tempmap 因 Gradle wrapper 缓存锁文件访问被拒绝失败；提升权限后重新执行同一命令，Android Debug 构建成功。
+
+### 黑名单主页自动记录提示与规则弹窗实现
+- src/screens/UsageScreen.js 已将黑名单主页顶部提示框改为说明黑名单应用使用时间段会折算为观看教程自动记录次数，并作为日历和统计中的观看教程次数下限。
+- src/screens/UsageScreen.js 已在黑名单主页顶部提示框标题行右侧新增信息图标，点击后打开观看教程自动记录规则弹窗。
+- 观看教程自动记录规则弹窗已使用黑名单主题 BaseModal，并以结构化编号列表展示 2 分钟碎片合并、1 小时聚合、跨日归属、5 分钟计入阈值、动态计算下限和手动次数限制。
+- 观看教程自动记录规则弹窗的编号列表已使用固定编号列和正文列，正文换行后保持统一左缩进，编号与正文距离接近普通编号列表。
+- src/screens/UsageHelpScreen.js、src/screens/VersionHistoryScreen.js、developer_guide.md 和 AGENTS.md 已同步黑名单主页信息图标可查看完整规则的口径。
+- 已执行 node --check src/screens/UsageScreen.js，结果通过。
+- 已执行 node --check src/screens/UsageHelpScreen.js，结果通过。
+- 已执行 node --check src/screens/VersionHistoryScreen.js，结果通过。
+- 已执行 git diff --check，结果通过。

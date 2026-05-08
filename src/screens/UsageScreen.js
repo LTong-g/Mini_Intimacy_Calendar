@@ -49,6 +49,15 @@ const BLACKLIST_MODAL_THEME = {
   secondaryBorder: '#F4D79A',
   secondaryBackground: '#fff',
 };
+const AUTO_RECORD_RULES = [
+  '黑名单应用的使用时间段会保存到本地，并用于动态计算观看教程自动记录次数。',
+  '同一应用的碎片使用记录会先合并：前后间隔不超过 2 分钟，且中间没有其他黑名单应用使用时，视为同一段。',
+  '合并后的所有黑名单使用时间段按开始时间排序，前一段结束到后一段开始间隔不超过 1 小时时，视为同一次观看教程自动记录。',
+  '同一次自动记录可以跨日，跨日时按开始时间所在日期计入。',
+  '同一次自动记录的已保存使用时长合计少于 5 分钟时，不计入自动记录次数。',
+  '自动记录次数不单独保存，会从已保存的黑名单使用时间段动态计算，并作为日历和统计中的观看教程次数下限。',
+  '手动修改观看教程次数时，不能低于当天的自动记录次数。',
+];
 const showBlacklistAlert = (title, message, buttons, options = {}) => (
   showAppAlert(title, message, buttons, { ...options, theme: 'blacklist' })
 );
@@ -150,6 +159,7 @@ const ExperimentalUsageScreen = () => {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [rangeModalVisible, setRangeModalVisible] = useState(false);
+  const [autoRecordRulesVisible, setAutoRecordRulesVisible] = useState(false);
   const [readResult, setReadResult] = useState(null);
   const [rangeStartDate, setRangeStartDate] = useState(moment().format('YYYY-MM-DD'));
   const [rangeEndDate, setRangeEndDate] = useState(moment().format('YYYY-MM-DD'));
@@ -221,6 +231,10 @@ const ExperimentalUsageScreen = () => {
 
   const handleOpenIntervals = () => {
     navigation.navigate('ExperimentalUsageIntervals');
+  };
+
+  const handleShowAutoRecordRules = () => {
+    setAutoRecordRulesVisible(true);
   };
 
   const ensureRefreshReady = useCallback(() => {
@@ -423,9 +437,20 @@ const ExperimentalUsageScreen = () => {
         )}
       >
         <View style={styles.notice}>
-          <Text style={styles.noticeTitle}>实验性功能</Text>
+          <View style={styles.noticeHeader}>
+            <Text style={styles.noticeTitle}>观看教程自动记录</Text>
+            <TouchableOpacity
+              onPress={handleShowAutoRecordRules}
+              style={styles.noticeInfoButton}
+              hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
+              accessibilityRole="button"
+              accessibilityLabel="查看观看教程自动记录规则"
+            >
+              <Ionicons name="information-circle-outline" size={20} color="#A66A00" />
+            </TouchableOpacity>
+          </View>
           <Text style={styles.noticeText}>
-            这里仅统计黑名单应用的系统使用时间段，不会自动写入日历打卡记录。
+            黑名单应用的使用时间段会按规则折算为观看教程自动记录次数，并作为日历和统计中的观看教程次数下限。
           </Text>
         </View>
 
@@ -528,6 +553,29 @@ const ExperimentalUsageScreen = () => {
       </BaseModal>
 
       <BaseModal
+        visible={autoRecordRulesVisible}
+        onRequestClose={() => setAutoRecordRulesVisible(false)}
+        closeOnBackdropPress
+        title="观看教程自动记录规则"
+        titleStyle={styles.modalTitle}
+      >
+        <View style={styles.ruleList}>
+          {AUTO_RECORD_RULES.map((rule, index) => (
+            <View key={rule} style={styles.ruleRow}>
+              <Text style={styles.ruleNumber}>{index + 1}.</Text>
+              <Text style={styles.ruleText}>{rule}</Text>
+            </View>
+          ))}
+        </View>
+        <ModalActionRow
+          theme={BLACKLIST_MODAL_THEME}
+          actions={[
+            { label: '知道了', onPress: () => setAutoRecordRulesVisible(false) },
+          ]}
+        />
+      </BaseModal>
+
+      <BaseModal
         visible={Boolean(readResult)}
         onRequestClose={() => setReadResult(null)}
         closeOnBackdropPress={false}
@@ -591,11 +639,25 @@ const styles = StyleSheet.create({
     padding: 12,
     backgroundColor: '#FFF8E1',
   },
+  noticeHeader: {
+    minHeight: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
   noticeTitle: {
+    flex: 1,
     fontSize: 15,
     fontWeight: '600',
     color: '#8A4B00',
-    marginBottom: 4,
+    marginRight: 8,
+  },
+  noticeInfoButton: {
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   noticeText: {
     fontSize: 13,
@@ -672,6 +734,27 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     color: '#5F4300',
     marginTop: 2,
+  },
+  ruleList: {
+    marginBottom: 8,
+  },
+  ruleRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  ruleNumber: {
+    width: 18,
+    fontSize: 14,
+    lineHeight: 22,
+    color: '#8A4B00',
+    fontWeight: '600',
+  },
+  ruleText: {
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 22,
+    color: '#5F4300',
   },
   summaryRow: {
     flexDirection: 'row',
