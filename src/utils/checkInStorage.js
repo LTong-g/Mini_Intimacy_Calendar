@@ -21,6 +21,7 @@ export const CHECKIN_KEY = LEGACY_DATA_KEYS.CHECKINS;
 
 const DATE_KEY_RE = /^\d{4}-\d{2}-\d{2}$/;
 const AUTO_TUTORIAL_GAP_MS = 60 * 60 * 1000;
+const AUTO_TUTORIAL_MIN_DURATION_MS = 5 * 60 * 1000;
 let cachedCheckInData = null;
 let cachedEffectiveCheckInData = null;
 
@@ -192,7 +193,12 @@ const normalizeUsageInterval = (value) => {
   if (!Number.isFinite(startTime) || !Number.isFinite(endTime) || endTime <= startTime) {
     return null;
   }
-  return { startTime, endTime };
+  const storedDurationMs = Number(value.durationMs);
+  const durationMs =
+    Number.isFinite(storedDurationMs) && storedDurationMs > 0
+      ? storedDurationMs
+      : endTime - startTime;
+  return { startTime, endTime, durationMs };
 };
 
 export const calculateAutoTutorialMinimums = (intervals) => {
@@ -205,6 +211,7 @@ export const calculateAutoTutorialMinimums = (intervals) => {
 
   const commitCurrent = () => {
     if (!current) return;
+    if (current.durationMs < AUTO_TUTORIAL_MIN_DURATION_MS) return;
     const dateKey = getLocalDateKey(current.startTime);
     minimums[dateKey] = (minimums[dateKey] || 0) + 1;
   };
@@ -217,6 +224,7 @@ export const calculateAutoTutorialMinimums = (intervals) => {
 
     if (interval.startTime - current.endTime <= AUTO_TUTORIAL_GAP_MS) {
       current.endTime = Math.max(current.endTime, interval.endTime);
+      current.durationMs += interval.durationMs;
       return;
     }
 

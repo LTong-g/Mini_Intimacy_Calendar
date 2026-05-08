@@ -1586,3 +1586,11 @@
 - 已使用 Babel parser 检查 App.js、checkInStorage.js、useCheckinData.js、useCheckinAggregation.js、CountAdjustModal.js、CustomTabBar.js、DayView.js、SettingsScreen.js、SoftwareIntroScreen.js、UsageHelpScreen.js、PrivacyPolicyScreen.js 和 VersionHistoryScreen.js，结果通过。
 - 已执行 git diff --check，结果通过。
 - 首次执行 npm run android:build:debug:tempmap 因 Gradle wrapper 缓存锁文件访问被拒绝失败；提升权限后重新执行同一命令，Android Debug 构建成功。
+
+### 黑名单自动打卡五分钟豁免实现
+- 已根据用户补充要求调整黑名单自动打卡下限规则：1 小时聚合组内已保存的 2 分钟合并后使用时长合计少于 5 分钟时，不计入观看教程自动记录次数。
+- src/utils/checkInStorage.js 已在自动下限聚合中累加聚合前已保存使用时间段的 durationMs，并以 5 分钟作为计入自动记录的最小时长阈值。
+- SoftwareIntroScreen.js、UsageHelpScreen.js、PrivacyPolicyScreen.js、VersionHistoryScreen.js、developer_guide.md 和 AGENTS.md 已同步 5 分钟豁免口径。
+- 已使用 Babel parser 检查 checkInStorage.js、SoftwareIntroScreen.js、UsageHelpScreen.js、PrivacyPolicyScreen.js 和 VersionHistoryScreen.js，结果通过。
+- 已执行 git diff --check，结果通过。
+- 首次执行 npm run android:build:debug:tempmap 因 Gradle wrapper 缓存锁文件访问被拒绝失败；提升权限后重新执行同一命令，Android Debug 构建成功。
