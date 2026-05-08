@@ -48,7 +48,6 @@
 ### 发布版本统一落地
 - 已将 Android `runtimeVersion` 从硬编码字符串改为 `policy: appVersion`，与 iOS 保持一致，统一运行时版本策略来源。
 - 已在 `package.json` 新增脚本 `release:sync-version`，命令为 `eas build:version:sync`，用于发布前同步 EAS 远端版本号到本地配置。
-- 已完成配置有效性校验：`app.json` 与 `package.json` JSON 解析通过。
 - 已在 `developer_guide.md` 新增“发布版本管理与统一工作流”章节，记录版本定义位置、当前版本值、更新入口、同步命令与 Android 发布流程。
 - 已明确文档口径：`runtimeVersion` 采用 `policy: appVersion`，构建号由 EAS 远端管理，`expo run:android` 仅用于开发调试。
 
@@ -85,24 +84,6 @@
 - 已在 `developer_guide.md` 增加“Windows 本地构建（临时短路径映射）”操作步骤与示例命令。
 - 已完成脚本轻量实测：通过 `-GradleTask "-v"` 在 `M:\android` 成功执行 Gradle，脚本结束后 `M:` 映射已自动取消。
 
-### 本机完整环境复验
-- 已复验核心命令均可解析：`node`、`npm`、`npx`、`java`、`javac`、`adb`、`emulator`、`sdkmanager`、`avdmanager`、`eas`。
-- 已复验环境变量：`JAVA_HOME=D:\ASoftware\Java\jdk-21`，`ANDROID_HOME`/`ANDROID_SDK_ROOT=D:\ASoftware\Android\Sdk`。
-- 已复验 SDK 目录完整性：`platform-tools`、`cmdline-tools`、`emulator`、`platforms`、`build-tools`、`system-images`、`ndk`、`cmake` 均存在。
-- 已复验关键版本：JDK `21.0.4`、ADB `35.0.2`、Emulator `35.4.9.0`、SDK Manager `20.0`、EAS CLI `16.17.3`。
-- 已复验 AVD：存在 `Pixel_6_API_35`（`android-35/google_apis/x86_64`）。
-- 已执行 `npm run android:build:debug:tempmap`，`BUILD SUCCESSFUL`，本地 native 链路可用（包含 `react-native-reanimated` CMake/Ninja 任务）。
-- 已复验构建后 `subst` 无残留映射（`M:` 未长驻）。
-- 已复验 APK 产物存在：`android/app/build/outputs/apk/debug/app-debug.apk`（`190596265` bytes）。
-- 已复验当前 `adb devices -l` 无在线设备，说明真机调试能力可用但当前会话下未连接设备。
-
-### 模拟器本机测试执行记录
-- 已启动本地 AVD `Pixel_6_API_35` 并等待系统引导完成。
-- 已读取模拟器参数：`Physical size: 1080x2400`，`Physical density: 420`。
-- 已执行 `npm run android:install:debug:tempmap`，`installDebug` 成功安装到 `Pixel_6_API_35(AVD) - 15`。
-- 已通过 `adb shell monkey` 拉起应用包 `com.ltongg.MinimalistWeaponEnhancementCalendar`。
-- 已确认进程存在（`pidof` 返回 `3935`）且前台窗口为 `MainActivity`，模拟器内应用可正常启动运行。
-
 ### AGENTS 构建流程澄清
 - 已在 `AGENTS.md` 新增“Windows Android 构建执行流程（强约束）”段落。
 - 已将“映射-构建-取消映射”拆分为明确步骤：构建前映射、映射路径内构建、`finally` 清理映射、构建后校验 `subst`、下次构建重新映射。
@@ -130,7 +111,6 @@
 - 已将 `quickbootChoice.ini` 改为 `saveOnExit = false`，避免退出时继续保存异常快照。
 - 已将 AVD 配置调整为冷启动优先：`fastboot.forceColdBoot=yes`、`fastboot.forceFastBoot=no`，并关闭 firstboot 本地/下载快照读取与保存。
 - 已将 AVD GPU 配置固定为 `hw.gpu.enabled=yes` 与 `hw.gpu.mode=swiftshader_indirect`，用于规避硬件 GPU/窗口渲染相关黑屏风险。
-- 验证限制：Codex 沙箱内直接启动 emulator 访问 `D:\ASoftware\Android\.android` 时会出现权限噪声，最终启动验证应以用户本机 PowerShell 执行为准。
 
 ### 旧 AVD 清理与新 AVD 重建
 - 已按用户要求删除旧 AVD Pixel_6_API_35。
@@ -149,10 +129,6 @@
 ### 手机 AVD 竖屏修正
 - 已按用户要求直接修改 `AVD_2640x1200` 配置为竖屏手机尺寸：`hw.lcd.width=1200`、`hw.lcd.height=2640`、`hw.initialOrientation=portrait`。
 - 已在修改前备份 `AVD_2640x1200.avd\config.ini` 为 `config.ini.bak_20260502_202047_portrait_fix`。
-
-### 双模拟器安装验证
-- 已在两个在线 Android 模拟器 `emulator-5554` 与 `emulator-5556` 执行 `npm run android:install:debug:tempmap`，安装 `com.ltongg.MinimalistWeaponEnhancementCalendar` 成功。
-- 已通过 `adb -s <serial> shell pm list packages` 分别验证两个模拟器均存在目标应用包名。
 
 ### 开发日志混合记录复盘
 - 已复盘本次“分析与实施混写”问题：同一会话连续追加日志时，先写了范围分析，随后将实施结果直接续写到同一标题下，未在追加前执行“单一主题/单一性质”的边界自检。
@@ -195,8 +171,6 @@
 - `src/utils/statsUtils.js` 已改为通过新格式记录对象统计次数，同时保留对旧位掩码输入的兼容解析。
 - `src/screens/SettingsScreen.js` 的导入/导出数据处理已改为调用统一导入导出 API，页面文案和布局未调整。
 - `src/screens/DayView.js` 中用于“坚持天数”和“长按取消记录”的直接 `AsyncStorage` 读写已改为统一存储 API，页面视觉与主交互未调整。
-- 已执行语法检查：`node --check` 覆盖 `checkInStorage.js`、`useCheckinData.js`、`useCheckinAggregation.js`、`statsUtils.js`、`SettingsScreen.js`、`DayView.js`，均通过。
-- 已执行 `git diff --check`，未发现空白错误。
 - 已记录新的功能范围约束：月视图和年视图暂不纳入“每日多次记录功能”的表层改动范围。
 - 基于该约束，后续多次记录表层改造范围缩小为打卡入口递增逻辑、打卡按钮关闭/连续点击体验、日视图次数展示、日视图撤销语义，以及开发文档/回归验证。
 
@@ -204,14 +178,12 @@
 - 已在 src/screens/SettingsScreen.js 新增 Android 导出分支：优先通过 FileSystem.StorageAccessFramework 申请目录权限并创建 JSON 文件写入用户选择目录。
 - 导出文件名已改为带 ISO 时间戳的唯一命名，避免重复导出时文件名冲突。
 - 已保留分享兜底路径：当非 Android 或目录授权未授予时，写入临时文件并触发 Sharing.shareAsync。
-- 已执行 node --check src/screens/SettingsScreen.js，语法检查通过。
 
 ### 导出取消后仍弹分享窗口修复
 - 已确认导出逻辑问题：Android 目录授权被取消时，代码继续执行分享兜底，导致返回界面后仍弹出分享窗口。
 - 已调整 src/screens/SettingsScreen.js：saveExportToAndroidSharedStorage 返回结构化结果 saved/reason，并区分 canceled 与 unavailable 场景。
 - 已在导出主流程新增 canceled 早返回分支：用户取消目录授权或选择后，直接结束本次导出，不再触发 Sharing.shareAsync。
 - 已保留 unavailable 场景的分享兜底，仅在共享存储能力不可用时继续走分享。
-- 已执行 node --check src/screens/SettingsScreen.js，语法检查通过。
 
 ### 设置页三按钮布局与独立分享入口
 - SettingsScreen 中新增独立 handleShare 流程，分享不再由导出按钮兜底触发。
@@ -270,8 +242,6 @@
 - 日视图记录图标在次数大于一时使用同色数字替换原图案显示次数。
 - 主页面已增加记录变更刷新键，使底部打卡面板写入后日视图可重新读取存储数据。
 - 长按弹窗触发已采用一秒步进与次数阈值实现，连续累计三次后弹出次数编辑弹窗。
-- App.js、CheckInButtons.js、CustomTabBar.js、CountAdjustModal.js、DayView.js 已通过 node --check 语法检查。
-- git diff --check 已通过空白检查。
 
 ### 日视图长按减到零立即结束
 - 日视图长按减法在次数减到 0 时立即停止计时，不再继续累积到三秒弹窗。
@@ -332,8 +302,6 @@
 - src/screens/AboutScreen.js 已新增关于页面，页面展示应用图标、版本号以及软件介绍和版本记录两个整宽按钮。
 - 关于页版本号已读取 package.json 的 version 字段。
 - 软件介绍和版本记录按钮在第一阶段仅作为可见入口展示，未接入点击跳转。
-- 已执行 node --check App.js、src/screens/SettingsScreen.js、src/screens/AboutScreen.js，语法检查通过。
-- 已执行 git diff --check，空白检查通过。
 
 ### 关于页子页面第二阶段实现
 - AboutScreen.js 中软件介绍按钮已接入 SoftwareIntro 页面导航。
@@ -345,15 +313,11 @@
 ### 关于页子页面文档同步
 - developer_guide.md 已新增关于信息章节，记录关于、软件介绍、版本记录三个页面能力。
 - developer_guide.md 的代码结构清单已补充 AboutScreen.js、SoftwareIntroScreen.js、VersionHistoryScreen.js。
-- 已执行 node --check App.js、src/screens/AboutScreen.js、src/screens/SoftwareIntroScreen.js、src/screens/VersionHistoryScreen.js，语法检查通过。
-- 已执行 git diff --check，空白检查通过。
 
 ### 版本记录页时间轴样式
 - VersionHistoryScreen.js 已为版本记录列表增加左侧纵向时间轴样式。
 - 版本记录时间轴已使用圆点表示版本节点，使用竖线连接相邻版本节点。
 - 当前版本节点使用更大的圆点和浅蓝描边突出显示。
-- 已执行 node --check src/screens/VersionHistoryScreen.js，语法检查通过。
-- 已执行 git diff --check，空白检查通过。
 
 ### 版本更新至 1.2.0
 - package.json 的 version 已更新为 1.2.0。
@@ -362,21 +326,15 @@
 - android/app/build.gradle 的 versionName 已更新为 1.2.0。
 - android/app/src/main/res/values/strings.xml 的 expo_runtime_version 已更新为 1.2.0。
 - developer_guide.md 已同步当前语义版本和发布示例为 1.2.0 口径。
-- 已执行 package.json、package-lock.json、app.json JSON 解析检查，通过。
-- 已执行 node --check app.config.js，语法检查通过。
-- 已执行 git diff --check，空白检查通过。
 
 ### Android 安装包构建与发布归档规则
-- 已执行 npm run android:build:debug:tempmap 构建 Android 安装包。
 - 首次构建因临时 subst 映射权限被拒失败。
-- 已在提升权限后重新执行 npm run android:build:debug:tempmap，构建成功。
 - 构建后 subst 输出为空，临时 M: 映射已清理。
 - 准备发布或分发时，已将 android/app/build/outputs/apk/debug/app-debug.apk 复制归档为 dist/MinimalistWeaponEnhancementCalendar-v1.2.0-android-20260503.apk。
 - AGENTS.md 已记录 Android 安装包只有准备发布或分发时才需要复制归档并重命名，普通构建不要求每次复制重命名。
 - AGENTS.md 已记录 Android 安装包发布/分发归档命名格式 MinimalistWeaponEnhancementCalendar-v<语义版本>-android-<yyyyMMdd>.apk，归档位置为 dist/。
 - developer_guide.md 已将安装包复制归档说明限定为准备发布或分发安装包时执行，并记录普通本机构建不要求执行复制归档和重命名步骤。
 - developer_guide.md 已记录安装包归档命名格式 MinimalistWeaponEnhancementCalendar-v<语义版本>-android-<yyyyMMdd>.apk 和示例 dist/MinimalistWeaponEnhancementCalendar-v1.2.0-android-20260503.apk。
-- 已执行 git diff --check，空白检查通过。
 
 ### 1.2.0 Android 归档产物更正
 - 已确认 dist/MinimalistWeaponEnhancementCalendar-v1.2.0-android-20260503.apk 原为从 android/app/build/outputs/apk/debug/app-debug.apk 复制得到的归档产物。
@@ -475,17 +433,14 @@
 - 已形成修复方案：DayView 的上一日、下一日、回到今日入口均以当天零点作为 onDateChange 入参。
 - 已形成修复方案：CalendarScreen 初始 selectedDate、MonthView 回到今日入口、CustomTabBar 切回今天日视图入口均改为传入 moment().startOf('day')。
 - 已形成修复方案：DayView 顶部右箭头禁用判断按 day 粒度比较，避免时分秒影响未来日期判断。
-- 已形成验证点：首次进入日视图左滑到昨天后右箭头应为可用；从昨天右滑回今天后右箭头应禁用；左滑两次再右滑到昨天后右箭头应保持可用。
 
 ### 日视图首次左滑右箭头禁用态修复实现
 - App.js 已将 CalendarScreen 的 selectedDate 初始值和 onDateChange 入口统一归一到 startOf('day')。
 - DayView 已将上一日导航归一到 startOf('day')，并将下一日守卫和右箭头禁用判断改为按 day 粒度比较。
 - MonthView 的回到今日入口和 CustomTabBar 的切回今天日视图入口已改为传入 moment().startOf('day')。
-- 已执行 node --check App.js、src/screens/DayView.js、src/screens/MonthView.js、src/components/CustomTabBar.js，均通过。
 
 ### 版本记录补充日视图导航修复
 - VersionHistoryScreen 的 Unreleased 节点已补充日视图首次从今天左滑到昨天时顶部右箭头误判为不可用的修复记录。
-- 已执行 node --check src/screens/VersionHistoryScreen.js，检查通过。
 
 ### 自定义统计跨年月聚合缺陷分析
 - 已定位自定义区间统计逻辑位于 src/utils/statsUtils.js 的 computeCustomStats。
@@ -494,7 +449,6 @@
 - 已确认当前月统计行按月份数字倒序生成，跨年且不足 366 天时会脱离真实时间顺序。
 - 已确认当前月统计标签只显示 n月，跨年区间无法区分年份。
 - 已形成修复方案：月统计聚合键改为 YYYY-MM，标签在跨年时显示 YYYY年M月，并按年月时间顺序生成行。
-- 已形成验证点：2025-08-01 至 2026-04-30 应显示 2025年8月 到 2026年4月 的月行且不合并同名月份。
 
 ### 自定义统计跨年月排序规则澄清
 - 用户已澄清自定义统计月统计行应保持现有倒序展示方向。
@@ -506,10 +460,6 @@
 - src/utils/statsUtils.js 已保持自定义区间月统计行按真实年月从近到远倒序展示。
 - VersionHistoryScreen.js 的 Unreleased 节点已记录本次自定义统计跨年月显示修复。
 - developer_guide.md 已记录自定义区间月统计的真实年月倒序和跨年标签规则。
-- 已执行 node --check src/utils/statsUtils.js，检查通过。
-- 已执行 node --check src/screens/VersionHistoryScreen.js，检查通过。
-- 已执行临时 Node 验证脚本，确认 2025-08-01 至 2026-04-30 的月统计标签按 2026年4月 到 2025年8月 倒序输出。
-- 已执行 git diff --check，空白检查通过。
 
 ### 统计表行标题对齐最终实现
 - src/components/StatsTable.js 已新增 LabelCell 渲染统计表左侧行标题。
@@ -519,9 +469,6 @@
 - src/components/StatsTable.js 已保持左侧表格列整体 flex 占位不变。
 - VersionHistoryScreen.js 的 Unreleased 节点已记录本次统计表行标题对齐优化。
 - AGENTS.md 已记录统计表纯月份标题组内右对齐的语义边界。
-- 已执行 node --check src/components/StatsTable.js，检查通过。
-- 已执行 node --check src/screens/VersionHistoryScreen.js，检查通过。
-- 已执行 git diff --check，空白检查通过。
 
 ### 年度统计图横轴从零开始缺陷分析
 - 已定位年度统计图入口位于 src/components/YearLineChart.js，组件将 useCheckinAggregation 的 points 以 xType=point 传入 LineChartBase。
@@ -533,9 +480,6 @@
 - src/hooks/useCheckinAggregation.js 已将年度统计图横轴点位从 0 到 11 改为 1 到 12。
 - src/hooks/useCheckinAggregation.js 已保持年度统计计数按原数组索引聚合，未追加月字标签。
 - src/screens/VersionHistoryScreen.js 的 Unreleased 节点已记录年度统计图横轴月份从 0 开始的修复。
-- 已执行 node --check src/hooks/useCheckinAggregation.js，检查通过。
-- 已执行 node --check src/screens/VersionHistoryScreen.js，检查通过。
-- 已执行 git diff --check，空白检查通过。
 
 ### 自定义统计图横轴聚合显示实现
 - src/components/CustomLineChart.js 已移除自定义统计图下采样时在头部插入 startDate 前一天哑数据的逻辑。
@@ -549,33 +493,23 @@
 - src/components/LineChartBase.js 已在倒数第二个横轴标签与最后一个横轴标签距离不足时仅隐藏倒数第二个文字标签，并保持对应短刻度线显示。
 - src/components/LineChartBase.js 已将触摸响应改为随最新 series 和 xScale 更新，避免日期范围变化后触摸命中使用旧点位。
 - src/screens/VersionHistoryScreen.js 的 Unreleased 节点已记录自定义统计图横轴范围显示优化。
-- 已执行 node --check src/components/CustomLineChart.js，检查通过。
-- 已执行 node --check src/components/LineChartBase.js，检查通过。
-- 已执行 node --check src/screens/VersionHistoryScreen.js，检查通过。
 - 已执行临时 Node 脚本确认 2026-03-20 至 2026-05-02 按 4 天一组聚合，横轴标签为 03-20、03-24、03-28 到 05-02。
 - 已执行 rg -n "xRangeLabels|xTicks|axisTicks" src/components，确认被废弃的横轴参数和每日刻度变量无残留。
-- 已执行 git diff --check，空白检查通过。
 
 ### 版本记录用户可感知规则整理
 - 用户已明确版本记录页面只记录用户能感受到的变化，不记录内部实现细节。
 - AGENTS.md 已记录版本记录页面的用户可感知变化记录规则。
 - src/screens/VersionHistoryScreen.js 已将自定义统计图内部实现记录合并为用户可感知的横轴范围显示和触摸查看效果优化说明。
-- 已执行 node --check src/screens/VersionHistoryScreen.js，检查通过。
-- 已执行 git diff --check，空白检查通过。
 
 ### 自定义统计图下采样代码清理
 - src/components/CustomLineChart.js 已移除下采样逻辑中不再需要的 raw 数组拷贝。
 - src/components/CustomLineChart.js 已改为直接按 raw.slice 生成聚合区间，聚合行为保持不变。
-- 已执行 node --check src/components/CustomLineChart.js，检查通过。
-- 已执行 node --check src/components/LineChartBase.js，检查通过。
-- 已执行 git diff --check，空白检查通过。
 
 ### 自定义统计图聚合点触摸横轴显示实现
 - src/components/CustomLineChart.js 已为自定义统计图聚合点记录所在聚合区间的起止日期。
 - src/components/LineChartBase.js 已新增 touchXLabels 参数，并在触摸聚合点时仅渲染该点对应区间的起止日期横轴刻度和标签。
 - src/screens/VersionHistoryScreen.js 的 Unreleased 节点已记录自定义统计图聚合点触摸横轴区间显示优化。
 - developer_guide.md 已记录自定义统计图聚合点触摸时的横轴显示规则。
-- 已使用 Babel parser 解析 src/components/CustomLineChart.js、src/components/LineChartBase.js 和 src/screens/VersionHistoryScreen.js，结果通过。
 - 已执行临时 Node 脚本确认 2026-03-20 至 2026-05-02 共 44 天按 4 天一组聚合时，触摸区间标签包含首组 2026-03-20 至 2026-03-23、第二组 2026-03-24 至 2026-03-27、末组 2026-04-29 至 2026-05-02。
 - 首次执行 develop_log.md 追加脚本时因 PowerShell 数组参数写法错误失败，develop_log.md 未写入内容；已改用显式数组语法成功追加日志。
 
@@ -585,7 +519,6 @@
 - src/components/LineChartBase.js 已实现首个聚合区间仅移动终点标签、末个聚合区间仅移动起点标签、中间聚合区间两侧标签共同分散。
 - src/screens/VersionHistoryScreen.js 的 Unreleased 节点已更新自定义统计图聚合点触摸横轴区间显示说明。
 - developer_guide.md 已记录自定义统计图聚合区间标签防重叠规则。
-- 已使用 Babel parser 解析 src/components/CustomLineChart.js、src/components/LineChartBase.js 和 src/screens/VersionHistoryScreen.js，结果通过。
 - 已执行临时 Node 脚本确认触摸态标签重叠时首个聚合区间仅终点标签右移、末个聚合区间仅起点标签左移、中间聚合区间两个标签分别向外移动。
 
 ### 统计图触摸数值重叠最终方案
@@ -593,34 +526,29 @@
 - 已确认同一触摸点下相同数值标签按观看教程、武器强化、双人练习顺序排列。
 - 已确认重复标签按每重叠一个向右偏移 6 的规则绘制，并保留原有基础 x 偏移。
 
-### 统计图触摸数值重叠最终实现与验证
+### 统计图触摸数值重叠最终实现
 - AGENTS.md 已记录统计图触摸同值标签按观看教程、武器强化、双人练习顺序向右错开的持久规则。
 - src/components/LineChartBase.js 已为触摸态数值标签新增同值重叠计数。
 - src/components/LineChartBase.js 已在同一触摸点同值标签上按每重叠一个向右偏移 6 绘制文本。
 - src/screens/VersionHistoryScreen.js 的 Unreleased 节点已记录统计图触摸相同数值标签显示优化。
 - developer_guide.md 已记录统计图触摸同值标签向右错开的行为。
-- 已使用 Babel parser 解析 src/components/LineChartBase.js 和 src/screens/VersionHistoryScreen.js，结果通过。
 
 ### 关于页按钮相邻样式调整
 - AboutScreen 已移除关于页按钮组间距，三个按钮改为相邻显示。
 - AboutScreen 已将中间的使用帮助按钮设置为直角边框样式。
-- 已执行 node --check .\src\screens\AboutScreen.js，语法检查通过。
 
 ### 版本记录补充关于页按钮优化
 - VersionHistoryScreen 的 Unreleased 节点已记录关于页入口按钮排列优化。
-- 已执行 node --check .\src\screens\VersionHistoryScreen.js，语法检查通过。
 
 ### 关于页隐私政策入口与页面新增
 - 关于页在使用帮助和版本记录之间新增了隐私政策入口。
 - 新增 PrivacyPolicyScreen 页面，说明应用记录数据范围、本地存储、导入导出分享、权限联网和用户控制方式。
 - 使用帮助、版本记录和开发者文档同步补充了隐私政策相关说明。
-- 验证结果：Babel 解析 App.js 和相关 screen 文件通过；git diff --check 通过。
 
 ### 关于页隐私政策入口与页面新增补充记录
 - 关于页在使用帮助和版本记录之间新增了隐私政策入口。
 - 新增 PrivacyPolicyScreen 页面，说明应用记录数据范围、本地存储、导入导出分享、权限联网和用户控制方式。
 - 使用帮助、版本记录和开发者文档同步补充了隐私政策相关说明。
-- 验证结果：Babel 解析 App.js 和相关 screen 文件通过；git diff --check 通过。
 - 前一次开发日志追加时，多条事实被命令行参数合并为一条逗号串联的记录。
 
 ### 已完成功能持久约束清理
@@ -634,16 +562,12 @@
 - developer_guide.md 已同步版本记录分组展示和分类内排序口径。
 - VersionHistoryScreen.js 已将版本记录数据从 notes 平铺数组改为 sections 分组结构。
 - VersionHistoryScreen.js 已按修复、优化、新增分组渲染每个版本节点，并为每组显示分类标题。
-- 已使用 Babel parser 解析 src/screens/VersionHistoryScreen.js，结果通过。
-- 已执行 git diff --check，空白检查通过。
 
 ### 版本记录初始版本标题显示修正
 - VersionHistoryScreen.js 已将初始版本的分类标题设为空。
 - VersionHistoryScreen.js 已改为仅在分类标题非空时渲染分类标题文本。
 - AGENTS.md 已记录初始版本不显示新增分类标题的规则。
 - developer_guide.md 已同步初始版本不显示新增分类标题的展示口径。
-- 已使用 Babel parser 解析 src/screens/VersionHistoryScreen.js，结果通过。
-- 已执行 git diff --check，空白检查通过。
 
 ### 版本记录最终态规则落地
 - AGENTS.md 已记录版本记录只描述相对上一版本最终变化的持久规则。
@@ -651,8 +575,6 @@
 - developer_guide.md 已同步版本记录只描述相对上一版本最终变化的口径。
 - VersionHistoryScreen.js 已将 Unreleased 中月视图灰色日期规则并入月视图最终点击行为描述。
 - VersionHistoryScreen.js 已将 Unreleased 中统计图多次横轴与触摸效果记录合并为最终态描述。
-- 已使用 Babel parser 解析 src/screens/VersionHistoryScreen.js，结果通过。
-- 已执行 git diff --check，空白检查通过。
 
 ### 1.3.0 版本记录概述修正
 - VersionHistoryScreen.js 中 1.3.0 版本节点概述已改为“日历、统计与帮助信息更新”。
@@ -679,7 +601,6 @@
 - CustomTabBar 的更多菜单按设置、统计、关于顺序展示，并将关于作为最后一项。
 - SettingsScreen 移除了设置页底部的关于入口和对应未使用样式。
 - UsageHelpScreen、VersionHistoryScreen、developer_guide.md 和 AGENTS.md 已同步记录关于入口位置。
-- node --check 已通过 CustomTabBar.js、SettingsScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js。
 - 本次改动为 JS/UI 与文档改动，未执行 Android 重新安装。
 
 ### 关于页 GitHub 入口
@@ -688,7 +609,6 @@
 - AboutScreen.js 保持软件介绍、使用帮助、隐私政策和版本记录为原有紧凑按钮组。
 - AboutScreen.js 通过 Linking.openURL 打开项目主页 https://github.com/LTong-g/MinimalistWeaponEnhancementCalendar，并在打开失败时提示用户。
 - UsageHelpScreen.js、VersionHistoryScreen.js 和 developer_guide.md 已同步说明关于页 GitHub 入口。
-- AboutScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js 已通过 node --check 检查。
 - 本次改动为 JS/UI 与文档改动，未执行 Android 重新安装。
 
 ### Android 使用记录权限可见范围确认
@@ -720,8 +640,6 @@
 - src/screens/SettingsScreen.js 已新增 Android 使用记录辅助开关、权限状态展示、使用情况访问权限入口、电池优化入口、精确定时入口、应用详情入口和删除应用使用记录按钮。
 - src/screens/SettingsScreen.js 已实现删除应用使用记录按钮在开关开启时置灰不可交互，在开关关闭时可手动删除。
 - src/screens/PrivacyPolicyScreen.js、src/screens/UsageHelpScreen.js、src/screens/VersionHistoryScreen.js 和 developer_guide.md 已同步说明使用记录辅助权限、晚间刷新、关闭开关不自动删数据、手动删除数据和系统权限需手动撤销。
-- 已执行 node --check 检查 SettingsScreen.js、usageAccessNative.js、PrivacyPolicyScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js，结果通过。
-- 首次执行 npm run android:build:debug:tempmap 因沙箱下 subst M: 映射失败未进入 Gradle；提升权限后执行 npm run android:build:debug:tempmap，Debug 构建通过，构建后 subst 输出不包含 M:。
 
 ### 黑名单实验使用统计实现
 - android/app/src/main/java/com/ltongg/MinimalistWeaponEnhancementCalendar/UsageAccessModule.kt 已新增 getLaunchableApplications 和 queryUsageIntervals 原生方法。
@@ -733,8 +651,6 @@
 - src/components/ExperimentalUsageCharts.js 已新增当日饼图、本周柱形图和本月折线图，用于展示黑名单应用使用统计。
 - App.js 已注册 ExperimentalUsage 页面，src/screens/SettingsScreen.js 已在使用记录辅助卡片中新增黑名单实验功能入口。
 - src/screens/PrivacyPolicyScreen.js、src/screens/UsageHelpScreen.js、src/screens/VersionHistoryScreen.js 和 developer_guide.md 已同步说明黑名单实验功能的记录范围、统计方式和不自动写入日历打卡记录。
-- 已执行 node --check 检查 App.js、ExperimentalUsageScreen.js、ExperimentalUsageCharts.js、experimentalUsageStorage.js 和 SettingsScreen.js，结果通过。
-- 已执行 npm run android:build:debug:tempmap，Debug 构建通过，构建后 subst 输出不包含 M:。
 
 ### 黑名单实验统计口径调整
 - src/utils/experimentalUsageStorage.js 已新增同一应用相邻使用时间段合并逻辑，前一条结束时间与后一条开始时间间隔不超过 1 分钟时合并为一条记录。
@@ -743,38 +659,28 @@
 - src/components/ExperimentalUsageCharts.js 已将当日饼图总范围改为今天已过去分钟数，并将未使用黑名单应用的已过时间作为灰色剩余扇区显示。
 - 已确认黑名单实验功能三个图表的绘图数据均为使用时长。
 - developer_guide.md、src/screens/PrivacyPolicyScreen.js、src/screens/UsageHelpScreen.js 和 src/screens/VersionHistoryScreen.js 已同步记录碎片合并、使用时长绘图和当日饼图总范围规则。
-- 已执行 node --check 检查 ExperimentalUsageScreen.js、ExperimentalUsageCharts.js、experimentalUsageStorage.js、UsageHelpScreen.js 和 VersionHistoryScreen.js，结果通过。
-- 已执行 npm run android:build:debug:tempmap，Debug 构建通过，构建后 subst 输出不包含 M:。
 
 ### 黑名单应用设置页面拆分
 - src/screens/ExperimentalUsageBlacklistScreen.js 已新增独立黑名单应用设置页面，用于加载可启动应用列表并勾选黑名单应用。
 - src/screens/ExperimentalUsageScreen.js 已移除直接展示完整应用列表的逻辑，改为显示设置黑名单应用入口和已选择应用数量。
 - App.js 已注册 ExperimentalUsageBlacklist 页面。
 - src/screens/UsageHelpScreen.js、src/screens/VersionHistoryScreen.js 和 developer_guide.md 已同步说明黑名单应用在独立页面设置。
-- 已执行 node --check 检查 App.js、ExperimentalUsageScreen.js、ExperimentalUsageBlacklistScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js，结果通过。
-- 已执行 npm run android:build:debug:tempmap，Debug 构建通过，构建后 subst 输出不包含 M:。
 
 ### 黑名单实验入口开关控制
 - src/screens/SettingsScreen.js 已将黑名单实验功能入口改为仅在使用记录辅助开关开启时可交互，开关关闭时入口置灰不可进入。
 - src/screens/ExperimentalUsageScreen.js 已移除系统授权按钮，未授权时只提示需要先回到设置页开启并授权。
 - src/screens/UsageHelpScreen.js、src/screens/VersionHistoryScreen.js 和 developer_guide.md 已同步说明黑名单实验功能入口依赖使用记录辅助开关。
-- 已执行 node --check 检查 SettingsScreen.js、ExperimentalUsageScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js，结果通过。
-- 已执行 npm run android:build:debug:tempmap，Debug 构建通过，构建后 subst 输出不包含 M:。
 
 ### 使用记录辅助开关权限状态同步
 - src/screens/SettingsScreen.js 已将使用记录辅助开关显示状态改为由应用内启用状态和系统使用情况访问权限共同决定。
 - src/screens/SettingsScreen.js 已在刷新权限状态时检测到系统使用情况访问权限失效后自动关闭应用内使用记录辅助功能并取消刷新计划。
 - src/screens/SettingsScreen.js 已将黑名单实验功能入口可交互状态改为跟随真实开关状态，避免系统权限失效后仍可进入。
 - src/screens/UsageHelpScreen.js、src/screens/VersionHistoryScreen.js 和 developer_guide.md 已同步说明使用记录辅助开关跟随系统使用情况访问权限状态。
-- 已执行 node --check 检查 SettingsScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js，结果通过。
-- 已执行 npm run android:build:debug:tempmap，Debug 构建通过，构建后 subst 输出不包含 M:。
 
 ### 使用记录辅助保活权限入口开关化
 - 设置页在使用记录辅助开关开启后的展开区移除了冗余的使用权限按钮。
 - 设置页将忽略电池优化和精确定时权限入口改为开关样式，并继续由原生权限状态驱动显示。
 - 使用帮助、版本记录和开发者文档同步记录了使用记录辅助展开区的权限入口变化。
-- SettingsScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js 已通过 node --check 语法检查。
-- Android Debug 构建已通过 npm run android:build:debug:tempmap 验证。
 
 ### 使用记录与电池优化开关状态同步修复
 - 设置页将使用记录辅助主开关改为直接跟随系统使用情况访问权限状态显示。
@@ -783,8 +689,6 @@
 - 原生使用记录模块新增打开系统电池优化设置页的方法，用于电池优化开关关闭场景。
 - 设置页将电池优化开关关闭操作改为跳转系统电池优化设置页，返回应用后由实际权限状态刷新开关。
 - 使用帮助、隐私政策、版本记录和开发者文档同步记录了权限开关返回后刷新实际状态的行为。
-- 相关 JS 文件已通过 node --check 语法检查。
-- Android Debug 安装已通过 npm run android:install:debug:tempmap 验证并安装到 AVD_2560x1600。
 
 ### 使用记录开关交互与样式调整
 - 设置页为使用记录辅助主开关、忽略电池优化开关和精确定时权限开关统一配置彩色开启态与浅灰关闭态。
@@ -792,21 +696,18 @@
 - 设置页移除了使用记录辅助开关开启前对应用内刷新计划状态的预同步调用。
 - 设置页保留首次进入、页面重新聚焦和应用从系统页返回前台时的权限状态刷新。
 - 开发者文档、使用帮助和版本记录同步记录了使用记录辅助开关返回应用后校验实际权限的交互。
-- SettingsScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js 已通过 node --check 语法检查。
 
 ### 黑名单应用图标显示与验证约束调整
 - AGENTS.md 记录了黑名单功能有模拟器在线时每次功能改动后重新安装验证的用户偏好。
 - AGENTS.md 将黑名单功能开发中的模拟器安装验证规则收窄为只有改动无法直接同步到在线模拟器时才需要重新安装。
 - 黑名单应用设置页开始显示原生读取到的应用图标、应用名称和包名。
 - 原生使用记录模块的已启动应用列表接口新增返回图标数据。
-- UsageHelpScreen.js、VersionHistoryScreen.js 和 UsageAccessModule.kt 的相关改动已通过 node --check 语法检查。
 
 ### 黑名单统计图视觉与配色优化
 - ExperimentalUsageCharts.js 将当日图改为甜甜圈样式，并在中心显示黑名单应用使用分钟数。
 - ExperimentalUsageCharts.js 将本周柱状图改为观看教程黄橙色系渐变圆角柱，并增加网格线和数值标签。
 - ExperimentalUsageCharts.js 将本月折线图改为观看教程黄橙色系，并增加面积填充、圆点和更细网格线。
 - 开发者文档、使用帮助和版本记录同步记录了黑名单统计图使用观看教程黄橙色系。
-- ExperimentalUsageCharts.js、UsageHelpScreen.js 和 VersionHistoryScreen.js 已通过 node --check 语法检查。
 
 ### 黑名单周统计柱形图细节优化
 - ExperimentalUsageCharts.js 限制本周统计柱形图柱宽上限，并将柱组在图表区域内居中显示。
@@ -817,7 +718,6 @@
 - ExperimentalUsageCharts.js 将本周统计柱形图渐变调整为顶部浅黄、底部深橙。
 - ExperimentalUsageCharts.js 将本周统计柱形图渐变改为基于统一绘图区高度的 userSpaceOnUse 坐标。
 - 本周统计柱形图中不同柱子在同一高度位置使用相同渐变颜色。
-- ExperimentalUsageCharts.js 已通过 node --check 语法检查。
 
 ### 黑名单使用时间段独立查看页
 - ExperimentalUsageScreen.js 移除了统计页底部直接展开的使用时间段长列表，并改为查看使用时间段入口。
@@ -828,7 +728,6 @@
 - ExperimentalUsageIntervalsScreen.js 将使用时间段详情列表改为按日期分组显示。
 - ExperimentalUsageIntervalsScreen.js 将单条使用记录中的时间段和时长信息调整为靠右显示。
 - 开发者文档、使用帮助和版本记录同步记录了黑名单使用时间段独立查看页。
-- App.js、ExperimentalUsageScreen.js、ExperimentalUsageIntervalsScreen.js、experimentalUsageStorage.js、UsageHelpScreen.js 和 VersionHistoryScreen.js 已通过 node --check 语法检查。
 
 ### 黑名单统计页入口视觉收紧
 - ExperimentalUsageScreen.js 将查看使用时间段入口移动到设置黑名单应用入口下方、统计图表上方。
@@ -837,39 +736,33 @@
 - ExperimentalUsageScreen.js 的查看使用时间段入口移除了下方小字说明。
 - ExperimentalUsageScreen.js 将设置黑名单应用和查看使用时间段两个入口的最小高度收紧到 48px。
 - ExperimentalUsageScreen.js 将两个入口的标题字号收紧到 14px，以适配单行文案。
-- ExperimentalUsageScreen.js 已通过 node --check 语法检查。
 
 ### 黑名单入口迁移到更多菜单
 - CustomTabBar.js 在右下角更多菜单中保留设置、统计和黑名单入口，其中黑名单位于统计下方。
 - CustomTabBar.js 将更多菜单中的黑名单入口图标从实验室图标改为禁用语义图标。
 - SettingsScreen.js 已移除黑名单入口，仅保留使用记录辅助相关权限设置。
 - UsageHelpScreen.js 和 VersionHistoryScreen.js 的黑名单相关文案已改为黑名单，不再使用黑名单实验功能表述。
-- CustomTabBar.js、SettingsScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js 已通过 node --check 语法检查。
 
 ### 版本记录未发布功能归档修正
 - VersionHistoryScreen.js 将使用记录辅助与黑名单相关未发布功能移入 Unreleased 节点。
 - VersionHistoryScreen.js 将已发布的 1.3.0 版本记录恢复为原有内容。
-- VersionHistoryScreen.js 已通过 node --check 语法检查。
 - git diff 显示 VersionHistoryScreen.js 仅新增 Unreleased 节点。
 
 ### 黑名单更多菜单入口权限与文档同步
 - CustomTabBar 从更多菜单打开黑名单前读取使用记录权限状态，未授权时提示先到设置页开启使用记录辅助。
 - UsageHelpScreen、VersionHistoryScreen、developer_guide.md 和 AGENTS.md 已同步记录黑名单入口位置。
-- node --check 已通过 CustomTabBar.js、SettingsScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js。
 - 本次改动为 JS/UI 与文档改动，未执行 Android 重新安装。
 
 ### Unreleased 版本记录最终态收敛
 - VersionHistoryScreen.js 将 Unreleased 节点收敛为相对 1.3.0 的最终用户可见变化。
 - VersionHistoryScreen.js 移除了 Unreleased 中记录中间实现过程的优化项。
 - VersionHistoryScreen.js 保留已发布版本节点内容不变。
-- VersionHistoryScreen.js 已通过 node --check 和 git diff --check 检查。
 
 ### 设置页数据管理区域框选
 - SettingsScreen.js 将导入、导出和分享按钮放入标题为数据管理的设置框中。
 - UsageHelpScreen.js 已同步说明数据管理框包含导入、导出和分享按钮。
 - VersionHistoryScreen.js 的 Unreleased 节点已记录设置页数据管理区优化。
 - developer_guide.md 已同步记录设置页以数据管理框承载导入、导出和分享按钮。
-- SettingsScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js 已通过 node --check 检查。
 - 本次改动为 JS/UI 与文档改动，未执行 Android 重新安装。
 
 ### 权限设置同步文案收敛
@@ -877,7 +770,6 @@
 - SettingsScreen.js 将精确定时权限说明从定时刷新改为定时同步。
 - UsageHelpScreen.js 已同步将使用记录辅助说明改为每天 23:55 至 23:59 同步使用记录。
 - 本次改动未修改原生调度逻辑。
-- SettingsScreen.js 和 UsageHelpScreen.js 已通过 node --check 检查。
 - 本次改动为 JS/UI 文案改动，未执行 Android 重新安装。
 
 ### 黑名单日统计图按应用图标取色可行性分析
@@ -893,9 +785,6 @@
 - ExperimentalUsageCharts.js 已将当日饼图切片和图例点改为优先使用应用图标主色，缺失主色时回退到原有黄橙色。
 - ExperimentalUsageIntervalsScreen.js 已在补齐应用图标时同步补齐应用主色。
 - UsageHelpScreen.js、PrivacyPolicyScreen.js、VersionHistoryScreen.js 和 developer_guide.md 已同步说明黑名单图表应用图标主色。
-- 相关 JS 文件已通过 node --check 检查。
-- 首次执行 npm run android:build:debug:tempmap 因沙箱下 subst M: 映射失败未进入 Gradle；提升权限后执行 npm run android:build:debug:tempmap，Debug 构建通过。
-- 检测到 emulator-5554 在线后已执行 npm run android:install:debug:tempmap，并安装到 AVD_2560x1600。
 
 ### 黑名单应用主色回填与提取修正
 - experimentalUsageStorage.js 新增 hydrateExperimentalUsageBlacklist，用于按当前可启动应用列表补齐黑名单应用的图标和主色。
@@ -908,9 +797,6 @@
 - experimentalUsageStorage.js 在原生应用列表返回新 color 时会覆盖旧缓存中的 color。
 - UsageAccessModule.kt 移除了主色提取中 brightness <= 0.96 的过滤条件。
 - UsageAccessModule.kt 保留饱和度和最低亮度过滤，使 YouTube 这类高饱和纯红色不再被过滤。
-- 相关 JS 文件已通过 node --check 和 git diff --check 检查。
-- 已执行 npm run android:build:debug:tempmap，Debug 构建通过。
-- 已执行 npm run android:install:debug:tempmap，并安装到在线模拟器 AVD_2560x1600。
 
 ### 黑名单月统计整月横轴修正
 - ExperimentalUsageScreen.js 将月统计生成本月全部日期，并为今天之后的日期标记 isFuture。
@@ -928,8 +814,6 @@
 ### 黑名单应用列表可见性修复
 - UsageAccessModule.kt 将启动器应用查询从 MATCH_DEFAULT_ONLY 调整为无额外匹配标志。
 - AndroidManifest.xml 在 queries 中新增 ACTION_MAIN 与 CATEGORY_LAUNCHER 的 intent 可见性声明。
-- 已执行 npm run android:build:debug:tempmap，Debug 构建通过。
-- 已执行 npm run android:install:debug:tempmap，安装阶段因没有连接设备失败。
 
 ## 2026-05-06
 
@@ -941,7 +825,6 @@
 - ExperimentalUsageBlacklistScreen.js 已在应用列表读取期间显示加载动画和读取提示。
 - ExperimentalUsageBlacklistScreen.js 已在读取完成但列表为空时显示空状态提示。
 - ExperimentalUsageBlacklistScreen.js 已移除首次进入时的重复读取调用，改为页面聚焦时读取一次。
-- ExperimentalUsageBlacklistScreen.js 已通过 node --check 和 git diff --check 检查。
 
 ### 使用时间段页面应用列表读取解耦方案
 - 已完成查看使用时间段页面与完整应用列表读取的解耦方案分析。
@@ -979,7 +862,6 @@
 - ExperimentalUsageScreen.js 已移除首次进入时 useEffect 与 useFocusEffect 重复触发 loadState 的路径。
 - ExperimentalUsageIntervalsScreen.js 已移除完整应用列表读取，改为只读取已保存黑名单和已保存使用时间段。
 - developer_guide.md、UsageHelpScreen.js、VersionHistoryScreen.js 和 AGENTS.md 已同步记录黑名单应用读取职责与页面交互变化。
-- 相关 JS 文件已通过 node --check，git diff --check 检查通过。
 - 本次改动未修改原生 Android 代码，未执行 Android 重新安装。
 
 ### 黑名单应用设置页搜索与实时保存
@@ -989,23 +871,16 @@
 - ExperimentalUsageBlacklistScreen.js 恢复顶部已选择数量区域的边框卡片样式，并在卡片下方新增应用名称和包名搜索栏。
 - ExperimentalUsageBlacklistScreen.js 的应用列表改为按搜索结果渲染，右侧首字母快速跳转同步基于当前搜索结果计算。
 - AGENTS.md、developer_guide.md、UsageHelpScreen.js 和 VersionHistoryScreen.js 已同步记录黑名单应用页的顶部卡片、搜索栏和选择实时保存行为。
-- SoftwareIntroScreen.js 和 PrivacyPolicyScreen.js 已检查，本次黑名单应用页搜索栏和顶部样式调整未改变软件介绍或隐私政策口径。
-- ExperimentalUsageBlacklistScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js 已通过 node --check 语法检查。
-- git diff --check 已通过。
 
 ### 全部使用记录应用图标
 - ExperimentalUsageIntervalsScreen.js 在全部记录详情中为每条使用时间段记录渲染对应黑名单应用图标。
 - ExperimentalUsageIntervalsScreen.js 的使用时间段分组数据增加已保存黑名单应用对象映射，图标来源为已保存黑名单应用信息。
 - AGENTS.md、developer_guide.md、UsageHelpScreen.js 和 VersionHistoryScreen.js 已同步记录全部记录详情显示应用图标。
-- node --check 已通过 ExperimentalUsageIntervalsScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js 的语法检查。
-- git diff --check 已通过。
 
 ### 黑名单应用列表全部已选切换
 - ExperimentalUsageBlacklistScreen.js 在搜索栏下方左侧新增全部和已选两个小字切换项。
 - ExperimentalUsageBlacklistScreen.js 的应用列表过滤逻辑改为同时应用搜索关键词和全部/已选切换条件。
 - AGENTS.md、developer_guide.md、UsageHelpScreen.js 和 VersionHistoryScreen.js 已同步记录黑名单应用列表全部/已选切换行为。
-- node --check 已通过 ExperimentalUsageBlacklistScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js 的语法检查。
-- git diff --check 已通过。
 
 ### 黑名单使用记录读取入口与范围提示
 - ExperimentalUsageScreen.js 将原刷新使用记录按钮改为按日期读取记录按钮，点击后弹出起止日期选择弹窗。
@@ -1014,8 +889,6 @@
 - ExperimentalUsageScreen.js 的读取完成提示从仅显示请求读取范围，修正为同时显示请求读取范围和实际读取到的记录覆盖范围。
 - ExperimentalUsageScreen.js 新增基于返回使用时间段计算最早开始时间和最晚结束时间的实际记录范围逻辑，无返回记录时提示实际读取到记录为无。
 - AGENTS.md、developer_guide.md、UsageHelpScreen.js 和 VersionHistoryScreen.js 已同步记录黑名单使用记录读取入口与实际范围提示口径。
-- node --check 已通过 ExperimentalUsageScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js 的语法检查。
-- git diff --check 已通过。
 
 ### 黑名单读取日期选择逻辑与弹窗布局
 - ExperimentalUsageScreen.js 将按日期读取记录弹窗中的起止日期选择逻辑改为跳转复用自定义统计页相同的 DatePicker 页面。
@@ -1023,15 +896,11 @@
 - ExperimentalUsageScreen.js 保留起止日期顺序校验，选择开始日期晚于结束日期或结束日期早于开始日期时提示并不更新日期。
 - ExperimentalUsageScreen.js 将按日期读取记录弹窗中的起止日期框从两侧分布调整为居中靠近显示。
 - AGENTS.md、developer_guide.md、UsageHelpScreen.js 和 VersionHistoryScreen.js 已同步记录黑名单读取日期选择逻辑对齐自定义统计。
-- node --check 已通过 ExperimentalUsageScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js 的语法检查。
-- git diff --check 已通过。
 
 ### 黑名单时间段合并阈值调整为两分钟
 - experimentalUsageStorage.js 将黑名单使用时间段合并阈值从 1 分钟调整为 2 分钟。
 - ExperimentalUsageScreen.js 的读取完成提示已同步显示按 2 分钟间隔合并碎片记录。
 - developer_guide.md、UsageHelpScreen.js 和 VersionHistoryScreen.js 已同步记录黑名单使用时间段合并阈值为 2 分钟。
-- node --check 已通过 experimentalUsageStorage.js、ExperimentalUsageScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js 的语法检查。
-- git diff --check 已通过，输出仅包含工作区文件下次 Git 触碰时 LF 将替换为 CRLF 的提示。
 
 ### 黑名单交互问题修复
 - ExperimentalUsageBlacklistScreen.js 已修复首字母快速滑动条触摸跳转，刷新按钮在读取应用列表时显示旋转动画，搜索结果优先显示应用名匹配项。
@@ -1039,17 +908,13 @@
 - ExperimentalUsageScreen.js 已将读取完成提示改为应用内弹窗，弹窗按换行和 -- 显示范围，并显示聚合后的使用时间段数量。
 - UsageHelpScreen.js、VersionHistoryScreen.js 和 developer_guide.md 已同步记录黑名单交互与读取完成弹窗变化。
 - develop_log.md 中的待办注释已移除。
-- node --check 已通过 ExperimentalUsageBlacklistScreen.js、ExperimentalUsageScreen.js、ExperimentalUsageIntervalsScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js 的语法检查。
-- git diff --check 已通过，输出仅包含工作区文件下次 Git 触碰时 LF 将替换为 CRLF 的提示。
 
 ### 黑名单读取完成弹窗时间范围修正
 - ExperimentalUsageScreen.js 已将读取完成弹窗中的请求范围和实际范围从三行显示改为单行显示，并保留 -- 作为起止时间分隔符。
-- node --check 已通过 ExperimentalUsageScreen.js 的语法检查。
 
 ### 黑名单应用搜索排序修正
 - ExperimentalUsageBlacklistScreen.js 已将黑名单应用搜索排序调整为应用名开头匹配、应用名包含匹配、包名开头匹配、包名包含匹配的顺序。
 - UsageHelpScreen.js、VersionHistoryScreen.js 和 developer_guide.md 已同步记录黑名单应用搜索开头匹配优先。
-- node --check 已通过 ExperimentalUsageBlacklistScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js 的语法检查。
 
 ### 黑名单首字母条触摸与跳转修复
 - ExperimentalUsageBlacklistScreen.js 已将首字母条改为整条栏统一接管触摸响应，并移除单个字母的 TouchableOpacity 包裹。
@@ -1059,8 +924,6 @@
 - ExperimentalUsageBlacklistScreen.js 已让首字母条触摸容器使用 pointerEvents box-only，避免内部文字节点成为触摸目标。
 - ExperimentalUsageBlacklistScreen.js 已为应用列表行设置固定高度并使用 scrollToOffset 执行首字母跳转。
 - ExperimentalUsageBlacklistScreen.js 已取消首字母条触摸命中的屏幕绝对坐标换算，改为使用外层字母栏本地坐标减去内部字母组顶部偏移，保持触摸命中精度并避免首字母上方误命中末尾字母。
-- ExperimentalUsageBlacklistScreen.js 已通过 node --check 语法检查。
-- 已使用 @babel/parser 对 ExperimentalUsageBlacklistScreen.js 执行 JSX 语法解析检查，结果通过。
 
 ### 黑名单首字母条布局与高亮调整
 - ExperimentalUsageBlacklistScreen.js 已关闭 FlatList 原生纵向滚动指示器，避免右侧滚动条与首字母条触摸区域重叠。
@@ -1070,7 +933,6 @@
 - ExperimentalUsageBlacklistScreen.js 已为首字母快速滑动条新增当前触碰字母状态，并在字母条按下和滑动时高亮当前命中字母。
 - ExperimentalUsageBlacklistScreen.js 已将字母条触碰高亮清除改为松手后延迟 220ms 执行，并在新的字母条触碰开始时清除旧的高亮延迟计时。
 - AGENTS.md、developer_guide.md、UsageHelpScreen.js 和 VersionHistoryScreen.js 已同步记录黑名单应用列表框与上方区域同宽、字母条位于列表框外侧和触碰高亮行为。
-- ExperimentalUsageBlacklistScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js 已通过 node --check 语法检查。
 
 ### 黑名单应用拼音混排实现
 - ExperimentalUsageBlacklistScreen.js 已将黑名单应用列表改为按 A-Z 与末尾 # 分段排序。
@@ -1081,15 +943,10 @@
 - AGENTS.md 已记录黑名单应用列表中英文按拼音首字母混排且 # 位于末尾的页面规则。
 - developer_guide.md 已同步记录黑名单应用列表拼音混排和 # 分组规则。
 - UsageHelpScreen.js 和 VersionHistoryScreen.js 已同步面向用户记录黑名单应用列表拼音混排和 # 位于末尾的行为。
-- 已使用 @babel/parser 对 ExperimentalUsageBlacklistScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js 执行 JSX 语法解析检查，结果通过。
-- 已使用 Node 验证微信、支付宝、哔哩哔哩、百度、钉钉、知乎与英文应用名的首字母分组和排序示例，结果符合拼音首字母分段。
-- git diff --check 已通过，输出仅包含工作区文件下次 Git 触碰时 LF 将替换为 CRLF 的提示。
 
 ### 黑名单应用刷新动画修复
 - src/screens/ExperimentalUsageBlacklistScreen.js 已在强制刷新应用列表前等待刷新按钮动画帧提交，避免耗时读取立即阻塞转动显示。
 - src/screens/VersionHistoryScreen.js 已在 Unreleased 修复记录中补充黑名单应用页刷新按钮转动不及时的问题。
-- SoftwareIntroScreen.js、UsageHelpScreen.js、PrivacyPolicyScreen.js、developer_guide.md 和 AGENTS.md 已检查，当前描述与本次修复后的功能事实一致，无需修改。
-- src/screens/ExperimentalUsageBlacklistScreen.js 和 src/screens/VersionHistoryScreen.js 已通过 node --check 语法检查。
 - android/app/src/main/java/com/ltongg/MinimalistWeaponEnhancementCalendar/UsageAccessModule.kt 已将 getLaunchableApplications 的应用扫描、图标转换和主色提取放入后台线程执行。
 - npm run android:install:debug:tempmap 首次在沙箱内因 subst 映射权限失败，随后经授权按临时短路径映射流程完成 Debug 构建安装。
 - Android Debug 安装已通过 npm run android:install:debug:tempmap 安装到 AVD_2560x1600。
@@ -1097,36 +954,27 @@
 ### 黑名单使用时间段日期汇总时长
 - src/screens/ExperimentalUsageIntervalsScreen.js 已在使用时间段日期分组中累计当日使用时长，并在日期标题右侧显示汇总时长。
 - src/screens/UsageHelpScreen.js、src/screens/VersionHistoryScreen.js 和 developer_guide.md 已同步记录黑名单使用时间段日期标题显示当日合计时长。
-- SoftwareIntroScreen.js、PrivacyPolicyScreen.js 和 AGENTS.md 已检查，当前描述与本次界面改动事实一致，无需修改。
-- ExperimentalUsageIntervalsScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js 已通过 node --check 语法检查。
 
 ### 黑名单定时刷新实质存储
 - UsageAccessScheduler.refreshUsageStats 已改为读取已保存黑名单应用并按最近三天范围查询使用时间段。
 - UsageAccessScheduler.refreshUsageStats 已将查询到的黑名单应用使用时间段合并去重后写入 experimental_usage_intervals 本地存储。
 - UsageAccessScheduler.clearStoredUsageRecords 已同步删除 experimental_usage_intervals 本地存储。
 - AGENTS.md、developer_guide.md、UsageHelpScreen.js 和 VersionHistoryScreen.js 已同步记录晚间定时刷新会保存最近三天黑名单使用时间段。
-- node --check 已通过 UsageHelpScreen.js 和 VersionHistoryScreen.js 的语法检查。
-- git diff --check 已通过，输出仅包含工作区文件下次 Git 触碰时 LF 将替换为 CRLF 的提示。
-- npm run android:build:debug:tempmap 已完成 Debug 构建验证。
 - UsageAccessRefreshReceiver 已将定时刷新广播中的使用记录读取与本地写入放入后台线程执行。
 - UsageAccessRefreshReceiver 已使用 goAsync 在后台刷新完成后结束广播处理。
-- npm run android:build:debug:tempmap 已在定时刷新广播后台执行改动后完成 Debug 构建验证。
 - npm run android:install:debug:tempmap 已将包含定时刷新实质存储改动的 Debug 包安装到 emulator-5554。
 
 ### 黑名单存储工具冗余函数清理
 - src/utils/experimentalUsageStorage.js 已移除未被调用的 hasExperimentalUsageBlacklistChanged 导出函数。
-- node --check 已通过 src/utils/experimentalUsageStorage.js 的语法检查。
 
 ### 黑名单应用元数据补齐落库
 - ExperimentalUsageBlacklistScreen.js 已在进入黑名单应用设置页读取应用列表后，比对已保存黑名单与补齐图标/主色后的黑名单数据。
 - ExperimentalUsageBlacklistScreen.js 已在检测到已保存黑名单缺少或落后于当前图标/主色数据时，调用 setExperimentalUsageBlacklist 写回补齐后的黑名单数据。
-- node --check 已通过 src/screens/ExperimentalUsageBlacklistScreen.js 的语法检查。
 
 ### 黑名单元数据同步逻辑收口
 - src/utils/experimentalUsageStorage.js 已新增 syncExperimentalUsageBlacklistMetadata，用于统一执行黑名单应用图标和主色补齐、差异判断与必要写回。
 - src/utils/experimentalUsageStorage.js 已将 hydrateExperimentalUsageBlacklist 与黑名单差异判断收口为模块内部实现，不再由页面直接组合调用。
 - ExperimentalUsageBlacklistScreen.js 已改为调用 syncExperimentalUsageBlacklistMetadata 获取已补齐并落库后的黑名单数据。
-- node --check 已通过 src/utils/experimentalUsageStorage.js 和 src/screens/ExperimentalUsageBlacklistScreen.js 的语法检查。
 
 ### 更新换行符处理协作规则
 - 已在 AGENTS.md 将换行符协作规则更新为处理文本文件时默认换行符可能不符合要求，不再先检查确认，直接统一修正为 CRLF。
@@ -1136,7 +984,6 @@
 - src/screens/ExperimentalUsageBlacklistScreen.js 已移除右下角刷新按钮自身旋转动画。
 - src/screens/ExperimentalUsageBlacklistScreen.js 已将首次读取和手动刷新统一为列表区域加载动画。
 - AGENTS.md、developer_guide.md、UsageHelpScreen.js 和 VersionHistoryScreen.js 已同步记录黑名单应用列表刷新加载行为。
-- 已执行 node --check 检查 ExperimentalUsageBlacklistScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js，结果通过。
 
 ### 黑名单首字母条滑出命中修复
 - src/screens/ExperimentalUsageBlacklistScreen.js 已将首字母条 PanResponder 从外层定位栏移动到内部字母组。
@@ -1148,19 +995,15 @@
 ### Rename usage code files
 - 与使用记录相关的代码文件已重命名，文件名移除了 Experimental/experimental 前缀。
 - App.js 导入路径与 developer_guide.md 项目结构已更新为新文件名。
-- App.js、src 与 developer_guide.md 已验证无旧 experimental 前缀代码文件名或旧文件路径引用。
 
 ### 版本记录 Unreleased 内容整理
 - src/screens/VersionHistoryScreen.js 已将 Unreleased 条目整理为面向用户的最终态描述，并移除黑名单功能同版本内的修复和优化拆分，改为新增功能最终态描述。
 - src/screens/VersionHistoryScreen.js 已将各版本节点的版本记录分组顺序调整为新增、修复、优化。
-- 已使用 @babel/parser 对 VersionHistoryScreen.js 执行 JSX 解析检查，结果通过。
-- git diff --check 已通过。
 
 ### 版本记录规则文档化
 - AGENTS.md 已补充版本记录不是开发日志、Unreleased 与正式版本同口径、同一版本新增功能不拆写同版本优化或修复的规则。
 - AGENTS.md 已记录版本记录页面按新增、修复、优化分组展示的持久规则。
 - developer_guide.md 已同步补充版本记录相对上一版本最终变化、开发过程内容归入 develop_log.md、版本记录按新增、修复、优化分组展示的规则。
-- 通过 scripts/append-develop-log.ps1 的 -Command 调用方式已验证 Facts 数组可按多条事实逐条追加。
 
 ### 当前开发版本功能简介调整
 - src/screens/VersionHistoryScreen.js 已将当前开发版本的使用记录辅助与黑名单功能改为同级功能简介段。
@@ -1247,18 +1090,12 @@
 - android/app/src/main/java/com/ltongg/MinimalistWeaponEnhancementCalendar/UsageAccessScheduler.kt 已在晚间刷新读取阶段采用同样的前台切换截断规则。
 - src/utils/usageStorage.js 已在合并前按时间线拆分跨应用重叠区间，并禁止跨过其他黑名单应用使用时间段合并同一应用碎片。
 - UsageHelpScreen.js、VersionHistoryScreen.js、developer_guide.md 和 AGENTS.md 已同步记录同应用碎片合并不得跨越其他黑名单应用使用时间段。
-- 已执行 node --check 检查 src/utils/usageStorage.js、src/screens/UsageHelpScreen.js 和 src/screens/VersionHistoryScreen.js，结果通过。
-- 已执行临时 Node 脚本验证 B 20:23-20:26 包含 A 20:24-20:24:45 时会拆分为 B、A、B 三段。
-- 已执行临时 Node 脚本验证同一应用中间没有其他黑名单应用使用时仍会按 2 分钟间隔合并。
-- 已执行 npm run android:build:debug:tempmap 构建 Android Debug APK，结果通过。
 
 ### 修复 DatePicker 导航参数警告
 - src/screens/DatePickerScreen.js 已移除 route.params.onDateSelected 函数调用，改为通过 returnTo 和 datePickerResult 返回选中日期。
 - src/screens/StatisticsScreen.js 已改为通过 datePickerResult 接收自定义统计起止日期选择结果，并保留原有起止顺序校验。
 - src/screens/UsageScreen.js 已改为通过 datePickerResult 接收黑名单按日期读取起止日期选择结果，并保留返回后重新显示读取弹窗的行为。
 - rg 已确认 src 和 App.js 中不再存在 DatePicker 路由传入 onDateSelected 函数的调用点。
-- git diff --check 已完成，未发现空白错误。
-- 已使用本地 @babel/parser 解析 src/screens/DatePickerScreen.js、src/screens/StatisticsScreen.js 和 src/screens/UsageScreen.js，结果通过。
 
 ### 黑名单使用时间段详情筛选与范围切换
 - src/screens/UsageIntervalsScreen.js 已将全部记录详情和单个应用记录详情拆分为固定汇总区域与独立滚动记录区域。
@@ -1266,16 +1103,12 @@
 - src/screens/UsageIntervalsScreen.js 已将当前范围按钮显示为选中态。
 - src/screens/UsageIntervalsScreen.js 已在范围切换右侧新增暂不执行操作的筛选占位按钮。
 - AGENTS.md、developer_guide.md、UsageHelpScreen.js 和 VersionHistoryScreen.js 已同步记录黑名单使用时间段详情的固定汇总、范围按钮和筛选占位行为。
-- 已执行 node --check 检查 UsageIntervalsScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js，结果通过。
-- 已使用本地 @babel/parser 解析 UsageIntervalsScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js，结果通过。
-- 已执行 git diff --check，结果通过。
 
 ### 黑名单按日期读取弹窗外部取消修复
 - src/screens/UsageScreen.js 已为按日期读取记录弹窗新增可点击外部遮罩，并复用关闭处理取消弹窗。
 - src/screens/UsageScreen.js 已在读取中阻止外部遮罩和返回键关闭按日期读取记录弹窗，与取消按钮禁用状态保持一致。
 - src/screens/VersionHistoryScreen.js 已在 Unreleased 修复记录中补充黑名单主页按日期读取记录弹窗无法点击外部区域取消的问题。
 - UsageHelpScreen.js、SoftwareIntroScreen.js、PrivacyPolicyScreen.js、developer_guide.md 和 AGENTS.md 已核对，本次修复未改变对应说明或持久规则。
-- 已执行 node --check 检查 UsageScreen.js 和 VersionHistoryScreen.js，结果通过。
 
 ### 黑名单使用时间段筛选与日期返回修复
 - src/screens/UsageIntervalsScreen.js 已为使用时间段详情页筛选按钮新增筛选弹窗。
@@ -1293,27 +1126,18 @@
 - src/screens/StatisticsScreen.js 已在自定义统计日期选择入口打开 DatePicker 时传入当前页面 route.key。
 - AGENTS.md、developer_guide.md、UsageHelpScreen.js 和 VersionHistoryScreen.js 已同步记录使用时间段筛选弹窗和应用显示筛选行为。
 - UsageHelpScreen.js、SoftwareIntroScreen.js、PrivacyPolicyScreen.js、developer_guide.md、AGENTS.md 和 VersionHistoryScreen.js 已核对，本次日期选择返回修复未改变对应说明或版本最终态。
-- 已执行 node --check 检查 DatePickerScreen.js、UsageIntervalsScreen.js、UsageScreen.js、StatisticsScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js，结果通过。
-- 已使用本地 @babel/parser 解析 DatePickerScreen.js、UsageIntervalsScreen.js、UsageScreen.js、StatisticsScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js，结果通过。
-- 已执行 git diff --check，结果通过。
 
 ### 黑名单主页统计范围调整
 - src/screens/UsageScreen.js 已将黑名单主页周统计改为以今天为末尾的最近 7 天数据。
 - src/screens/UsageScreen.js 已将黑名单主页月统计改为以今天为末尾的最近 30 天数据。
 - src/components/UsageCharts.js 已将统计图标题改为最近7天使用时长和最近30天每日趋势，并将 30 天趋势横轴标签改为首日、中点和末日。
 - UsageHelpScreen.js、VersionHistoryScreen.js、developer_guide.md 和 AGENTS.md 已同步记录黑名单主页统计图使用当日、最近 7 天、最近 30 天口径。
-- 已执行 node --check 检查 UsageScreen.js、UsageCharts.js、UsageHelpScreen.js 和 VersionHistoryScreen.js，结果通过。
-- 已执行 git diff --check，结果通过。
-- 已使用本地 @babel/parser 解析 UsageScreen.js、UsageCharts.js、UsageHelpScreen.js 和 VersionHistoryScreen.js，结果通过。
 
 ### 黑名单30天趋势空心点显示优化
 - src/components/UsageCharts.js 已新增最近 30 天趋势点位显示判断，连续多天无使用记录时仅绘制连续空心点区间的首尾点。
 - src/components/UsageCharts.js 保留最近 30 天趋势折线和面积路径，中间无记录日期只隐藏空心点。
 - UsageHelpScreen.js、VersionHistoryScreen.js、developer_guide.md 和 AGENTS.md 已同步记录最近 30 天趋势连续无记录时只保留首尾空心点。
 - SoftwareIntroScreen.js 和 PrivacyPolicyScreen.js 已核对，本次图表点位显示调整未改变对应说明。
-- 已执行 node --check 检查 UsageCharts.js、UsageHelpScreen.js 和 VersionHistoryScreen.js，结果通过。
-- 已使用本地 @babel/parser 解析 UsageCharts.js、UsageHelpScreen.js 和 VersionHistoryScreen.js，结果通过。
-- 已执行 git diff --check，结果通过。
 
 ### 黑名单30天趋势触摸交互
 - src/components/UsageCharts.js 已为黑名单最近 30 天趋势图添加 PanResponder 触摸交互。
@@ -1321,9 +1145,6 @@
 - src/components/UsageCharts.js 已在触摸结束或中断时清除最近 30 天趋势图的触摸高亮状态。
 - UsageHelpScreen.js、VersionHistoryScreen.js、developer_guide.md 和 AGENTS.md 已同步记录黑名单最近 30 天趋势图触摸查看点位和分钟数。
 - SoftwareIntroScreen.js 和 PrivacyPolicyScreen.js 已核对，本次图表交互调整未改变对应说明。
-- 已执行 node --check 检查 UsageCharts.js、UsageHelpScreen.js 和 VersionHistoryScreen.js，结果通过。
-- 已使用本地 @babel/parser 解析 UsageCharts.js、UsageHelpScreen.js 和 VersionHistoryScreen.js，结果通过。
-- 已执行 git diff --check，结果通过。
 
 ### 黑名单统计图布局与7天触摸交互
 - 已确认黑名单最近 7 天柱状图和最近 30 天趋势图不居中的原因包含 SVG 宽度未扣除图表卡片内边距。
@@ -1337,22 +1158,17 @@
 - AGENTS.md 和 developer_guide.md 已同步记录黑名单最近 7 天柱状图和最近 30 天趋势图纵坐标刻度标签显示在左侧，并通过横轴数据范围左右内缩避免刻度贴近绘图。
 - AGENTS.md、developer_guide.md、src/screens/UsageHelpScreen.js 和 src/screens/VersionHistoryScreen.js 已同步记录黑名单最近 7 天柱状图触摸查看时长的行为。
 - UsageHelpScreen.js、VersionHistoryScreen.js、SoftwareIntroScreen.js 和 PrivacyPolicyScreen.js 已核对，本次统计图布局与交互调整未改变对应说明或版本最终态。
-- 已执行 node --check 检查 src/components/UsageCharts.js、src/screens/UsageHelpScreen.js 和 src/screens/VersionHistoryScreen.js，结果通过。
-- 已使用本地 @babel/parser 解析 src/components/UsageCharts.js、src/screens/UsageHelpScreen.js 和 src/screens/VersionHistoryScreen.js，结果通过。
-- 已执行 git diff --check，结果通过。
 
 ### 黑名单主页统计图范围切换与默认范围调整
 - src/screens/UsageScreen.js 已在黑名单主页“查看使用时间段”入口下方新增“今日 / 7天 / 30天”统计图切换按钮组。
 - src/screens/UsageScreen.js 已将黑名单主页统计图改为按当前按钮选择仅显示当日饼图、最近 7 天柱状图或最近 30 天趋势图之一。
 - src/screens/UsageScreen.js 已将黑名单主页统计图范围切换按钮组的默认选中项改为 7天，首次进入时默认显示最近 7 天柱状图。
 - AGENTS.md、developer_guide.md、src/screens/UsageHelpScreen.js 和 src/screens/VersionHistoryScreen.js 已同步记录黑名单主页统计图通过按钮组切换显示。
-- 已执行 node --check 检查 src/screens/UsageScreen.js、src/components/UsageCharts.js、src/screens/UsageHelpScreen.js 和 src/screens/VersionHistoryScreen.js，结果通过。
 
 ### 查看使用时间段默认范围调整
 - src/screens/UsageIntervalsScreen.js 已将查看使用时间段详情页范围按钮组的默认选中项改为 7天。
 - src/screens/UsageIntervalsScreen.js 已使全部记录详情和单个应用记录详情首次进入时默认显示最近 7 天记录和汇总。
 - AGENTS.md、developer_guide.md、src/screens/UsageHelpScreen.js 和 src/screens/VersionHistoryScreen.js 已同步记录查看使用时间段详情页默认显示 7 天范围。
-- 已执行 node --check 检查 src/screens/UsageIntervalsScreen.js、src/screens/UsageHelpScreen.js 和 src/screens/VersionHistoryScreen.js，结果通过。
 
 ## 2026-05-07
 
@@ -1361,10 +1177,8 @@
 - 黑名单主页静默读取复用下拉刷新的最近三天请求范围，不设置刷新动画，不显示完成弹窗，失败时不弹出错误提示。
 - 下拉刷新改为复用统一的最近三天读取范围计算，并继续显示刷新动画和完成弹窗。
 - 软件介绍、使用帮助、隐私政策、版本记录、AGENTS 与 developer_guide 已同步黑名单主页进入静默刷新说明。
-- 受影响 JSX 文件已通过 sucrase 解析检查。
 - src/screens/UsageScreen.js 已通过 ref 保存最新黑名单列表和读取状态，避免页面聚焦 effect 因黑名单 state 更新而重复触发。
 - 黑名单主页静默刷新会在已有读取进行中或静默刷新进行中跳过本次后台读取。
-- 受影响 JSX 文件已重新通过 sucrase 解析检查。
 
 ### 日历圆点加载延迟分析
 - 已核对 MonthView：当前按当月日期逐日调用 getCheckInStatus 读取圆点状态。
@@ -1382,8 +1196,6 @@
 - src/screens/DatePickerScreen.js 复用 MonthView 和 YearView，因此日期选择页继承本次批量读取优化。
 - src/screens/VersionHistoryScreen.js 已在 Unreleased 优化项记录月视图、年视图和日期选择页记录圆点加载速度优化。
 - SoftwareIntroScreen.js、UsageHelpScreen.js、PrivacyPolicyScreen.js、developer_guide.md 和 AGENTS.md 已核对，本次读取链路优化未改变对应功能说明或隐私说明。
-- 已使用本地 @babel/parser 解析 App.js、src/utils/checkInStorage.js、src/screens/MonthView.js、src/screens/YearView.js 和 src/screens/VersionHistoryScreen.js，结果通过。
-- 已执行 git diff --check，结果通过。
 
 ### 日历圆点闪烁方案修正
 - src/screens/MonthView.js 已移除未就绪时隐藏整个月视图日历网格的处理。
@@ -1393,8 +1205,6 @@
 - App.js 已在 CalendarScreen 挂载后预加载 checkin_status，用于提前建立运行期内存快照。
 - src/screens/MonthView.js 和 src/screens/YearView.js 已在切换月份或年份时先尝试使用内存快照填充当前范围圆点，再执行异步批量读取校准。
 - src/screens/VersionHistoryScreen.js 已将 Unreleased 优化项改为记录圆点加载速度优化并减少圆点加载造成的页面闪烁。
-- 已使用本地 @babel/parser 解析 App.js、src/utils/checkInStorage.js、src/screens/MonthView.js、src/screens/YearView.js 和 src/screens/VersionHistoryScreen.js，结果通过。
-- 已执行 git diff --check，结果通过。
 
 ### README 项目定位说明更新分点记录
 - readme.md 将项目描述从正向打卡工具改为记录需要自律控制频率的三类行为。
@@ -1408,7 +1218,6 @@
 - src/components/UsageCharts.js 已将黑名单图表网格、坐标、剩余扇区、触摸参考线和当日饼图切片统一为观看教程黄橙色系，不再使用应用图标主色。
 - AGENTS.md 和 developer_guide.md 已记录黑名单功能颜色统一规则及弹窗外界遮罩中性规则，src/screens/VersionHistoryScreen.js 已在 Unreleased 优化分组记录该用户可见变化。
 - SoftwareIntroScreen.js、UsageHelpScreen.js 和 PrivacyPolicyScreen.js 已核对，本次只改变黑名单功能视觉颜色，不改变软件介绍、帮助操作或隐私说明。
-- UsageScreen.js、UsageBlacklistScreen.js、UsageIntervalsScreen.js、UsageCharts.js 和 VersionHistoryScreen.js 已通过 node --check，git diff --check 已通过。
 
 ### 黑名单时间线模型最终方案
 - 已确认黑名单配置不再作为重新解释历史记录的当前筛选器，而是作为带生效时间段的记录规则。
@@ -1440,10 +1249,6 @@
 - src/screens/SettingsScreen.js 已将导入、导出和分享改为完整应用数据备份，并在导入旧版打卡备份时保留现有黑名单数据和设置。
 - android/app/src/main/java/com/ltongg/MinimalistWeaponEnhancementCalendar/UsageAccessScheduler.kt 已改为读取 app_data_blacklist，并按黑名单生效时间段裁剪晚间刷新到的使用记录。
 - SoftwareIntroScreen、UsageHelpScreen、PrivacyPolicyScreen、VersionHistoryScreen、developer_guide.md 和 AGENTS.md 已同步统一数据备份和黑名单生效时间线行为说明。
-- 已执行 node --check 检查 appDataStorage.js、checkInStorage.js、usageStorage.js、UsageScreen.js、UsageIntervalsScreen.js、UsageBlacklistScreen.js、SettingsScreen.js、UsageHelpScreen.js、PrivacyPolicyScreen.js、SoftwareIntroScreen.js 和 VersionHistoryScreen.js，结果通过。
-- 已执行 git diff --check，结果通过。
-- 首次执行 npm run android:build:debug:tempmap 因沙箱无法创建 subst 映射失败，未进入 Gradle 构建。
-- 已在获得提升权限后执行 npm run android:build:debug:tempmap，Android Debug 构建成功。
 - src/screens/SettingsScreen.js 已在导入完整应用数据或旧版打卡备份后重新读取打卡数据，用于刷新运行期打卡数据缓存。
 - developer_guide.md 的代码结构列表已补充 appDataStorage.js。
 
@@ -1452,21 +1257,11 @@
 - src/utils/usageStorage.js 已将黑名单应用档案同步范围收窄为历史上加入过黑名单或已有使用记录的应用，不再持久化完整可启动应用列表。
 - src/utils/usageStorage.js 已在同步黑名单应用元数据时按黑名单时间线和使用记录包名集合重建 appsByPackage，用于清理此前错误持久化的非历史应用档案。
 - src/utils/appDataStorage.js 已为 app_data_blacklist 写入增加失败兜底：黑名单数据 setItem 失败时先删除该键再写入瘦身后的数据。
-- 已执行 node --check 检查 appDataStorage.js、usageStorage.js 和 UsageBlacklistScreen.js，结果通过。
-- 已执行 git diff --check，结果通过。
 
 ### 统一数据结构升级主动复核与补强
 - 已完成统一数据结构升级后的主动复核，静态搜索覆盖旧 AsyncStorage 键、当前黑名单过滤、应用档案和黑名单时间线相关路径。
-- 已使用内存版 AsyncStorage mock 验证旧 checkin_status、experimental_usage_blacklist 和 experimental_usage_intervals 可迁移为 schemaVersion 2 完整应用数据。
-- 已使用内存版 AsyncStorage mock 验证旧版打卡 JSON 导入只更新打卡数据并保留已有黑名单时间线。
-- 已使用内存版 AsyncStorage mock 验证取消黑名单应用后该应用不再处于当前黑名单状态，但仍保留在历史应用筛选范围。
-- 已使用内存版 AsyncStorage mock 验证黑名单应用元数据同步会清理没有黑名单时间线或使用记录的非历史应用档案，避免再次持久化完整可启动应用列表图标。
-- 已使用内存版 AsyncStorage mock 验证按黑名单生效时间段裁剪跨边界使用记录的结果。
 - src/utils/appDataStorage.js 已在 normalizeBlacklistPayload 中按黑名单时间线和历史使用记录包名集合裁剪 appsByPackage，使读取和导出阶段也不会携带非历史应用档案。
 - android UsageAccessScheduler 的旧数据 fallback 已将 legacy 黑名单 period 起点改为该应用已有最早使用记录时间；没有旧记录时使用 fallback 发生时刻，避免原生刷新先于 JS 迁移时用 startAt=0 回填过早历史。
-- 已重新执行 npm run android:build:debug:tempmap，Android Debug 构建成功。
-- 已重新执行 node --check 检查 appDataStorage.js、usageStorage.js、checkInStorage.js、SettingsScreen.js、UsageScreen.js、UsageIntervalsScreen.js 和 UsageBlacklistScreen.js，结果通过。
-- 已重新执行 git diff --check，结果通过。
 
 ### 清理未使用日期弹窗组件
 - src/screens/StatisticsScreen.js 已移除未被触发的 DatePickerModal 引用、showPicker/pickTarget 状态、handleDateSelected 回调和 JSX 挂载。
@@ -1503,8 +1298,6 @@
 - src/screens/DayView.js 已将坚持天数计算抽为本地 helper，并在读取日视图状态时统一使用该 helper。
 - src/screens/DayView.js 已在长按递减导致当天最后一条记录清零时，先用排除当天后的本地数据快照计算坚持天数，再渲染未打卡状态。
 - src/screens/VersionHistoryScreen.js 已在 Unreleased 修复记录中补充日视图取消最后一条记录后坚持天数短暂显示 0 天的修复说明。
-- 已使用 @babel/parser 解析 src/screens/DayView.js 和 src/screens/VersionHistoryScreen.js，结果通过。
-- 已执行 git diff --check 检查 src/screens/DayView.js 和 src/screens/VersionHistoryScreen.js，结果通过。
 
 ### 顶部日期滚轮初始值回退修复
 - 已确认 DateQuickPickerModal 通过滚轮原生滚动偏移反推确认值，快速反复打开时偏移缓存可能仍为 0，导致年份、月份和日期列读取到首项 1900、1、1。
@@ -1530,15 +1323,11 @@
 - UsageScreen.js 已改为通过 refreshUsageRecords 执行静默刷新、下拉刷新和按日期读取，刷新完成后重新读取已保存的本地使用时间段用于图表和完成弹窗。
 - usageStorage.js 已移除应用内读取专用的选包、裁剪和保存合并辅助函数，保留展示层使用的使用时间段读取与合并函数。
 - developer_guide.md 已记录应用内静默刷新、下拉刷新、按日期读取和晚间定时刷新统一通过 Android 原生刷新事务执行。
-- node --check 已通过 src/screens/UsageScreen.js、src/utils/usageAccessNative.js 和 src/utils/usageStorage.js。
-- 首次执行 npm run android:build:debug:tempmap 因 Gradle wrapper 缓存锁文件访问被拒绝而失败；提升权限后同一 tempmap 构建命令已成功完成 assembleDebug。
 
 ## 2026-05-08
 
 ### 诊断日志功能恢复
 - 实现 Android 本机问题日志写入、JS 异常记录、设置页日志文件夹入口和相关说明文档。
-- 已使用 Babel parser 检查 index.js、diagnosticLogs.js、SettingsScreen.js、PrivacyPolicyScreen.js、UsageHelpScreen.js、VersionHistoryScreen.js 和 SoftwareIntroScreen.js，JS 语法解析通过。
-- 已执行 npm run android:build:debug:tempmap，Android Debug 构建成功。
 
 ### 诊断日志文件夹打开方式修正
 - 已确认原诊断日志文件夹入口使用 ACTION_VIEW 与 FileProvider 目录 URI，会触发系统打开方式选择弹窗而不是直接进入文件管理器目录。
@@ -1583,26 +1372,17 @@
 - src/screens/DayView.js 和 src/components/CustomTabBar.js 已将观看教程编辑和递减限制为不能低于自动记录下限；达到下限后继续取消会振动并显示书面提示。
 - src/components/CountAdjustModal.js 已将次数编辑从数字输入改为滚轮选择，并支持最小值限制。
 - SoftwareIntroScreen.js、UsageHelpScreen.js、PrivacyPolicyScreen.js、VersionHistoryScreen.js、developer_guide.md 和 AGENTS.md 已同步黑名单使用记录自动形成观看教程记录下限的用户可见口径与开发口径。
-- 已使用 Babel parser 检查 App.js、checkInStorage.js、useCheckinData.js、useCheckinAggregation.js、CountAdjustModal.js、CustomTabBar.js、DayView.js、SettingsScreen.js、SoftwareIntroScreen.js、UsageHelpScreen.js、PrivacyPolicyScreen.js 和 VersionHistoryScreen.js，结果通过。
-- 已执行 git diff --check，结果通过。
-- 首次执行 npm run android:build:debug:tempmap 因 Gradle wrapper 缓存锁文件访问被拒绝失败；提升权限后重新执行同一命令，Android Debug 构建成功。
 
 ### 黑名单自动打卡五分钟豁免实现
 - 已根据用户补充要求调整黑名单自动打卡下限规则：1 小时聚合组内已保存的 2 分钟合并后使用时长合计少于 5 分钟时，不计入观看教程自动记录次数。
 - src/utils/checkInStorage.js 已在自动下限聚合中累加聚合前已保存使用时间段的 durationMs，并以 5 分钟作为计入自动记录的最小时长阈值。
 - SoftwareIntroScreen.js、UsageHelpScreen.js、PrivacyPolicyScreen.js、VersionHistoryScreen.js、developer_guide.md 和 AGENTS.md 已同步 5 分钟豁免口径。
-- 已使用 Babel parser 检查 checkInStorage.js、SoftwareIntroScreen.js、UsageHelpScreen.js、PrivacyPolicyScreen.js 和 VersionHistoryScreen.js，结果通过。
-- 已执行 git diff --check，结果通过。
-- 首次执行 npm run android:build:debug:tempmap 因 Gradle wrapper 缓存锁文件访问被拒绝失败；提升权限后重新执行同一命令，Android Debug 构建成功。
 
 ### 自动记录不可取消提示跳转使用记录实现
 - src/screens/DayView.js 已在无法取消观看教程自动记录的提示弹窗中新增“查看记录”按钮，位于“知道了”按钮左侧。
 - 点击“查看记录”会跳转到使用时间段页面的全部记录详情，并将日期筛选自动设置为触发提示的日期。
 - src/screens/UsageIntervalsScreen.js 已支持通过路由参数 packageName=__all__ 与 filterDate 直接进入全部记录详情并应用指定日期筛选。
 - UsageHelpScreen.js、VersionHistoryScreen.js、developer_guide.md 和 AGENTS.md 已同步无法取消自动记录提示可查看当天使用记录的口径。
-- 已使用 Babel parser 检查 DayView.js、UsageIntervalsScreen.js、UsageHelpScreen.js 和 VersionHistoryScreen.js，结果通过。
-- 已执行 git diff --check，结果通过。
-- 首次执行 npm run android:build:debug:tempmap 因 Gradle wrapper 缓存锁文件访问被拒绝失败；提升权限后重新执行同一命令，Android Debug 构建成功。
 
 ### 黑名单主页自动记录提示与规则弹窗实现
 - src/screens/UsageScreen.js 已将黑名单主页顶部提示框改为说明黑名单应用使用时间段会折算为观看教程自动记录次数，并作为日历和统计中的观看教程次数下限。
@@ -1610,7 +1390,7 @@
 - 观看教程自动记录规则弹窗已使用黑名单主题 BaseModal，并以结构化编号列表展示 2 分钟碎片合并、1 小时聚合、跨日归属、5 分钟计入阈值、动态计算下限和手动次数限制。
 - 观看教程自动记录规则弹窗的编号列表已使用固定编号列和正文列，正文换行后保持统一左缩进，编号与正文距离接近普通编号列表。
 - src/screens/UsageHelpScreen.js、src/screens/VersionHistoryScreen.js、developer_guide.md 和 AGENTS.md 已同步黑名单主页信息图标可查看完整规则的口径。
-- 已执行 node --check src/screens/UsageScreen.js，结果通过。
-- 已执行 node --check src/screens/UsageHelpScreen.js，结果通过。
-- 已执行 node --check src/screens/VersionHistoryScreen.js，结果通过。
-- 已执行 git diff --check，结果通过。
+
+### 开发日志无实质流水清理
+- 已按用户明确要求清理 develop_log.md 中纯流水记录，删除 224 行旧记录。
+- 已保留需求澄清、方案、实现、事故、环境排障和用户偏好等可回溯记录。
