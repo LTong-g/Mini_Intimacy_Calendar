@@ -41,6 +41,7 @@
 - 假设、风险、验证结果统一记录到 `develop_log.md`。
 - 开发日志仅记录已发生事实，不写计划或下一步目标。
 - 开发日志和开发文档不得记录本机绝对路径或本机临时环境测量值；如需描述环境、路径或体积，使用“本机 Android SDK 路径”“项目 android 原始长路径”“临时映射路径”“主要占用来自可再生成构建产物”等泛化表述。
+- 签名隐私信息不得写入开发日志、开发文档或提交信息；包括 keystore 密码、密钥别名密码、证书 SHA 指纹、私有签名文件内容或其他可用于识别/复用签名材料的细节。
 - 版本更新单独拥有一条时间戳，单独记录一条开发日志。
 
 ## 提交规则
@@ -71,6 +72,8 @@
 - 在 Windows 本机进行 Android 构建时，采用“构建前临时 `subst` 映射短路径、构建后无论成功失败都取消映射”的流程；每次构建重新映射，避免 `M:` 长驻和与原始长路径混用导致 Kotlin/Gradle 缓存根路径冲突及 native 编译路径过深问题。
 - Android 安装包只有准备发布或分发时才需要复制归档并重命名；普通构建不要求每次复制重命名。
 - Android 安装包发布/分发归档命名格式为 `MinimalistWeaponEnhancementCalendar-v<语义版本>-android-<yyyyMMdd>.apk`，归档位置为 `dist/`，归档来源必须是 Release APK。
+- Android Release APK 使用本机私有 release 签名；`android/app/debug.keystore` 仅用于 Debug，Release 构建不得使用 `signingConfigs.debug`。
+- Android Release 签名配置读取 `android/keystore.properties`，私有签名文件为 `android/app/release.keystore`；两者必须保持 Git 忽略，禁止提交到开源仓库。
 - 正式发布版本之后开发的未发布功能，必须先记录到版本记录页的 `Unreleased` 节点；正式发布时再把该节点版本号改成对应的正式版本号。
 - 版本记录页里 `Unreleased` 前面不加 `v`。`Unreleased` 本身不天然作为特殊版本；只有当前正在开发的版本有明确主功能时，才可先用与“新增、修复、优化”同级的标题单独介绍该功能，再显示“新增、修复、优化”分组。
 - 版本记录页面只记录用户能感受到的变化，不记录内部实现细节。
@@ -129,5 +132,6 @@
   - 步骤 5：下一次构建必须重新映射，不复用旧映射。
 - 实现载体：`scripts/android-build-tempmap.ps1`（`try/finally` 保证清理）。
 - 发布/分发归档：仅在准备发布或分发安装包时，将 `android/app/build/outputs/apk/release/app-release.apk` 复制到 `dist/` 并按 `MinimalistWeaponEnhancementCalendar-v<语义版本>-android-<yyyyMMdd>.apk` 命名；普通构建不执行该归档步骤，禁止将 `debug/app-debug.apk` 作为发布或分发归档来源。
+- Release 签名：Release APK 必须使用 `android/keystore.properties` 指向的本机私有签名；缺少私有签名配置时不得回退为 debug 签名。
 
 - 当前 AVD 尺寸语义约定：`AVD_2640x1200` 为手机尺寸默认机型，`AVD_2560x1600` 为平板尺寸机型。

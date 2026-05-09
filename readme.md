@@ -29,6 +29,9 @@
 - 开发者文档：见 [developer_guide.md](./developer_guide.md)
 - 开发日志：见 [develop_log.md](./develop_log.md)
 
+## Android 发布签名
+Release APK 需要使用本机私有签名文件。仓库只提供 `android/keystore.properties.example` 作为配置格式示例，真实的 `android/keystore.properties` 和 `android/app/release.keystore` 不应提交到 Git。
+
 ## License
 本存储库中的源代码遵循MIT许可协议。参见[LICENSE](./LICENSE)获取详细信息。
 应用程序图标、徽标、应用程序名称、视觉设计资产、截图和其他品牌材料均由@LTong-g创建，不包含在MIT许可中。版权所有。未经作者明确书面许可，不得复制、再分发、修改或在衍生项目中使用这些材料。

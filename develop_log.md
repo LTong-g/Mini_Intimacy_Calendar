@@ -1441,6 +1441,13 @@
 - src/screens/VersionHistoryScreen.js 顶部记录已从 Unreleased 改为 1.4.0，并将日期更新为 2026-05-09。
 - developer_guide.md 中当前语义版本和发布示例已同步为 1.4.0。
 
+### Android Release 私有签名配置与验证
+- android/app/build.gradle 改为读取 android/keystore.properties 并在 Release 构建中使用 signingConfigs.release，缺少私有签名配置时 Release 构建不再回退 debug 签名。
+- .gitignore 新增对 *.keystore、android/keystore.properties、.env、.env.* 和 .vscode/ 的忽略，并保留 android/app/debug.keystore 作为调试签名例外。
+- android/keystore.properties.example 新增了 Release 签名配置示例，本机生成的 android/app/release.keystore 和 android/keystore.properties 均处于 Git 忽略状态。
+- developer_guide.md、AGENTS.md 和 readme.md 已同步 Android Release 私有签名、旧 debug 签名 APK 覆盖安装限制和签名隐私信息记录规则。
+- npm run android:build:release:tempmap 在提升本机 Gradle 缓存访问权限后完成 Release APK 构建，apksigner 和 keytool 验证 APK 签名证书与本机 release keystore 匹配，构建结束后的 subst 输出不包含 M: 映射。
+
 ### 本机路径记录脱敏
 - develop_log.md 中已有本机绝对路径已改为泛化环境路径、项目原始长路径和临时映射路径描述。
 - AGENTS.md 中 Windows Android 构建流程已改为不记录本机绝对项目路径。
