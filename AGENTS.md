@@ -40,6 +40,7 @@
 - 若脚本缺失或执行失败，需先修复脚本或向用户说明阻塞原因；不得回退为手工混写。
 - 假设、风险、验证结果统一记录到 `develop_log.md`。
 - 开发日志仅记录已发生事实，不写计划或下一步目标。
+- 开发日志和开发文档不得记录本机绝对路径或本机临时环境测量值；如需描述环境、路径或体积，使用“本机 Android SDK 路径”“项目 android 原始长路径”“临时映射路径”“主要占用来自可再生成构建产物”等泛化表述。
 - 版本更新单独拥有一条时间戳，单独记录一条开发日志。
 
 ## 提交规则
@@ -115,14 +116,14 @@
 
 ## Windows Android 构建执行流程（强约束）
 - 适用范围：所有本机 Android Gradle 构建与安装流程。
-- 禁止事项：禁止直接在原始长路径 `D:\B0Projects\my_tools\MinimalistWeaponEnhancementCalendar\android` 执行 `gradlew` 系列命令。
+- 禁止事项：禁止直接在项目 android 原始长路径执行 `gradlew` 系列命令。
 - 标准命令（仓库根目录）：
   - 构建 Debug APK：`npm run android:build:debug:tempmap`
   - 构建 Release APK：`npm run android:build:release:tempmap`
   - 构建并安装到模拟器/设备：`npm run android:install:debug:tempmap`
 - 执行语义（必须满足）：
   - 步骤 1：每次构建前先创建临时映射（默认 `M:`）。
-  - 步骤 2：仅在映射路径内执行 Gradle 任务（`M:\android`）。
+  - 步骤 2：仅在临时映射路径下的 android 目录内执行 Gradle 任务。
   - 步骤 3：构建结束后无论成功或失败都执行取消映射（`subst M: /D`）。
   - 步骤 4：构建结束后校验 `subst` 输出不包含 `M:`。
   - 步骤 5：下一次构建必须重新映射，不复用旧映射。

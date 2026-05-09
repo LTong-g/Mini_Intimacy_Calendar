@@ -64,25 +64,25 @@
 - 风险记录：本地构建对本机环境一致性要求较高（Android SDK/Java/Xcode），且 iOS 本地构建仅支持 macOS。
 
 ### Android 本机构建链路环境诊断与排障记录
-- 已确认基础环境可用：Android SDK 位于 `D:\ASoftware\Android\Sdk`，Java 位于 `D:\ASoftware\Java\jdk-21`，Gradle Wrapper 可用（Gradle `8.13`），`adb`/`emulator` 可用。
-- 第 1 次在原始路径 `D:\B0Projects\my_tools\MinimalistWeaponEnhancementCalendar\android` 执行 `.\gradlew.bat assembleDebug` 失败，失败任务为 `:react-native-reanimated:buildCMakeDebug[armeabi-v7a][reanimated,worklets]`，报错 `ninja: error: mkdir(...) No such file or directory`。
+- 已确认基础环境可用：Android SDK 与 JDK 位于本机已配置开发环境路径，Gradle Wrapper 可用（Gradle `8.13`），`adb`/`emulator` 可用。
+- 第 1 次在项目 android 原始长路径执行 `.\gradlew.bat assembleDebug` 失败，失败任务为 `:react-native-reanimated:buildCMakeDebug[armeabi-v7a][reanimated,worklets]`，报错 `ninja: error: mkdir(...) No such file or directory`。
 - 已确认该失败不属于 SDK/Java/Gradle 缺失，而是进入 native 编译后触发路径过深相关问题。
 - 已确认系统长路径开关 `LongPathsEnabled=1`。
 - 第 2 次在原始路径清理缓存后重试仍失败；日志出现 object file 目录长度警告（对象目录 `188` 字符，提示对象文件完整路径上限 `250` 字符）并再次失败于 `react-native-reanimated` 的 Ninja `mkdir`。
 - 已确认“仅清缓存”不能消除根因，根因仍为原始工程路径过深导致的 native 编译路径风险。
-- 第 3 次使用 `subst` 将工程目录映射为短路径 `M:\` 后，从 `M:\android` 构建成功（`BUILD SUCCESSFUL`）。
-- 在切换构建根路径过程中出现 Kotlin 增量缓存 `different roots` 报错（`D:\...` 与 `M:\android` 混用），随后 Kotlin 编译降级到无 daemon 回退路径并完成构建。
-- 已确认当前可行稳定方案为固定使用短路径 `M:\` 进行本机构建，不与原始长路径混用。
+- 第 3 次使用 `subst` 将工程目录映射为临时短路径后，从映射路径内的 android 目录构建成功（`BUILD SUCCESSFUL`）。
+- 在切换构建根路径过程中出现 Kotlin 增量缓存 `different roots` 报错（原始长路径与临时短路径混用），随后 Kotlin 编译降级到无 daemon 回退路径并完成构建。
+- 已确认当前可行稳定方案为固定使用临时短路径进行本机构建，不与原始长路径混用。
 
 ### 临时映射构建流程固化
 - 已记录新的持久偏好：不希望 `M:` 长驻系统盘符界面，改为“构建前映射、构建后无论成功失败都取消映射、每次构建重新映射”。
-- 已在 `AGENTS.md` 更新对应协作规则，替代“固定长期使用 `M:\`”的表述。
+- 已在 `AGENTS.md` 更新对应协作规则，替代“固定长期使用临时映射盘符”的表述。
 - 已新增脚本 `scripts/android-build-tempmap.ps1`，采用 `try/finally` 实现构建后强制 `subst /D` 取消映射。
 - 已在 `package.json` 增加快捷命令：
 - `android:build:debug:tempmap` -> 临时映射后执行 `assembleDebug`
 - `android:install:debug:tempmap` -> 临时映射后执行 `installDebug`
 - 已在 `developer_guide.md` 增加“Windows 本地构建（临时短路径映射）”操作步骤与示例命令。
-- 已完成脚本轻量实测：通过 `-GradleTask "-v"` 在 `M:\android` 成功执行 Gradle，脚本结束后 `M:` 映射已自动取消。
+- 已完成脚本轻量实测：通过 `-GradleTask "-v"` 在临时映射路径下的 android 目录成功执行 Gradle，脚本结束后临时映射已自动取消。
 
 ### AGENTS 构建流程澄清
 - 已在 `AGENTS.md` 新增“Windows Android 构建执行流程（强约束）”段落。
@@ -106,7 +106,7 @@
 ### Android 模拟器黑屏排障
 - 已确认当前黑屏时 `adb devices -l` 曾显示 `emulator-5554 offline`，说明模拟器系统未正常完成启动。
 - 已检查 `Pixel_6_API_35` 的启动记录，当前 `npm run start` 按 `a` 会以普通 `@Pixel_6_API_35` 方式启动，不会自动附带冷启动或 GPU 回退参数。
-- 已备份 `D:\ASoftware\Android\.android\avd\Pixel_6_API_35.avd\config.ini` 到 `config.ini.bak_20260502_black_screen`，并备份 `quickbootChoice.ini` 到 `quickbootChoice.ini.bak_20260502_black_screen`。
+- 已备份本机 AVD 配置文件 `config.ini` 到 `config.ini.bak_20260502_black_screen`，并备份 `quickbootChoice.ini` 到 `quickbootChoice.ini.bak_20260502_black_screen`。
 - 已删除 `Pixel_6_API_35.avd\snapshots\default_boot` 快照目录，用于排除 quickboot 快照损坏导致的黑屏或离线。
 - 已将 `quickbootChoice.ini` 改为 `saveOnExit = false`，避免退出时继续保存异常快照。
 - 已将 AVD 配置调整为冷启动优先：`fastboot.forceColdBoot=yes`、`fastboot.forceFastBoot=no`，并关闭 firstboot 本地/下载快照读取与保存。
@@ -1440,3 +1440,13 @@
 - android/app/build.gradle 的 versionName 和 android/app/src/main/res/values/strings.xml 的 expo_runtime_version 已同步为 1.4.0。
 - src/screens/VersionHistoryScreen.js 顶部记录已从 Unreleased 改为 1.4.0，并将日期更新为 2026-05-09。
 - developer_guide.md 中当前语义版本和发布示例已同步为 1.4.0。
+
+### 本机路径记录脱敏
+- develop_log.md 中已有本机绝对路径已改为泛化环境路径、项目原始长路径和临时映射路径描述。
+- AGENTS.md 中 Windows Android 构建流程已改为不记录本机绝对项目路径。
+- AGENTS.md 新增开发日志和开发文档不得记录本机绝对路径的规则。
+
+### 开发者文档本机信息脱敏
+- developer_guide.md 中项目体积说明已改为泛化描述，不再记录本机目录体积测量值。
+- AGENTS.md 中开发日志和开发文档不得记录本机绝对路径的规则已扩展为包含本机临时环境测量值。
+- developer_guide.md、AGENTS.md、readme.md 和 .gitignore 已复扫，未命中本机绝对路径、签名隐私或本机目录体积测量值。
