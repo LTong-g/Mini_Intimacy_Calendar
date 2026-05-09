@@ -1641,3 +1641,9 @@
 - 用户明确版本记录页的专题功能介绍不应逐条重复使用新增句式，而应围绕功能本身介绍。
 - src/screens/VersionHistoryScreen.js 已将 Unreleased 安全锁与极简备忘录专题介绍改为功能能力和使用结果描述。
 - AGENTS.md 和 developer_guide.md 已同步专题功能介绍的文案规则。
+
+### 设置页使用记录辅助开关状态修正
+- src/screens/SettingsScreen.js 已移除 usageAccessPending 临时状态，使用记录辅助开关显示改为仅来自实际系统权限状态。
+- developer_guide.md 已将使用记录辅助开关规则改为跳转系统权限页后按实际权限刷新。
+- src/screens/VersionHistoryScreen.js 已在 Unreleased 修复项记录使用记录辅助开关不会提前显示目标状态。
+- 已通过 git diff --check 和 Babel parser 语法解析校验。

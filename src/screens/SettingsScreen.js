@@ -110,17 +110,15 @@ const SettingsScreen = () => {
     canRevokeUsageAccessInApp: false,
   });
   const [usageStatusLoading, setUsageStatusLoading] = useState(false);
-  const [usageAccessPending, setUsageAccessPending] = useState(null);
   const [diagnosticLogsAvailable, setDiagnosticLogsAvailable] = useState(false);
   const usageAccessAvailable = isUsageAccessNativeAvailable();
-  const usageSwitchOn = usageAccessPending ?? usageStatus.usageAccessGranted;
+  const usageSwitchOn = usageStatus.usageAccessGranted;
 
   const refreshUsageStatus = useCallback(async () => {
     if (!usageAccessAvailable) return;
     try {
       setUsageStatusLoading(true);
       const nextStatus = await getUsageAccessStatus();
-      setUsageAccessPending(null);
       if (nextStatus.featureEnabled && !nextStatus.usageAccessGranted) {
         const disabledStatus = await setUsageAccessFeatureEnabled(false);
         setUsageStatus(disabledStatus);
@@ -273,20 +271,16 @@ const SettingsScreen = () => {
 
   const handleEnableUsageAccess = async () => {
     try {
-      setUsageAccessPending(true);
       await openUsageAccessSettings();
     } catch (error) {
-      setUsageAccessPending(null);
       showAppAlert('开启失败', error.message || '无法开启使用记录辅助功能');
     }
   };
 
   const handleDisableUsageAccess = async () => {
     try {
-      setUsageAccessPending(false);
       await openUsageAccessSettings();
     } catch (error) {
-      setUsageAccessPending(null);
       showAppAlert('打开失败', error.message || '无法打开使用情况访问权限设置');
     }
   };
