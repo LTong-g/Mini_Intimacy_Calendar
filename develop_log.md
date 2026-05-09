@@ -1,4 +1,4 @@
-> 提示：请使用 UTF-8 编码读取本文件。
+﻿> 提示：请使用 UTF-8 编码读取本文件。
 
 # 开发日志
 撰写规则：
@@ -1503,8 +1503,6 @@
 - android/app/src/main/AndroidManifest.xml 已改为通过原应用入口和极简备忘录入口两个 activity-alias 控制桌面名称入口；SecurityLockModule.kt 已新增桌面入口切换原生模块。
 - DiagnosticLogManager.kt、DiagnosticLogModule.kt 和 diagnosticLogs.js 已新增问题日志清理能力，供重置应用流程使用。
 - SoftwareIntroScreen.js、UsageHelpScreen.js、PrivacyPolicyScreen.js、VersionHistoryScreen.js、developer_guide.md、AGENTS.md 和 readme.md 已同步安全锁、极简备忘录和数据边界说明。
-- node --check 已通过本次新增和修改的 JS 文件语法检查。
-- npm run android:build:debug:tempmap 已完成 Debug APK 构建，Android 原生改动编译通过，构建结束后的临时映射盘符已清理。
 
 ### 安全锁备忘录导入冲突选择实现
 - MemoShellScreen.js 已将备忘录导入冲突处理从默认策略改为逐项选择：同名分类导入时选择导入当前分类或新建副本，同 ID 备忘录导入时选择替换、跳过或存为副本。
@@ -1512,7 +1510,6 @@
 
 ### 安全锁桌面入口切换加固
 - SecurityLockModule.kt 已调整桌面入口切换顺序，先启用目标 activity-alias，再禁用旧 activity-alias，避免异常时两个桌面入口同时关闭。
-- npm run android:build:debug:tempmap 已再次完成 Debug APK 构建，Android 原生入口切换加固后编译通过，构建结束后的临时映射盘符已清理。
 
 ### 安全锁交互与整页展示修正
 - SecurityLockScreen.js 已将安全锁开关改为乐观状态：开启时立即显示目标开启状态，取消或设置页退出时回落；关闭时立即显示目标关闭状态，取消或失败时回落。
@@ -1521,14 +1518,12 @@
 - SecurityLockScreen.js 已将入口触发内容设置页改为组件内整页切换，不再使用 Modal 承载。
 - MemoShellScreen.js 已将新建和编辑备忘录页、备忘录设置页改为组件内整页切换，不再使用 Modal 承载；分类选择和重置确认仍按弹窗语义保留弹窗。
 - MemoShellScreen.js 已调整重置应用弹窗文案，不再提及实际应用、打卡、黑名单或内部数据分类，避免在备忘录外层暴露安全锁状态。
-- node --check 已通过 SecurityLockScreen.js 和 MemoShellScreen.js 语法检查。
 
 ### 安全锁修改密码流程提示修正
 - SecurityLockScreen.js 已将修改入口触发内容流程改为普通确认弹窗，不再要求输入指定确认内容。
 - 开启安全锁流程仍保留强告知和指定内容输入校验。
 - SecurityLockScreen.js 已区分首次开启和修改入口触发内容的保存结果提示。
 - 首次开启保存成功后仍提示安全锁已开启；修改入口触发内容保存成功后提示入口触发内容已更新，不再提示安全锁已开启。
-- node --check 已通过 SecurityLockScreen.js 语法检查。
 
 ### 安全锁密码术语与代码命名统一
 - 用户明确安全锁相关用户可见术语不再使用“入口触发内容”或“入口触发方式”，统一称为“密码”。
@@ -1538,7 +1533,6 @@
 - SecurityLockScreen.js 已将入口触发相关状态和保存函数改为 password 命名。
 - MemoShellScreen.js 已改为调用 verifyPassword 校验新建备忘录正文。
 - appDataStorage.js 已将安全锁新存储字段改为 passwordSalt 和 passwordHash，并仅通过 LEGACY_SECURITY_LOCK_FIELDS 常量兼容读取旧 triggerSalt 和 triggerHash 字段。
-- node --check 已通过 appDataStorage.js、securityLockStorage.js、SecurityLockScreen.js 和 MemoShellScreen.js 语法检查；rg 已确认 App.js、src、AGENTS.md、developer_guide.md 和 readme.md 中不再残留“入口触发内容”“入口触发方式”或“触发入口”。
 
 ### 安全锁分类颜色弹窗与滑条修正
 - MemoShellScreen.js 已修正分类选择和新建分类弹窗遮罩，遮罩覆盖整个屏幕并支持点击遮罩关闭弹窗。
@@ -1546,7 +1540,6 @@
 - MemoShellScreen.js 已将 RGB 滑条取值从触摸目标相对坐标改为屏幕绝对坐标减去轨道屏幕位置，避免滑动过程中因触摸目标切换导致数值在触摸位置和初始位置之间闪动。
 - MemoShellScreen.js 已将 RGB 滑条最终调整为细胶囊颜色条搭配更大的圆形滑块，滑块比颜色条更粗大并覆盖在颜色条上方。
 - MemoShellScreen.js 已调整颜色填充宽度和轨道裁剪，改善滑块与颜色条连接处不协调的问题。
-- node --check 已通过 MemoShellScreen.js 语法检查。
 
 ### 安全锁改动冗余检查与清理
 - src/utils/appDataStorage.js 已移除未使用的 ID_RE 常量，并从完整应用数据导出中移除不参与导入恢复的 securityLock 摘要字段。
@@ -1554,16 +1547,13 @@
 - src/screens/MemoShellScreen.js 已移除未使用的 createLocalId 导入，并调整 RGB 滑条按下时先完成轨道位置测量再计算取值。
 - src/screens/SecurityLockScreen.js 已修正安全锁开关处理函数中的缩进噪声。
 - developer_guide.md 已同步完整应用数据 JSON 顶层字段说明，明确包含 memos 且不包含本机安全锁状态。
-- node --check 已通过 appDataStorage.js、securityLockStorage.js、MemoShellScreen.js 和 SecurityLockScreen.js；git diff --check 未发现空白错误。
 
 ### 安全锁分类颜色滑条回调修复
 - MemoShellScreen.js 已修复 RGB 滑条轨道测量函数在 onLayout 调用时误把布局事件对象当作回调执行的问题。
-- node --check 已通过 MemoShellScreen.js；git diff --check 未发现空白错误。
 
 ### 安全锁备忘录数据管理入口对齐
 - MemoShellScreen.js 已将极简备忘录设置页的数据管理从导入和导出两个按钮调整为导入、导出、分享三个按钮，与内部设置页数据管理入口数量和语义一致。
 - MemoShellScreen.js 已将备忘录导出调整为优先保存备忘录 JSON 文件，分享按钮单独调用系统分享面板；两者均仅处理备忘录数据。
-- node --check 已通过 MemoShellScreen.js；git diff --check 未发现空白错误。
 
 ### 设置页标题居中修正
 - src/screens/SettingsScreen.js 已为设置页标题栏补充右侧等宽占位，并将标题设为横向居中显示。
@@ -1572,7 +1562,6 @@
 
 ### 安全锁备忘录页系统返回修复
 - MemoShellScreen.js 已接入 Android 硬件返回键处理；在重置确认、分类编辑、分类列表、备忘录编辑和备忘录设置页之间按当前可见层级优先关闭当前界面，不再直接退出应用。
-- node --check 已通过 MemoShellScreen.js；git diff --check 未发现空白错误。
 
 ### 极简备忘录底部栏布局修正
 - src/components/CustomTabBar.js 已将打卡日历底栏恢复为原始布局与按钮样式，撤回此前向备忘录底栏靠拢的视觉调整。
@@ -1580,7 +1569,6 @@
 - src/screens/MemoShellScreen.js 已将备忘录外壳底部栏从绝对定位浮层改为正常布局块，避免底栏白色区域覆盖备忘录列表内容。
 - src/screens/MemoShellScreen.js 已同步收窄列表底部留白，保留中间新增按钮的悬浮视觉但不再压住列表正文。
 - src/screens/MemoShellScreen.js 已为备忘录外壳底栏设置 overflow 可见并提高加号按钮层级，避免右侧设置按钮的白底覆盖中间新增按钮。
-- node --check 已通过 CustomTabBar.js 和 MemoShellScreen.js；git diff --check 未发现空白错误。
 
 ### 安全锁弹窗样式通用化
 - src/screens/MemoShellScreen.js 已为重置应用弹窗单独引入带半透明遮罩的居中面板样式，避免复用空白 overlay 导致弹窗视觉异常。
@@ -1589,7 +1577,6 @@
 - src/screens/SecurityLockScreen.js 已将开启安全锁强告知确认弹窗从手写 Modal 改为复用 BaseModal 和 ModalActionRow。
 - src/screens/MemoShellScreen.js 已将查看分类和新建分类弹窗从手写 Modal 改为复用 BaseModal，并将操作按钮改为 ModalActionRow。
 - src/screens/MemoShellScreen.js 和 src/screens/SecurityLockScreen.js 已移除对应手写弹窗样式和不再使用的 Modal 引用。
-- node --check 已通过 MemoShellScreen.js 和 SecurityLockScreen.js；git diff --check 未发现空白错误。
 
 ### 安全锁状态一致性加固
 - src/utils/securityLockStorage.js 已将安全锁开启和关闭流程集中到存储工具中处理，并在原生入口切换失败时回滚安全锁存储状态。
@@ -1610,7 +1597,6 @@
 - src/components/modals/AppAlertProvider.js 已将遮罩或返回键关闭通用弹窗的行为调整为优先执行 cancel 按钮回调。
 - src/screens/SecurityLockScreen.js 已移除修改密码和关闭安全锁确认弹窗的 cancelable false 配置，恢复遮罩取消能力。
 - src/screens/SecurityLockScreen.js 已在关闭安全锁确认弹窗被遮罩或返回键取消时清除安全锁开关乐观状态。
-- node --check 已通过 AppAlertProvider.js 和 SecurityLockScreen.js；git diff --check 未发现空白错误。
 
 ### 安全锁开关视觉与配色调整
 - src/components/SmoothSwitch.js 曾新增轻量动画开关组件并使用同一个 Animated.Value 同步驱动滑块位置、轨道颜色和滑块颜色。
@@ -1621,13 +1607,11 @@
 - src/screens/SecurityLockScreen.js 已移除安全锁原生 Switch 的动态 thumbColor 配置，让 Android 原生开关自行处理滑块颜色状态。
 - src/screens/SecurityLockScreen.js 已将安全锁原生 Switch 配色调整为浅灰白固定滑块、蓝色开启轨道和灰色关闭轨道。
 - src/screens/SecurityLockScreen.js 的安全锁开关不再动态切换滑块颜色，避免滑块颜色与位置动画错拍。
-- node --check 已通过 SecurityLockScreen.js；git diff --check 未发现空白错误。
 
 ### 极简备忘录条目术语调整
 - 用户明确极简备忘录软件里的内容称为笔记，不称为备忘录。
 - MemoShellScreen.js 已将新建、编辑、删除、搜索、导入、导出、分享等用户可见条目文案从备忘录调整为笔记。
 - SecurityLockScreen.js、SoftwareIntroScreen.js、UsageHelpScreen.js、PrivacyPolicyScreen.js、VersionHistoryScreen.js、developer_guide.md、AGENTS.md 和 readme.md 已同步极简备忘录与笔记的术语边界。
-- node --check 已通过 MemoShellScreen.js、SecurityLockScreen.js 和 PrivacyPolicyScreen.js。
 
 ### 安全锁桌面入口图标切换加固与文案同步
 - src/utils/securityLockStorage.js 已新增安全锁状态与 Android launcher 入口模式同步函数，用于按安全锁开启状态校正普通入口和极简备忘录入口。
@@ -1646,11 +1630,9 @@
 - src/screens/SettingsScreen.js 已移除 usageAccessPending 临时状态，使用记录辅助开关显示改为仅来自实际系统权限状态。
 - developer_guide.md 已将使用记录辅助开关规则改为跳转系统权限页后按实际权限刷新。
 - src/screens/VersionHistoryScreen.js 已在 Unreleased 修复项记录使用记录辅助开关不会提前显示目标状态。
-- 已通过 git diff --check 和 Babel parser 语法解析校验。
 
 ### 安全锁开关样式与状态显示修正
 - src/screens/SecurityLockScreen.js 已将安全锁开关颜色改为与设置页权限开关一致。
 - src/screens/SecurityLockScreen.js 已移除 pendingEnabled 临时状态，安全锁开关显示改为仅来自实际启用状态。
 - AGENTS.md 和 developer_guide.md 已记录安全锁开关样式与非乐观切换规则。
 - src/screens/VersionHistoryScreen.js 已在 Unreleased 修复项记录安全锁开关不会提前显示目标状态。
-- 已通过 git diff --check 和 Babel parser 语法解析校验。
