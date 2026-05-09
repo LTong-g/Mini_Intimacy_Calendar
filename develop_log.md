@@ -1432,3 +1432,11 @@
 ### 软件介绍列表样式修正
 - src/screens/SoftwareIntroScreen.js 已将软件介绍列表项从文本内连字符改为独立 bullet 符号。
 - src/screens/SoftwareIntroScreen.js 已为软件介绍列表设置约一个汉字宽度的统一左缩进，并保持换行正文对齐。
+
+## 2026-05-09
+
+### 1.4.0 发布准备
+- package.json 和 app.json 的版本号已更新为 1.4.0。
+- android/app/build.gradle 的 versionName 和 android/app/src/main/res/values/strings.xml 的 expo_runtime_version 已同步为 1.4.0。
+- src/screens/VersionHistoryScreen.js 顶部记录已从 Unreleased 改为 1.4.0，并将日期更新为 2026-05-09。
+- developer_guide.md 中当前语义版本和发布示例已同步为 1.4.0。

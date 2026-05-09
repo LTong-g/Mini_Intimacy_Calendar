@@ -9,9 +9,9 @@ import { useNavigation } from '@react-navigation/native';
 
 const versionHistory = [
   {
-    version: 'Unreleased',
+    version: '1.4.0',
     title: '使用记录辅助与黑名单功能',
-    date: '2026-05-05',
+    date: '2026-05-09',
     featureIntro: {
       label: '使用记录辅助与黑名单功能：',
       notes: [
