@@ -1,4 +1,4 @@
-﻿> 提示：请使用 UTF-8 编码读取本文件。
+> 提示：请使用 UTF-8 编码读取本文件。
 
 # 开发日志
 撰写规则：
@@ -1422,3 +1422,13 @@
 - 重写 src/screens/UsageHelpScreen.js 的帮助条目，使日视图、月视图、年视图、记录编辑、底部栏、设置页、使用记录辅助、黑名单和关于页说明与当前实现一致。
 - src/screens/UsageHelpScreen.js 将黑名单和使用记录辅助从设置页说明中拆出为独立章节，并删除过长的界面细节描述。
 - src/screens/VersionHistoryScreen.js 的 Unreleased 优化项新增使用帮助内容校准记录。
+
+### 软件介绍页面内容收敛
+- src/screens/SoftwareIntroScreen.js 已将软件介绍页面内容调整为聚焦应用定位、记录类型和用户可见功能。
+- src/screens/SoftwareIntroScreen.js 已移除介绍页中关于权限、刷新范围、数据结构、自动计算细则和问题日志的展开说明。
+- src/screens/UsageHelpScreen.js、src/screens/VersionHistoryScreen.js、developer_guide.md 和 AGENTS.md 已同步软件介绍页面只介绍功能的口径。
+- src/screens/PrivacyPolicyScreen.js 已核对，本次变更未改变数据记录、权限、本地存储、导入导出或分享说明。
+
+### 软件介绍列表样式修正
+- src/screens/SoftwareIntroScreen.js 已将软件介绍列表项从文本内连字符改为独立 bullet 符号。
+- src/screens/SoftwareIntroScreen.js 已为软件介绍列表设置约一个汉字宽度的统一左缩进，并保持换行正文对齐。

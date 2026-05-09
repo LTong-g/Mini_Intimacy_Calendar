@@ -7,6 +7,13 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-nati
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
+const IntroListItem = ({ children }) => (
+  <View style={styles.listItem}>
+    <Text style={styles.bullet}>•</Text>
+    <Text style={styles.listItemText}>{children}</Text>
+  </View>
+);
+
 const SoftwareIntroScreen = () => {
   const navigation = useNavigation();
 
@@ -21,33 +28,30 @@ const SoftwareIntroScreen = () => {
 
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.paragraph}>
-          极简武器强化日历是一款基于日期的记录工具，用于记录三类需要自律管理的行为，并通过日历和统计视图帮助回顾频率变化。
+          极简武器强化日历是一款基于日期的记录工具，用来记录和回顾三类需要自律管理的行为。你可以按天记录次数，在日历中查看分布，并通过统计图表观察变化。
         </Text>
 
         <Text style={styles.sectionTitle}>记录类型</Text>
         <View style={styles.list}>
-          <Text style={styles.listItem}>- 观看教程：记录教程相关行为。</Text>
-          <Text style={styles.listItem}>- 武器强化：记录武器强化相关行为。</Text>
-          <Text style={styles.listItem}>- 双人练习：记录双人练习相关行为。</Text>
+          <IntroListItem>观看教程</IntroListItem>
+          <IntroListItem>武器强化</IntroListItem>
+          <IntroListItem>双人练习</IntroListItem>
         </View>
 
         <Text style={styles.sectionTitle}>主要功能</Text>
         <View style={styles.list}>
-          <Text style={styles.listItem}>- 日视图：查看当天记录、图标状态和间隔天数，并可快速切换日期。</Text>
-          <Text style={styles.listItem}>- 月视图：按月查看每天是否存在记录，并可快速切换年月。</Text>
-          <Text style={styles.listItem}>- 年视图：按全年维度查看记录分布，并可快速切换年份。</Text>
-          <Text style={styles.listItem}>- 统计分析：查看总览、年度和自定义区间统计。</Text>
-          <Text style={styles.listItem}>- 使用记录辅助：在 Android 授权后可统计黑名单应用使用时间段，并在进入黑名单主页时静默刷新最近三天记录；黑名单主页支持按今日、7 天、30 天和当前屏幕可显示周数的热力图查看使用时长，满足时长条件的黑名单使用记录会作为观看教程次数的自动下限。</Text>
-          <Text style={styles.listItem}>- 数据管理：支持包含打卡、黑名单和设置数据的 JSON 备份导入、导出和分享。</Text>
-          <Text style={styles.listItem}>- 问题日志：应用发生异常或长时间无响应后，可在设置页打开本机问题日志文件夹。</Text>
+          <IntroListItem>日历记录：通过日视图、月视图和年视图查看每天、每月和全年的记录分布。</IntroListItem>
+          <IntroListItem>黑名单：授予必要权限后，可以将应用设置为黑名单，查看黑名单应用的使用时长、趋势图和热力图。黑名单应用的使用记录会按规则折算为观看教程自动记录次数。</IntroListItem>
+          <IntroListItem>统计分析：查看总览、年度和自定义区间统计，并通过图表观察趋势。</IntroListItem>
+          <IntroListItem>数据备份：支持导入、导出和分享本地数据，便于迁移和留存。</IntroListItem>
         </View>
 
-        <Text style={styles.sectionTitle}>记录规则</Text>
+        <Text style={styles.sectionTitle}>使用特点</Text>
         <View style={styles.list}>
-          <Text style={styles.listItem}>- 同一天同一类型可以记录多次。</Text>
-          <Text style={styles.listItem}>- 开启使用记录辅助且存在满足时长条件的黑名单使用记录时，观看教程次数不能低于系统根据黑名单使用记录自动计算的次数。</Text>
-          <Text style={styles.listItem}>- 未来日期不可编辑。</Text>
-          <Text style={styles.listItem}>- 统计结果按实际次数累计。</Text>
+          <IntroListItem>记录围绕日期展开，适合做长期回顾。</IntroListItem>
+          <IntroListItem>未来日期不可记录，避免提前填写。</IntroListItem>
+          <IntroListItem>统计结果按实际记录次数展示。</IntroListItem>
+          <IntroListItem>数据保存在本机，由你通过设置页自行导入、导出或分享。</IntroListItem>
         </View>
       </ScrollView>
     </View>
@@ -95,12 +99,24 @@ const styles = StyleSheet.create({
   },
   list: {
     marginBottom: 24,
+    marginLeft: 15,
   },
   listItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 6,
+  },
+  bullet: {
+    width: 14,
     fontSize: 15,
     lineHeight: 24,
     color: '#444',
-    marginBottom: 6,
+  },
+  listItemText: {
+    flex: 1,
+    fontSize: 15,
+    lineHeight: 24,
+    color: '#444',
   },
 });
 
