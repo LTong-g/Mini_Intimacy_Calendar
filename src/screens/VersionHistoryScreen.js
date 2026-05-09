@@ -9,9 +9,9 @@ import { useNavigation } from '@react-navigation/native';
 
 const versionHistory = [
   {
-    version: 'Unreleased',
+    version: '2.1.0',
     title: '安全锁与极简备忘录',
-    date: '开发中',
+    date: '2026-05-10',
     featureIntro: {
       label: '安全锁与极简备忘录：',
       notes: [

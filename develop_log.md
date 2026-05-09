@@ -1649,3 +1649,14 @@
 - src/screens/SettingsScreen.js 已将精确定时权限开关显示改为读取 exactAlarmPermissionGranted，并保留 canScheduleExactAlarms 作为兼容回退。
 - AGENTS.md 和 developer_guide.md 已记录精确定时权限开关显示系统权限本身授权状态，不用电池优化例外等其他能力替代。
 - src/screens/VersionHistoryScreen.js 已在 Unreleased 修复项记录精确定时权限开关状态显示修复。
+
+## 2026-05-10
+
+### 版本更新至 2.1.0
+- package.json、package-lock.json 和 app.json 的版本号已更新为 2.1.0。
+- android/app/build.gradle 的 versionName 和 android/app/src/main/res/values/strings.xml 的 expo_runtime_version 已同步为 2.1.0。
+- src/screens/VersionHistoryScreen.js 顶部记录已从 Unreleased 改为 2.1.0，并将日期更新为 2026-05-10。
+- developer_guide.md 中当前语义版本、归档示例和发布流程示例已同步为 2.1.0。
+- 已核对软件介绍、使用帮助、隐私政策、版本记录、AGENTS、developer_guide 和 develop_log。
+- 已确认 2.1.0 发布准备对应的安全锁与极简备忘录用户可见说明在软件介绍、使用帮助、隐私政策和版本记录中保持一致。
+- 已执行本地字段校验，package.json、app.json、动态 Expo 配置、Android runtimeVersion 和 iOS runtimeVersion 均显示为 2.1.0。
