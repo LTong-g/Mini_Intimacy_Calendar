@@ -1,4 +1,4 @@
-﻿> 提示：请使用 UTF-8 编码读取本文件。
+> 提示：请使用 UTF-8 编码读取本文件。
 
 # 开发日志
 撰写规则：
@@ -1469,3 +1469,175 @@
 - npm run android:archive:release 已将 Release APK 归档为 dist/MinimalistWeaponEnhancementCalendar-v2.0.0-android-20260509.apk。
 - 构建结束后的 subst 输出不包含临时映射盘符。
 - 私有签名文件和归档 APK 均未进入 Git 跟踪列表。
+
+### 安全锁合规与功能设计最终态
+- Google Play 合规边界：商店应用名、商店图标、商店截图和商店介绍继续展示本应用的真实记录用途；安全锁、桌面入口切换、真实入口位置和解锁后进入记录应用的行为需在商店说明、应用内说明、使用帮助和审核可见路径中公开；不得默认开启安全锁，不得把应用整体包装成纯备忘录应用，不得使用审核不可见的秘密入口，不得根据审核环境和普通用户环境展示不同行为，不得模仿系统备忘录、Google Keep 或其他知名备忘录应用。
+- 安全锁功能定位：安全锁是用户主动启用的隐私入口保护功能，默认关闭，不预置启用状态；开启后启动应用先进入本地备忘录页面，用户完成自己设置的入口触发方式后进入实际记录应用；功能对用户和审核人员同样可见，桌面入口切换可控可逆。
+- 设置页入口：安全锁入口位于设置页数据管理分组下方、黑名单权限管理分组上方；点击入口进入安全锁功能页面，不直接开启安全锁。
+- 开启流程：安全锁开启前弹窗显示必要用户告知，并要求用户输入由实现时设计的指定确认内容；弹窗包含取消和开始设置按钮，开始设置按钮需在确认内容输入正确后进入入口触发内容设置页。
+- 入口触发内容设置：设置页采用备忘录新建界面并配有明确用户指引；用户设置的入口触发内容不保存为备忘录，不保存明文，保存带随机盐的哈希校验信息。
+- 入口触发规则：入口触发方式是在备忘录里新建一条备忘录，输入用户设置的入口触发内容后点击保存；内容完全匹配时进入内部应用且不保存刚输入的内容，内容不匹配时按正常备忘录保存且不进入内部应用；只有新建备忘录保存时触发入口内容校验，编辑已有备忘录不触发进入内部应用。
+- 入口触发内容风险提示：开启安全锁时需说明入口触发内容应避免使用常见备忘录内容，避免正常新建备忘录时内容完全匹配入口触发内容而进入内部应用。
+- 入口模式：安全锁入口模式只保留真实备忘录模式，不设计简单封面模式；备忘录作为应用真实功能保存本地备忘录数据。
+- 备忘录主界面：底部布局与日视图一致，左侧为查看分类，右侧为设置，中间为加号新建备忘录；备忘录功能按常见备忘录体验设计，整体视觉风格与内部打卡日历保持一致，并提供搜索功能。
+- 备忘录内容：备忘录支持标题和正文，手动保存；标题未填写时使用正文第一句话前若干字生成默认标题，字数上限由实现时参考成熟备忘录软件自行决定。
+- 备忘录分类：点击查看分类后弹出较大的可滚动弹窗，显示已设置的全部分类；未设置分类时显示全部笔记和新建分类入口；新建分类通过弹窗输入分类名称并设置分类颜色，分类颜色采用少量预设色加自定义 RGB 滑条，并显示 HEX 值。
+- 备忘录模式设置页：只显示处理备忘录数据的数据管理分组按钮，不显示内部设置页其他内容，并额外显示重置软件按钮；完整应用数据导入和导出仍保留在进入内部应用后的设置页。
+- 备忘录数据导入：备忘录模式导入采用合并导入，不覆盖当前已有备忘录数据；由唯一 ID 判断是否为同一篇笔记，同 ID 冲突时弹窗提供替换、跳过、存为副本三个选项；不按标题或正文去重，即使标题和内容完全相同，也允许作为不同笔记同时存在。
+- 分类导入：分类导入遇到同名分类时弹窗提示，可选择导入当前同名分类中，或新建副本分类后导入；分类存为副本时在原分类名后追加序号，例如 (1)，若该名称已存在则按 (2)、(3) 顺序递增。
+- 桌面入口：备忘录模式桌面名称显示为“极简备忘录”；图标使用内置图标，具体图标由实现时确定；名称和图标需避免系统或第三方应用混淆；关闭安全锁时需恢复原图标和原名称。
+- 关闭安全锁：进入内部应用后关闭安全锁不需要再次验证入口触发方式，只需弹窗二次确认，确认弹窗不要求输入指定内容；安全锁开启采用强告知和强校验，安全锁关闭保持易关闭。
+- 修改入口触发方式：进入内部应用后，安全锁页面提供修改入口触发方式能力；修改流程类似首次设置，已进入内部应用时不要求输入旧入口触发内容。
+- 重置应用：安全锁不设计免密恢复真实应用入口的备用路径；备忘录页面提供“重置应用”按钮，用于在忘记入口触发方式时恢复控制权；重置软件按钮点击后弹窗显示必要用户告知和解释，并要求用户输入由实现时设计的指定确认内容；弹窗包含取消和确认按钮，确认按钮需在确认内容输入正确后执行重置。
+- 重置应用后的崭新安装状态：无打卡数据、无黑名单数据、无用户配置、无备忘录内容、关闭安全锁、恢复原桌面图标和名称、清除问题日志，并清理应用可控的缓存和临时导出文件；重置流程不得作为无认证进入真实应用的绕过通道。
+- 重置前权限处理：重置应用前仅引导关闭当前已开启的黑名单使用记录权限和电池优化权限；当前未开启的权限不引导关闭；若系统权限不能由应用自动关闭，则先引导用户跳转到系统权限页依次关闭相关权限，中途退出且权限仍开启时不能继续重置；不专门引导关闭精确定时权限，精确定时权限即使仍为系统开启状态，重置后应用内相关功能和本地状态均恢复为未启用。
+- 文档同步：安全锁功能开发时需同步软件介绍、使用帮助、隐私政策、版本记录、AGENTS、developer_guide 和 develop_log。
+
+### 安全锁与极简备忘录首版实现
+- App.js 已在根导航前接入安全锁启动门控：安全锁开启且未触发入口时显示极简备忘录，触发成功后进入原记录应用。
+- src/screens/SettingsScreen.js 已在数据管理下方、使用记录辅助上方新增安全锁入口，点击进入安全锁功能页。
+- src/screens/SecurityLockScreen.js 已新增安全锁页面，支持强告知开启、入口触发内容设置、修改入口触发内容和关闭安全锁。
+- src/screens/MemoShellScreen.js 已新增极简备忘录入口页，支持备忘录新建、编辑、删除、搜索、分类、分类颜色设置、备忘录导入导出和重置应用。
+- src/utils/appDataStorage.js 已将备忘录数据和安全锁状态纳入完整应用数据结构，完整导出包含备忘录数据且不导出入口触发内容明文。
+- src/utils/securityLockStorage.js 已新增安全锁和备忘录存储工具，入口触发内容保存为带随机盐的哈希校验信息。
+- android/app/src/main/AndroidManifest.xml 已改为通过原应用入口和极简备忘录入口两个 activity-alias 控制桌面名称入口；SecurityLockModule.kt 已新增桌面入口切换原生模块。
+- DiagnosticLogManager.kt、DiagnosticLogModule.kt 和 diagnosticLogs.js 已新增问题日志清理能力，供重置应用流程使用。
+- SoftwareIntroScreen.js、UsageHelpScreen.js、PrivacyPolicyScreen.js、VersionHistoryScreen.js、developer_guide.md、AGENTS.md 和 readme.md 已同步安全锁、极简备忘录和数据边界说明。
+- node --check 已通过本次新增和修改的 JS 文件语法检查。
+- npm run android:build:debug:tempmap 已完成 Debug APK 构建，Android 原生改动编译通过，构建结束后的临时映射盘符已清理。
+
+### 安全锁备忘录导入冲突选择实现
+- MemoShellScreen.js 已将备忘录导入冲突处理从默认策略改为逐项选择：同名分类导入时选择导入当前分类或新建副本，同 ID 备忘录导入时选择替换、跳过或存为副本。
+- node --check 已通过 MemoShellScreen.js 及本次安全锁相关 JS 文件语法检查。
+
+### 安全锁桌面入口切换加固
+- SecurityLockModule.kt 已调整桌面入口切换顺序，先启用目标 activity-alias，再禁用旧 activity-alias，避免异常时两个桌面入口同时关闭。
+- npm run android:build:debug:tempmap 已再次完成 Debug APK 构建，Android 原生入口切换加固后编译通过，构建结束后的临时映射盘符已清理。
+
+### 安全锁交互与整页展示修正
+- SecurityLockScreen.js 已将安全锁开关改为乐观状态：开启时立即显示目标开启状态，取消或设置页退出时回落；关闭时立即显示目标关闭状态，取消或失败时回落。
+- SecurityLockScreen.js 已将修改入口触发内容的确认弹窗改为独立文案，不再复用开启安全锁的强告知文案。
+- 已确认此前入口触发内容设置页虽然使用 fullScreen Modal，但在 Android 上仍由 Modal 承载，视觉效果不符合整页预期。
+- SecurityLockScreen.js 已将入口触发内容设置页改为组件内整页切换，不再使用 Modal 承载。
+- MemoShellScreen.js 已将新建和编辑备忘录页、备忘录设置页改为组件内整页切换，不再使用 Modal 承载；分类选择和重置确认仍按弹窗语义保留弹窗。
+- MemoShellScreen.js 已调整重置应用弹窗文案，不再提及实际应用、打卡、黑名单或内部数据分类，避免在备忘录外层暴露安全锁状态。
+- node --check 已通过 SecurityLockScreen.js 和 MemoShellScreen.js 语法检查。
+
+### 安全锁修改密码流程提示修正
+- SecurityLockScreen.js 已将修改入口触发内容流程改为普通确认弹窗，不再要求输入指定确认内容。
+- 开启安全锁流程仍保留强告知和指定内容输入校验。
+- SecurityLockScreen.js 已区分首次开启和修改入口触发内容的保存结果提示。
+- 首次开启保存成功后仍提示安全锁已开启；修改入口触发内容保存成功后提示入口触发内容已更新，不再提示安全锁已开启。
+- node --check 已通过 SecurityLockScreen.js 语法检查。
+
+### 安全锁密码术语与代码命名统一
+- 用户明确安全锁相关用户可见术语不再使用“入口触发内容”或“入口触发方式”，统一称为“密码”。
+- SecurityLockScreen.js、SoftwareIntroScreen.js、UsageHelpScreen.js、PrivacyPolicyScreen.js、VersionHistoryScreen.js、developer_guide.md、AGENTS.md 和 readme.md 已将安全锁相关用户可见文案统一为“密码”。
+- 安全锁密码仍不保存明文，仅保存带随机盐的哈希校验信息。
+- securityLockStorage.js 已将 hashTriggerContent 和 verifyTriggerContent 等代码 API 重命名为 hashPassword 和 verifyPassword。
+- SecurityLockScreen.js 已将入口触发相关状态和保存函数改为 password 命名。
+- MemoShellScreen.js 已改为调用 verifyPassword 校验新建备忘录正文。
+- appDataStorage.js 已将安全锁新存储字段改为 passwordSalt 和 passwordHash，并仅通过 LEGACY_SECURITY_LOCK_FIELDS 常量兼容读取旧 triggerSalt 和 triggerHash 字段。
+- node --check 已通过 appDataStorage.js、securityLockStorage.js、SecurityLockScreen.js 和 MemoShellScreen.js 语法检查；rg 已确认 App.js、src、AGENTS.md、developer_guide.md 和 readme.md 中不再残留“入口触发内容”“入口触发方式”或“触发入口”。
+
+### 安全锁分类颜色弹窗与滑条修正
+- MemoShellScreen.js 已修正分类选择和新建分类弹窗遮罩，遮罩覆盖整个屏幕并支持点击遮罩关闭弹窗。
+- MemoShellScreen.js 已将分类颜色自定义从 RGB 数字输入改为 RGB 滑条，并在分类设置弹窗中显示当前颜色预览和 HEX 值。
+- MemoShellScreen.js 已将 RGB 滑条取值从触摸目标相对坐标改为屏幕绝对坐标减去轨道屏幕位置，避免滑动过程中因触摸目标切换导致数值在触摸位置和初始位置之间闪动。
+- MemoShellScreen.js 已将 RGB 滑条最终调整为细胶囊颜色条搭配更大的圆形滑块，滑块比颜色条更粗大并覆盖在颜色条上方。
+- MemoShellScreen.js 已调整颜色填充宽度和轨道裁剪，改善滑块与颜色条连接处不协调的问题。
+- node --check 已通过 MemoShellScreen.js 语法检查。
+
+### 安全锁改动冗余检查与清理
+- src/utils/appDataStorage.js 已移除未使用的 ID_RE 常量，并从完整应用数据导出中移除不参与导入恢复的 securityLock 摘要字段。
+- src/utils/securityLockStorage.js 已移除未使用的 clearSecurityLockAndMemoData 导出函数及对应 AsyncStorage 依赖。
+- src/screens/MemoShellScreen.js 已移除未使用的 createLocalId 导入，并调整 RGB 滑条按下时先完成轨道位置测量再计算取值。
+- src/screens/SecurityLockScreen.js 已修正安全锁开关处理函数中的缩进噪声。
+- developer_guide.md 已同步完整应用数据 JSON 顶层字段说明，明确包含 memos 且不包含本机安全锁状态。
+- node --check 已通过 appDataStorage.js、securityLockStorage.js、MemoShellScreen.js 和 SecurityLockScreen.js；git diff --check 未发现空白错误。
+
+### 安全锁分类颜色滑条回调修复
+- MemoShellScreen.js 已修复 RGB 滑条轨道测量函数在 onLayout 调用时误把布局事件对象当作回调执行的问题。
+- node --check 已通过 MemoShellScreen.js；git diff --check 未发现空白错误。
+
+### 安全锁备忘录数据管理入口对齐
+- MemoShellScreen.js 已将极简备忘录设置页的数据管理从导入和导出两个按钮调整为导入、导出、分享三个按钮，与内部设置页数据管理入口数量和语义一致。
+- MemoShellScreen.js 已将备忘录导出调整为优先保存备忘录 JSON 文件，分享按钮单独调用系统分享面板；两者均仅处理备忘录数据。
+- node --check 已通过 MemoShellScreen.js；git diff --check 未发现空白错误。
+
+### 设置页标题居中修正
+- src/screens/SettingsScreen.js 已为设置页标题栏补充右侧等宽占位，并将标题设为横向居中显示。
+- src/screens/MemoShellScreen.js 已为备忘录设置页标题栏补充右侧等宽占位，并将标题设为横向居中显示。
+- node --check 已通过 SettingsScreen.js 和 MemoShellScreen.js；git diff --check 未发现空白错误。
+
+### 安全锁备忘录页系统返回修复
+- MemoShellScreen.js 已接入 Android 硬件返回键处理；在重置确认、分类编辑、分类列表、备忘录编辑和备忘录设置页之间按当前可见层级优先关闭当前界面，不再直接退出应用。
+- node --check 已通过 MemoShellScreen.js；git diff --check 未发现空白错误。
+
+### 极简备忘录底部栏布局修正
+- src/components/CustomTabBar.js 已将打卡日历底栏恢复为原始布局与按钮样式，撤回此前向备忘录底栏靠拢的视觉调整。
+- src/screens/MemoShellScreen.js 已将备忘录外壳底部栏改为与打卡日历底部栏一致的三段式布局：左右平铺按钮、中间悬浮主按钮、边框分隔和相同尺寸比例。
+- src/screens/MemoShellScreen.js 已将备忘录外壳底部栏从绝对定位浮层改为正常布局块，避免底栏白色区域覆盖备忘录列表内容。
+- src/screens/MemoShellScreen.js 已同步收窄列表底部留白，保留中间新增按钮的悬浮视觉但不再压住列表正文。
+- src/screens/MemoShellScreen.js 已为备忘录外壳底栏设置 overflow 可见并提高加号按钮层级，避免右侧设置按钮的白底覆盖中间新增按钮。
+- node --check 已通过 CustomTabBar.js 和 MemoShellScreen.js；git diff --check 未发现空白错误。
+
+### 安全锁弹窗样式通用化
+- src/screens/MemoShellScreen.js 已为重置应用弹窗单独引入带半透明遮罩的居中面板样式，避免复用空白 overlay 导致弹窗视觉异常。
+- src/screens/MemoShellScreen.js 已将备忘录设置页的重置应用弹窗从手写 Modal 改为复用 BaseModal 和 ModalActionRow，遮罩点击关闭行为交由通用弹窗处理。
+- src/screens/MemoShellScreen.js 已移除重置弹窗不再使用的专用遮罩、面板和危险按钮样式。
+- src/screens/SecurityLockScreen.js 已将开启安全锁强告知确认弹窗从手写 Modal 改为复用 BaseModal 和 ModalActionRow。
+- src/screens/MemoShellScreen.js 已将查看分类和新建分类弹窗从手写 Modal 改为复用 BaseModal，并将操作按钮改为 ModalActionRow。
+- src/screens/MemoShellScreen.js 和 src/screens/SecurityLockScreen.js 已移除对应手写弹窗样式和不再使用的 Modal 引用。
+- node --check 已通过 MemoShellScreen.js 和 SecurityLockScreen.js；git diff --check 未发现空白错误。
+
+### 安全锁状态一致性加固
+- src/utils/securityLockStorage.js 已将安全锁开启和关闭流程集中到存储工具中处理，并在原生入口切换失败时回滚安全锁存储状态。
+- src/screens/SecurityLockScreen.js 已移除直接调用桌面入口切换原生模块的逻辑。
+- src/utils/appDataStorage.js 已从安全锁本地状态中移除 launcherMode 冗余字段，并保留旧密码字段兼容读取。
+- SecurityLockModule.kt 和 securityLockNative.js 已改为通过 Android 原生 PBKDF2 与 SecureRandom 生成和校验安全锁密码凭据。
+- App.js 已在安全锁状态读取失败时进入安全锁外层，避免静默进入真实记录应用。
+
+### 应用数据 schema 版本修正
+- src/utils/appDataStorage.js 已将完整应用数据 schema 版本提升到 3。
+- src/utils/appDataStorage.js 已允许导入旧 schema 2 完整应用数据，缺失备忘录字段时按空备忘录数据归一化。
+- developer_guide.md 已将完整应用数据 JSON 示例 schemaVersion 同步为 3。
+
+### 安全锁开关状态刷新与弹窗取消语义修正
+- src/screens/SecurityLockScreen.js 已接入页面重新聚焦和应用回到前台时读取真实安全锁状态。
+- src/screens/SecurityLockScreen.js 已统一安全锁开关显示态为 pendingEnabled 优先、真实状态兜底，并让修改密码入口跟随同一显示态。
+- src/screens/SecurityLockScreen.js 已在开启安全锁失败时清除乐观状态，避免失败后继续显示目标状态。
+- src/components/modals/AppAlertProvider.js 已将遮罩或返回键关闭通用弹窗的行为调整为优先执行 cancel 按钮回调。
+- src/screens/SecurityLockScreen.js 已移除修改密码和关闭安全锁确认弹窗的 cancelable false 配置，恢复遮罩取消能力。
+- src/screens/SecurityLockScreen.js 已在关闭安全锁确认弹窗被遮罩或返回键取消时清除安全锁开关乐观状态。
+- node --check 已通过 AppAlertProvider.js 和 SecurityLockScreen.js；git diff --check 未发现空白错误。
+
+### 安全锁开关视觉与配色调整
+- src/components/SmoothSwitch.js 曾新增轻量动画开关组件并使用同一个 Animated.Value 同步驱动滑块位置、轨道颜色和滑块颜色。
+- src/components/SmoothSwitch.js 曾补充滑块阴影和细边框，并移除按压时整体变暗效果。
+- src/screens/SecurityLockScreen.js 已恢复使用 React Native 原生 Switch，安全锁开关视觉回到原有控件样式。
+- src/components/SmoothSwitch.js 已删除，不再使用自定义安全锁开关视觉。
+- src/screens/SecurityLockScreen.js 已将安全锁开启和关闭确认弹窗延后一帧打开，使开关乐观状态先参与渲染。
+- src/screens/SecurityLockScreen.js 已移除安全锁原生 Switch 的动态 thumbColor 配置，让 Android 原生开关自行处理滑块颜色状态。
+- src/screens/SecurityLockScreen.js 已将安全锁原生 Switch 配色调整为浅灰白固定滑块、蓝色开启轨道和灰色关闭轨道。
+- src/screens/SecurityLockScreen.js 的安全锁开关不再动态切换滑块颜色，避免滑块颜色与位置动画错拍。
+- node --check 已通过 SecurityLockScreen.js；git diff --check 未发现空白错误。
+
+### 极简备忘录条目术语调整
+- 用户明确极简备忘录软件里的内容称为笔记，不称为备忘录。
+- MemoShellScreen.js 已将新建、编辑、删除、搜索、导入、导出、分享等用户可见条目文案从备忘录调整为笔记。
+- SecurityLockScreen.js、SoftwareIntroScreen.js、UsageHelpScreen.js、PrivacyPolicyScreen.js、VersionHistoryScreen.js、developer_guide.md、AGENTS.md 和 readme.md 已同步极简备忘录与笔记的术语边界。
+- node --check 已通过 MemoShellScreen.js、SecurityLockScreen.js 和 PrivacyPolicyScreen.js。
+
+### 安全锁桌面入口图标切换加固与文案同步
+- src/utils/securityLockStorage.js 已新增安全锁状态与 Android launcher 入口模式同步函数，用于按安全锁开启状态校正普通入口和极简备忘录入口。
+- App.js 已在启动读取安全锁状态后触发 launcher 入口模式同步，避免安全锁已开启但桌面入口因升级或异常停留在普通图标。
+- src/screens/SecurityLockScreen.js 已在页面刷新安全锁状态时触发 launcher 入口模式同步。
+- Android Debug 构建已通过；合并后的 Manifest 已确认普通入口使用原应用名称和图标，极简备忘录入口使用 shell 图标和极简备忘录名称。
+- src/screens/VersionHistoryScreen.js 已将 Unreleased 安全锁说明补充为开启后桌面入口显示极简备忘录名称和图标。
+- src/screens/SoftwareIntroScreen.js、src/screens/UsageHelpScreen.js 和 readme.md 已同步安全锁开启后的桌面名称和图标切换说明。
+
+### 版本记录专题介绍文案修正
+- 用户明确版本记录页的专题功能介绍不应逐条重复使用新增句式，而应围绕功能本身介绍。
+- src/screens/VersionHistoryScreen.js 已将 Unreleased 安全锁与极简备忘录专题介绍改为功能能力和使用结果描述。
+- AGENTS.md 和 developer_guide.md 已同步专题功能介绍的文案规则。

@@ -40,6 +40,12 @@ const AppAlertProvider = ({ children }) => {
     setAlertState(null);
   };
 
+  const dismissAlert = () => {
+    const cancelButton = buttons.find((button) => button.style === 'cancel');
+    closeAlert();
+    if (cancelButton?.onPress) cancelButton.onPress();
+  };
+
   const actions = buttons.map((button, index) => {
     const style = button.style;
     const isCancel = style === 'cancel';
@@ -61,7 +67,7 @@ const AppAlertProvider = ({ children }) => {
       {children}
       <BaseModal
         visible={Boolean(alertState)}
-        onRequestClose={canDismiss ? closeAlert : () => {}}
+        onRequestClose={canDismiss ? dismissAlert : () => {}}
         closeOnBackdropPress={canDismiss}
         title={alertState?.title}
         titleStyle={[styles.title, { color: theme.title }]}

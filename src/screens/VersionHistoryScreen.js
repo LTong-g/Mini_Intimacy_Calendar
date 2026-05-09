@@ -9,6 +9,20 @@ import { useNavigation } from '@react-navigation/native';
 
 const versionHistory = [
   {
+    version: 'Unreleased',
+    title: '安全锁与极简备忘录',
+    date: '开发中',
+    featureIntro: {
+      label: '安全锁与极简备忘录：',
+      notes: [
+        '安全锁可由用户主动开启，开启后桌面入口显示为极简备忘录名称和图标，启动时先进入极简备忘录，再通过用户设置的密码进入记录应用。',
+        '极简备忘录是真实本地笔记功能，支持笔记标题、正文、分类、搜索、导入和导出。',
+        '忘记密码时可在极简备忘录中重置应用，清空本地数据并恢复普通入口。',
+      ],
+    },
+    sections: [],
+  },
+  {
     version: '2.0.0',
     title: '正式发布签名切换',
     date: '2026-05-09',

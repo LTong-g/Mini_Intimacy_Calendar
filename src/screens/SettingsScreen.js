@@ -360,13 +360,14 @@ const SettingsScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
+      <View style={styles.container}>
       {/* 顶部返回栏 */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#007AFF" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>设置</Text>
+        <View style={styles.headerSpacer} />
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
@@ -389,6 +390,19 @@ const SettingsScreen = () => {
               </TouchableOpacity>
             </View>
           </View>
+        </View>
+
+        <View style={styles.section}>
+          <TouchableOpacity
+            style={styles.securityButton}
+            onPress={() => navigation.navigate('SecurityLock')}
+          >
+            <View style={styles.settingTitleRow}>
+              <Ionicons name="lock-closed-outline" size={20} color="#333" />
+              <Text style={styles.settingTitle}>安全锁</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#777" />
+          </TouchableOpacity>
         </View>
 
         {Platform.OS === 'android' && (
@@ -520,12 +534,18 @@ const styles = StyleSheet.create({
     borderBottomColor: '#e0e0e0',
   },
   backButton: {
-    marginRight: 12,
+    width: 52,
+    alignItems: 'center',
   },
   headerTitle: {
+    flex: 1,
     fontSize: 20,
     fontWeight: 'bold',
     color: '#333',
+    textAlign: 'center',
+  },
+  headerSpacer: {
+    width: 52,
   },
   section: {
     paddingHorizontal: 20,
@@ -565,6 +585,16 @@ const styles = StyleSheet.create({
     borderColor: '#d8d8d8',
     borderRadius: 8,
     padding: 14,
+  },
+  securityButton: {
+    minHeight: 52,
+    borderWidth: 1,
+    borderColor: '#d8d8d8',
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   settingHeader: {
     flexDirection: 'row',

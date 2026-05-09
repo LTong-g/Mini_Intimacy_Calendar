@@ -1,12 +1,15 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import pkg from '../../package.json';
 
-export const APP_DATA_SCHEMA_VERSION = 2;
+export const APP_DATA_SCHEMA_VERSION = 3;
+const APP_DATA_IMPORT_SCHEMA_VERSIONS = new Set([2, APP_DATA_SCHEMA_VERSION]);
 
 export const APP_DATA_KEYS = {
   CHECKINS: 'app_data_checkins',
   BLACKLIST: 'app_data_blacklist',
   SETTINGS: 'app_data_settings',
+  MEMOS: 'app_data_memos',
+  SECURITY_LOCK: 'app_data_security_lock',
   META: 'app_data_meta',
 };
 
@@ -18,6 +21,10 @@ export const LEGACY_DATA_KEYS = {
 
 const DATE_KEY_RE = /^\d{4}-\d{2}-\d{2}$/;
 const COLOR_RE = /^#[0-9A-Fa-f]{6}$/;
+const LEGACY_SECURITY_LOCK_FIELDS = {
+  PASSWORD_SALT: 'triggerSalt',
+  PASSWORD_HASH: 'triggerHash',
+};
 let migrationPromise = null;
 
 const isPlainObject = (value) =>
@@ -240,6 +247,96 @@ const normalizeSettingsPayload = (raw) => ({
   ui: isPlainObject(raw?.ui) ? raw.ui : {},
 });
 
+const normalizeMemoCategory = (value, now = Date.now()) => {
+  if (!isPlainObject(value)) return null;
+  const name = typeof value.name === 'string' ? value.name.trim() : '';
+  if (!name) return null;
+  const id = typeof value.id === 'string' && value.id.trim()
+    ? value.id.trim()
+    : `category_${now}_${Math.random().toString(36).slice(2, 10)}`;
+  const color = typeof value.color === 'string' && COLOR_RE.test(value.color.trim())
+    ? value.color.trim().toUpperCase()
+    : '#8E8E93';
+  const createdAt = Number.isFinite(value.createdAt) ? value.createdAt : now;
+  const updatedAt = Number.isFinite(value.updatedAt) ? value.updatedAt : createdAt;
+  return {
+    id,
+    name,
+    color,
+    createdAt,
+    updatedAt,
+  };
+};
+
+const normalizeMemoNote = (value, validCategoryIds, now = Date.now()) => {
+  if (!isPlainObject(value)) return null;
+  const body = typeof value.body === 'string' ? value.body : '';
+  const title = typeof value.title === 'string' ? value.title : '';
+  if (!title.trim() && !body.trim()) return null;
+  const id = typeof value.id === 'string' && value.id.trim()
+    ? value.id.trim()
+    : `memo_${now}_${Math.random().toString(36).slice(2, 10)}`;
+  const categoryId = typeof value.categoryId === 'string' && validCategoryIds.has(value.categoryId)
+    ? value.categoryId
+    : null;
+  const createdAt = Number.isFinite(value.createdAt) ? value.createdAt : now;
+  const updatedAt = Number.isFinite(value.updatedAt) ? value.updatedAt : createdAt;
+  return {
+    id,
+    title,
+    body,
+    categoryId,
+    createdAt,
+    updatedAt,
+  };
+};
+
+export const normalizeMemosPayload = (raw, now = Date.now()) => {
+  const source = isPlainObject(raw) ? raw : {};
+  const categories = (Array.isArray(source.categories) ? source.categories : [])
+    .map((item) => normalizeMemoCategory(item, now))
+    .filter(Boolean);
+  const categoryIds = new Set(categories.map((item) => item.id));
+  const notes = (Array.isArray(source.notes) ? source.notes : [])
+    .map((item) => normalizeMemoNote(item, categoryIds, now))
+    .filter(Boolean)
+    .sort((a, b) => b.updatedAt - a.updatedAt || b.createdAt - a.createdAt);
+
+  return {
+    schemaVersion: APP_DATA_SCHEMA_VERSION,
+    categories,
+    notes,
+  };
+};
+
+export const normalizeSecurityLockPayload = (raw, now = Date.now()) => {
+  const source = isPlainObject(raw) ? raw : {};
+  const passwordSalt = typeof source.passwordSalt === 'string'
+    ? source.passwordSalt
+    : typeof source[LEGACY_SECURITY_LOCK_FIELDS.PASSWORD_SALT] === 'string'
+      ? source[LEGACY_SECURITY_LOCK_FIELDS.PASSWORD_SALT]
+      : null;
+  const passwordHash = typeof source.passwordHash === 'string'
+    ? source.passwordHash
+    : typeof source[LEGACY_SECURITY_LOCK_FIELDS.PASSWORD_HASH] === 'string'
+      ? source[LEGACY_SECURITY_LOCK_FIELDS.PASSWORD_HASH]
+      : null;
+  return {
+    schemaVersion: APP_DATA_SCHEMA_VERSION,
+    enabled: source.enabled === true && Boolean(passwordSalt && passwordHash),
+    passwordSalt,
+    passwordHash,
+    passwordAlgorithm: typeof source.passwordAlgorithm === 'string'
+      ? source.passwordAlgorithm
+      : passwordSalt && passwordHash
+        ? 'legacy_sha256'
+        : null,
+    passwordIterations: Number.isFinite(source.passwordIterations) ? source.passwordIterations : 0,
+    createdAt: Number.isFinite(source.createdAt) ? source.createdAt : now,
+    updatedAt: Number.isFinite(source.updatedAt) ? source.updatedAt : now,
+  };
+};
+
 const normalizeMetaPayload = (raw, now = Date.now()) => ({
   schemaVersion: APP_DATA_SCHEMA_VERSION,
   createdAt: Number.isFinite(raw?.createdAt) ? raw.createdAt : now,
@@ -334,6 +431,8 @@ const migrateIfNeeded = async () => {
     existingCheckins,
     existingBlacklist,
     existingSettings,
+    existingMemos,
+    existingSecurityLock,
     legacyCheckins,
     legacyBlacklist,
     legacyIntervals,
@@ -341,6 +440,8 @@ const migrateIfNeeded = async () => {
     readJson(APP_DATA_KEYS.CHECKINS, null),
     readJson(APP_DATA_KEYS.BLACKLIST, null),
     readJson(APP_DATA_KEYS.SETTINGS, null),
+    readJson(APP_DATA_KEYS.MEMOS, null),
+    readJson(APP_DATA_KEYS.SECURITY_LOCK, null),
     readJson(LEGACY_DATA_KEYS.CHECKINS, {}),
     readJson(LEGACY_DATA_KEYS.BLACKLIST, []),
     readJson(LEGACY_DATA_KEYS.INTERVALS, []),
@@ -353,6 +454,8 @@ const migrateIfNeeded = async () => {
     ? normalizeBlacklistPayload(existingBlacklist, now)
     : buildLegacyBlacklistPayload(legacyBlacklist, legacyIntervals, now);
   const settings = normalizeSettingsPayload(existingSettings || {});
+  const memos = normalizeMemosPayload(existingMemos || {}, now);
+  const securityLock = normalizeSecurityLockPayload(existingSecurityLock || {}, now);
   const meta = normalizeMetaPayload({
     ...(existingMeta || {}),
     migratedFrom: existingMeta?.schemaVersion ?? 1,
@@ -363,6 +466,8 @@ const migrateIfNeeded = async () => {
     writeJson(APP_DATA_KEYS.CHECKINS, checkins),
     writeJson(APP_DATA_KEYS.BLACKLIST, blacklist),
     writeJson(APP_DATA_KEYS.SETTINGS, settings),
+    writeJson(APP_DATA_KEYS.MEMOS, memos),
+    writeJson(APP_DATA_KEYS.SECURITY_LOCK, securityLock),
     writeJson(APP_DATA_KEYS.META, meta),
   ]);
 };
@@ -421,6 +526,46 @@ export const writeSettingsData = async (settings) => {
   return payload;
 };
 
+export const readMemosData = async () => {
+  await ensureAppDataMigrated();
+  return normalizeMemosPayload(await readJson(APP_DATA_KEYS.MEMOS, {}));
+};
+
+export const writeMemosData = async (memos) => {
+  await ensureAppDataMigrated();
+  const payload = normalizeMemosPayload(memos);
+  await writeJson(APP_DATA_KEYS.MEMOS, payload);
+  await touchMeta();
+  return payload;
+};
+
+export const readSecurityLockData = async () => {
+  await ensureAppDataMigrated();
+  return normalizeSecurityLockPayload(await readJson(APP_DATA_KEYS.SECURITY_LOCK, {}));
+};
+
+export const writeSecurityLockData = async (securityLock) => {
+  await ensureAppDataMigrated();
+  const payload = normalizeSecurityLockPayload(securityLock);
+  await writeJson(APP_DATA_KEYS.SECURITY_LOCK, payload);
+  await touchMeta();
+  return payload;
+};
+
+export const clearAllStoredAppData = async () => {
+  await AsyncStorage.multiRemove([
+    APP_DATA_KEYS.CHECKINS,
+    APP_DATA_KEYS.BLACKLIST,
+    APP_DATA_KEYS.SETTINGS,
+    APP_DATA_KEYS.MEMOS,
+    APP_DATA_KEYS.SECURITY_LOCK,
+    APP_DATA_KEYS.META,
+    LEGACY_DATA_KEYS.CHECKINS,
+    LEGACY_DATA_KEYS.BLACKLIST,
+    LEGACY_DATA_KEYS.INTERVALS,
+  ]);
+};
+
 const touchMeta = async () => {
   const now = Date.now();
   const current = normalizeMetaPayload(await readJson(APP_DATA_KEYS.META, {}), now);
@@ -433,10 +578,11 @@ const touchMeta = async () => {
 export const exportAppData = async () => {
   await ensureAppDataMigrated();
   const now = Date.now();
-  const [checkins, blacklist, settings, meta] = await Promise.all([
+  const [checkins, blacklist, settings, memos, meta] = await Promise.all([
     readCheckinsData(),
     readBlacklistData(),
     readSettingsData(),
+    readMemosData(),
     readJson(APP_DATA_KEYS.META, {}),
   ]);
 
@@ -455,6 +601,10 @@ export const exportAppData = async () => {
       usageAccess: settings.usageAccess,
       ui: settings.ui,
     },
+    memos: {
+      categories: memos.categories,
+      notes: memos.notes,
+    },
     meta: normalizeMetaPayload(meta, now),
   };
 };
@@ -463,17 +613,20 @@ export const isAppDataEmpty = (appData) => (
   Object.keys(appData.checkins?.recordsByDate || {}).length === 0 &&
   Object.keys(appData.blacklist?.appsByPackage || {}).length === 0 &&
   (appData.blacklist?.periods || []).length === 0 &&
-  (appData.blacklist?.intervals || []).length === 0
+  (appData.blacklist?.intervals || []).length === 0 &&
+  (appData.memos?.categories || []).length === 0 &&
+  (appData.memos?.notes || []).length === 0
 );
 
 export const importAppData = async (raw) => {
   await ensureAppDataMigrated();
   const now = Date.now();
 
-  if (isPlainObject(raw) && raw.schemaVersion === APP_DATA_SCHEMA_VERSION) {
+  if (isPlainObject(raw) && APP_DATA_IMPORT_SCHEMA_VERSIONS.has(raw.schemaVersion)) {
     const checkins = normalizeCheckinsPayload(raw.checkins, { strict: true });
     const blacklist = normalizeBlacklistPayload(raw.blacklist, now);
     const settings = normalizeSettingsPayload(raw.settings || {});
+    const memos = normalizeMemosPayload(raw.memos || {}, now);
     const meta = normalizeMetaPayload({
       ...(raw.meta || {}),
       updatedAt: now,
@@ -483,10 +636,11 @@ export const importAppData = async (raw) => {
       writeJson(APP_DATA_KEYS.CHECKINS, checkins),
       writeJson(APP_DATA_KEYS.BLACKLIST, blacklist),
       writeJson(APP_DATA_KEYS.SETTINGS, settings),
+      writeJson(APP_DATA_KEYS.MEMOS, memos),
       writeJson(APP_DATA_KEYS.META, meta),
     ]);
 
-    return { format: 'appData', checkins, blacklist, settings };
+    return { format: 'appData', checkins, blacklist, settings, memos };
   }
 
   const checkins = normalizeCheckinsPayload(raw, { strict: true });

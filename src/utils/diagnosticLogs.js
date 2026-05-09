@@ -44,6 +44,11 @@ export const openDiagnosticLogFolder = async () => {
   return DiagnosticLogModule.openLogFolder();
 };
 
+export const clearDiagnosticLogs = async () => {
+  if (!isNativeDiagnosticLogAvailable()) return false;
+  return DiagnosticLogModule.clearLogs();
+};
+
 export const recordDiagnosticProblem = (source, error) => {
   if (!isNativeDiagnosticLogAvailable()) return false;
   const normalized = normalizeError(error);

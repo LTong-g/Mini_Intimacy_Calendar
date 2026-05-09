@@ -38,6 +38,21 @@ object DiagnosticLogManager {
     return dir.listFiles { file -> file.isFile && file.extension == "log" }?.isNotEmpty() == true
   }
 
+  fun clearLogs(context: Context): Boolean {
+    return try {
+      val dir = getLogDirectory(context)
+      if (!dir.exists()) return true
+      dir.listFiles()?.forEach { file ->
+        if (file.isFile && file.extension == "log") {
+          file.delete()
+        }
+      }
+      true
+    } catch (_: Exception) {
+      false
+    }
+  }
+
   fun writeProblem(
     context: Context,
     source: String,

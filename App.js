@@ -24,8 +24,14 @@ import VersionHistoryScreen from "./src/screens/VersionHistoryScreen";
 import ExperimentalUsageScreen from "./src/screens/UsageScreen";
 import ExperimentalUsageBlacklistScreen from "./src/screens/UsageBlacklistScreen";
 import ExperimentalUsageIntervalsScreen from "./src/screens/UsageIntervalsScreen";
+import SecurityLockScreen from "./src/screens/SecurityLockScreen";
+import MemoShellScreen from "./src/screens/MemoShellScreen";
 import AppAlertProvider from "./src/components/modals/AppAlertProvider";
 import { getEffectiveCheckInData } from "./src/utils/checkInStorage";
+import {
+  getSecurityLockState,
+  synchronizeSecurityLockLauncherMode,
+} from "./src/utils/securityLockStorage";
 
 const Stack = createNativeStackNavigator();
 
@@ -124,6 +130,54 @@ const CalendarScreen = () => {
 
 // 主 App，负责导航结构
 export default function App() {
+  const [securityReady, setSecurityReady] = useState(false);
+  const [securityEnabled, setSecurityEnabled] = useState(false);
+  const [securityUnlocked, setSecurityUnlocked] = useState(false);
+
+  useEffect(() => {
+    getSecurityLockState()
+      .then((state) => {
+        setSecurityEnabled(state.enabled);
+        synchronizeSecurityLockLauncherMode(state).catch(() => {});
+      })
+      .catch(() => {
+        setSecurityEnabled(true);
+      })
+      .finally(() => setSecurityReady(true));
+  }, []);
+
+  const handleSecurityResetComplete = useCallback(() => {
+    setSecurityEnabled(false);
+    setSecurityUnlocked(false);
+    setSecurityReady(true);
+  }, []);
+
+  if (!securityReady) {
+    return (
+      <PaperProvider>
+        <SafeAreaProvider>
+          <View style={styles.container} />
+        </SafeAreaProvider>
+      </PaperProvider>
+    );
+  }
+
+  if (securityEnabled && !securityUnlocked) {
+    return (
+      <PaperProvider>
+        <SafeAreaProvider>
+          <AppAlertProvider>
+            <MemoShellScreen
+              onUnlock={() => setSecurityUnlocked(true)}
+              onResetComplete={handleSecurityResetComplete}
+            />
+            <StatusBar style="auto" />
+          </AppAlertProvider>
+        </SafeAreaProvider>
+      </PaperProvider>
+    );
+  }
+
   return (
     <PaperProvider>
       <SafeAreaProvider>
@@ -132,6 +186,7 @@ export default function App() {
             <Stack.Navigator screenOptions={{ headerShown: false }}>
               <Stack.Screen name="Calendar" component={CalendarScreen} />
               <Stack.Screen name="Settings" component={SettingsScreen} />
+              <Stack.Screen name="SecurityLock" component={SecurityLockScreen} />
               <Stack.Screen name="About" component={AboutScreen} />
               <Stack.Screen name="SoftwareIntro" component={SoftwareIntroScreen} />
               <Stack.Screen name="UsageHelp" component={UsageHelpScreen} />

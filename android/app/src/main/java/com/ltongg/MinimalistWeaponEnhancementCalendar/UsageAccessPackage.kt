@@ -9,7 +9,8 @@ class UsageAccessPackage : ReactPackage {
   override fun createNativeModules(reactContext: ReactApplicationContext): List<NativeModule> {
     return listOf(
       UsageAccessModule(reactContext),
-      DiagnosticLogModule(reactContext)
+      DiagnosticLogModule(reactContext),
+      SecurityLockModule(reactContext)
     )
   }
 

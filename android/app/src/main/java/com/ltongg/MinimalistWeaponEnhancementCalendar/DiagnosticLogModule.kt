@@ -37,6 +37,15 @@ class DiagnosticLogModule(
   }
 
   @ReactMethod
+  fun clearLogs(promise: Promise) {
+    try {
+      promise.resolve(DiagnosticLogManager.clearLogs(reactContext))
+    } catch (error: Exception) {
+      promise.reject("DIAGNOSTIC_LOG_CLEAR_FAILED", error)
+    }
+  }
+
+  @ReactMethod
   fun openLogFolder(promise: Promise) {
     try {
       val logDir = DiagnosticLogManager.getLogDirectory(reactContext)
