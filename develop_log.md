@@ -1457,3 +1457,15 @@
 - developer_guide.md 中项目体积说明已改为泛化描述，不再记录本机目录体积测量值。
 - AGENTS.md 中开发日志和开发文档不得记录本机绝对路径的规则已扩展为包含本机临时环境测量值。
 - developer_guide.md、AGENTS.md、readme.md 和 .gitignore 已复扫，未命中本机绝对路径、签名隐私或本机目录体积测量值。
+
+### 2.0.0 发布准备
+- package.json、package-lock.json 和 app.json 的版本号已更新为 2.0.0。
+- android/app/build.gradle 的 versionName 和 android/app/src/main/res/values/strings.xml 的 expo_runtime_version 已同步为 2.0.0。
+- src/screens/VersionHistoryScreen.js 已新增 2.0.0 版本节点，记录正式发布签名切换和旧版本覆盖安装限制。
+- developer_guide.md 中当前语义版本、归档示例和发布流程示例已同步为 2.0.0。
+
+### 2.0.0 Release APK 构建归档
+- npm run android:build:release:tempmap 已完成 2.0.0 Release APK 构建。
+- npm run android:archive:release 已将 Release APK 归档为 dist/MinimalistWeaponEnhancementCalendar-v2.0.0-android-20260509.apk。
+- 构建结束后的 subst 输出不包含临时映射盘符。
+- 私有签名文件和归档 APK 均未进入 Git 跟踪列表。

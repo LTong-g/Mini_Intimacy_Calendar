@@ -9,6 +9,19 @@ import { useNavigation } from '@react-navigation/native';
 
 const versionHistory = [
   {
+    version: '2.0.0',
+    title: '正式发布签名切换',
+    date: '2026-05-09',
+    sections: [
+      {
+        label: '修复：',
+        notes: [
+          '修复历史安装包使用调试签名导致的发布签名问题；本版本开始使用正式发布签名，旧版本无法覆盖安装，需先导出数据，卸载旧版本后安装本版本，再导入数据。',
+        ],
+      },
+    ],
+  },
+  {
     version: '1.4.0',
     title: '使用记录辅助与黑名单功能',
     date: '2026-05-09',
