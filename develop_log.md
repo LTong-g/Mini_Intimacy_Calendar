@@ -1647,3 +1647,10 @@
 - developer_guide.md 已将使用记录辅助开关规则改为跳转系统权限页后按实际权限刷新。
 - src/screens/VersionHistoryScreen.js 已在 Unreleased 修复项记录使用记录辅助开关不会提前显示目标状态。
 - 已通过 git diff --check 和 Babel parser 语法解析校验。
+
+### 安全锁开关样式与状态显示修正
+- src/screens/SecurityLockScreen.js 已将安全锁开关颜色改为与设置页权限开关一致。
+- src/screens/SecurityLockScreen.js 已移除 pendingEnabled 临时状态，安全锁开关显示改为仅来自实际启用状态。
+- AGENTS.md 和 developer_guide.md 已记录安全锁开关样式与非乐观切换规则。
+- src/screens/VersionHistoryScreen.js 已在 Unreleased 修复项记录安全锁开关不会提前显示目标状态。
+- 已通过 git diff --check 和 Babel parser 语法解析校验。

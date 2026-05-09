@@ -24,33 +24,37 @@ import {
 const ENABLE_CONFIRM_TEXT = '我已知晓安全锁风险';
 
 const SWITCH_COLORS = {
-  track: { false: '#D1D5DB', true: '#007AFF' },
-  thumb: '#F1F5F9',
+  track: {
+    false: '#D1D5DB',
+    true: '#8EC5FF',
+  },
+  thumb: {
+    false: '#F8F9FA',
+    true: '#007AFF',
+  },
   iosBackground: '#D1D5DB',
 };
 
-const SWITCH_COLOR_PROPS = {
+const getSwitchColorProps = (enabled) => ({
   trackColor: SWITCH_COLORS.track,
-  thumbColor: SWITCH_COLORS.thumb,
+  thumbColor: enabled ? SWITCH_COLORS.thumb.true : SWITCH_COLORS.thumb.false,
   ios_backgroundColor: SWITCH_COLORS.iosBackground,
-};
+});
 
 const SecurityLockScreen = () => {
   const navigation = useNavigation();
   const [securityState, setSecurityState] = useState({ enabled: false });
-  const [pendingEnabled, setPendingEnabled] = useState(null);
   const [confirmVisible, setConfirmVisible] = useState(false);
   const [confirmText, setConfirmText] = useState('');
   const [setupVisible, setSetupVisible] = useState(false);
   const [setupMode, setSetupMode] = useState('enable');
   const [password, setPassword] = useState('');
   const [saving, setSaving] = useState(false);
-  const securitySwitchOn = pendingEnabled ?? securityState.enabled;
+  const securitySwitchOn = securityState.enabled;
 
   const refresh = useCallback(async () => {
     const nextState = await getSecurityLockState();
     setSecurityState(nextState);
-    setPendingEnabled(null);
     synchronizeSecurityLockLauncherMode(nextState).catch(() => {});
   }, []);
 
@@ -79,7 +83,6 @@ const SecurityLockScreen = () => {
   };
 
   const closeEnableConfirm = () => {
-    setPendingEnabled(null);
     setConfirmVisible(false);
   };
 
@@ -129,7 +132,6 @@ const SecurityLockScreen = () => {
         showAppAlert('安全锁已开启', '下次启动应用时会先进入极简备忘录');
       }
     } catch (error) {
-      setPendingEnabled(null);
       showAppAlert('开启失败', error.message || '无法开启安全锁');
     } finally {
       setSaving(false);
@@ -137,9 +139,6 @@ const SecurityLockScreen = () => {
   };
 
   const closeSetup = () => {
-    if (!securityState.enabled) {
-      setPendingEnabled(null);
-    }
     setSetupVisible(false);
   };
 
@@ -148,7 +147,7 @@ const SecurityLockScreen = () => {
       '关闭安全锁',
       '关闭后将恢复普通启动入口，并恢复原桌面名称和图标。',
       [
-        { text: '取消', style: 'cancel', onPress: () => setPendingEnabled(null) },
+        { text: '取消', style: 'cancel' },
         {
           text: '关闭',
           onPress: async () => {
@@ -157,7 +156,6 @@ const SecurityLockScreen = () => {
               await refresh();
               showAppAlert('已关闭', '安全锁已关闭');
             } catch (error) {
-              setPendingEnabled(null);
               showAppAlert('关闭失败', error.message || '无法关闭安全锁');
             }
           },
@@ -168,11 +166,9 @@ const SecurityLockScreen = () => {
 
   const handleToggle = (enabled) => {
     if (enabled) {
-      setPendingEnabled(true);
-      requestAnimationFrame(openEnableConfirm);
+      openEnableConfirm();
     } else {
-      setPendingEnabled(false);
-      requestAnimationFrame(handleDisable);
+      handleDisable();
     }
   };
 
@@ -224,7 +220,7 @@ const SecurityLockScreen = () => {
             <Switch
               value={securitySwitchOn}
               onValueChange={handleToggle}
-              {...SWITCH_COLOR_PROPS}
+              {...getSwitchColorProps(securitySwitchOn)}
             />
           </View>
           <Text style={styles.description}>
