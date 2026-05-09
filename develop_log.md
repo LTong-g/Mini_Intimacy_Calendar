@@ -1636,3 +1636,16 @@
 - src/screens/SecurityLockScreen.js 已移除 pendingEnabled 临时状态，安全锁开关显示改为仅来自实际启用状态。
 - AGENTS.md 和 developer_guide.md 已记录安全锁开关样式与非乐观切换规则。
 - src/screens/VersionHistoryScreen.js 已在 Unreleased 修复项记录安全锁开关不会提前显示目标状态。
+
+### 权限与安全锁开关触摸闪动修正
+- src/screens/SettingsScreen.js 已将使用记录辅助、忽略电池优化和精确定时权限开关改为外层点击触发、内部 Switch 仅展示状态。
+- src/screens/SettingsScreen.js 已移除打开精确定时设置后立即刷新权限状态的调用，改为依赖返回应用后的状态刷新。
+- src/screens/SecurityLockScreen.js 已将安全锁开关改为外层点击触发、内部 Switch 仅展示状态，并在开启弹窗关闭、设置页关闭或关闭确认取消后刷新实际状态。
+- AGENTS.md 和 developer_guide.md 已记录设置页权限开关与安全锁开关不在触摸瞬间改变显示的规则。
+
+### 精确定时权限状态读取修正
+- src/utils/usageAccessNative.js 已新增 exactAlarmPermissionGranted 默认状态字段。
+- android/app/src/main/java/com/ltongg/MinimalistWeaponEnhancementCalendar/UsageAccessModule.kt 已新增 exactAlarmPermissionGranted 原生状态返回，用于表示系统精确定时权限本身是否授权。
+- src/screens/SettingsScreen.js 已将精确定时权限开关显示改为读取 exactAlarmPermissionGranted，并保留 canScheduleExactAlarms 作为兼容回退。
+- AGENTS.md 和 developer_guide.md 已记录精确定时权限开关显示系统权限本身授权状态，不用电池优化例外等其他能力替代。
+- src/screens/VersionHistoryScreen.js 已在 Unreleased 修复项记录精确定时权限开关状态显示修复。

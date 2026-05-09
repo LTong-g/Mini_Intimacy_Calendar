@@ -10,6 +10,7 @@ const unavailableStatus = {
   usageAccessGranted: false,
   ignoringBatteryOptimizations: false,
   canScheduleExactAlarms: false,
+  exactAlarmPermissionGranted: false,
   canRevokeUsageAccessInApp: false,
 };
 

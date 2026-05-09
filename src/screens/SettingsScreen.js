@@ -57,6 +57,23 @@ const getSwitchColorProps = (enabled) => ({
   ios_backgroundColor: SWITCH_COLORS.iosBackground,
 });
 
+const DisplaySwitchButton = ({ value, disabled = false, onPress }) => (
+  <TouchableOpacity
+    activeOpacity={0.85}
+    disabled={disabled}
+    onPress={onPress}
+    style={disabled && styles.displaySwitchButtonDisabled}
+  >
+    <View pointerEvents="none">
+      <Switch
+        value={value}
+        disabled={disabled}
+        {...getSwitchColorProps(value)}
+      />
+    </View>
+  </TouchableOpacity>
+);
+
 const buildExportFileName = () => {
   const ts = new Date().toISOString().replace(/[.:]/g, '-');
   return `${EXPORT_FILE_BASENAME}_${ts}.json`;
@@ -107,12 +124,15 @@ const SettingsScreen = () => {
     usageAccessGranted: false,
     ignoringBatteryOptimizations: false,
     canScheduleExactAlarms: false,
+    exactAlarmPermissionGranted: false,
     canRevokeUsageAccessInApp: false,
   });
   const [usageStatusLoading, setUsageStatusLoading] = useState(false);
   const [diagnosticLogsAvailable, setDiagnosticLogsAvailable] = useState(false);
   const usageAccessAvailable = isUsageAccessNativeAvailable();
   const usageSwitchOn = usageStatus.usageAccessGranted;
+  const exactAlarmPermissionGranted =
+    usageStatus.exactAlarmPermissionGranted ?? usageStatus.canScheduleExactAlarms;
 
   const refreshUsageStatus = useCallback(async () => {
     if (!usageAccessAvailable) return;
@@ -308,7 +328,6 @@ const SettingsScreen = () => {
   const handleOpenExactAlarmSettings = async () => {
     try {
       await openExactAlarmSettings();
-      refreshUsageStatus();
     } catch (error) {
       showAppAlert('打开失败', error.message || '无法打开精确闹钟设置');
     }
@@ -407,11 +426,10 @@ const SettingsScreen = () => {
                   <Ionicons name="shield-half-outline" size={20} color="#333" />
                   <Text style={styles.settingTitle}>使用记录辅助</Text>
                 </View>
-                <Switch
+                <DisplaySwitchButton
                   value={usageSwitchOn}
                   disabled={!usageAccessAvailable || usageStatusLoading}
-                  onValueChange={handleToggleUsageAccess}
-                  {...getSwitchColorProps(usageSwitchOn)}
+                  onPress={() => handleToggleUsageAccess(!usageSwitchOn)}
                 />
               </View>
               <Text style={styles.settingDescription}>
@@ -431,7 +449,7 @@ const SettingsScreen = () => {
                     忽略电池优化：{usageStatus.ignoringBatteryOptimizations ? '已允许' : '未允许'}
                   </Text>
                   <Text style={styles.statusText}>
-                    精确定时能力：{usageStatus.canScheduleExactAlarms ? '可用' : '未允许'}
+                    精确定时权限：{exactAlarmPermissionGranted ? '已允许' : '未允许'}
                   </Text>
                   <View style={styles.permissionSwitchList}>
                     <View style={styles.permissionSwitchRow}>
@@ -441,10 +459,11 @@ const SettingsScreen = () => {
                           提高晚间刷新使用记录的稳定性
                         </Text>
                       </View>
-                      <Switch
+                      <DisplaySwitchButton
                         value={usageStatus.ignoringBatteryOptimizations}
-                        onValueChange={handleToggleBatteryOptimization}
-                        {...getSwitchColorProps(usageStatus.ignoringBatteryOptimizations)}
+                        onPress={() => handleToggleBatteryOptimization(
+                          !usageStatus.ignoringBatteryOptimizations
+                        )}
                       />
                     </View>
                     <View style={styles.permissionSwitchRow}>
@@ -454,10 +473,9 @@ const SettingsScreen = () => {
                           支持 23:55 至 23:59 的定时同步
                         </Text>
                       </View>
-                      <Switch
-                        value={usageStatus.canScheduleExactAlarms}
-                        onValueChange={handleOpenExactAlarmSettings}
-                        {...getSwitchColorProps(usageStatus.canScheduleExactAlarms)}
+                      <DisplaySwitchButton
+                        value={exactAlarmPermissionGranted}
+                        onPress={handleOpenExactAlarmSettings}
                       />
                     </View>
                   </View>
@@ -701,6 +719,9 @@ const styles = StyleSheet.create({
     color: '#007AFF',
     fontSize: 14,
     marginLeft: 8,
+  },
+  displaySwitchButtonDisabled: {
+    opacity: 0.6,
   },
 });
 

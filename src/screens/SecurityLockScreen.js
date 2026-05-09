@@ -41,6 +41,17 @@ const getSwitchColorProps = (enabled) => ({
   ios_backgroundColor: SWITCH_COLORS.iosBackground,
 });
 
+const DisplaySwitchButton = ({ value, onPress }) => (
+  <TouchableOpacity activeOpacity={0.85} onPress={onPress}>
+    <View pointerEvents="none">
+      <Switch
+        value={value}
+        {...getSwitchColorProps(value)}
+      />
+    </View>
+  </TouchableOpacity>
+);
+
 const SecurityLockScreen = () => {
   const navigation = useNavigation();
   const [securityState, setSecurityState] = useState({ enabled: false });
@@ -84,6 +95,7 @@ const SecurityLockScreen = () => {
 
   const closeEnableConfirm = () => {
     setConfirmVisible(false);
+    refresh();
   };
 
   const openModifyConfirm = () => {
@@ -140,6 +152,7 @@ const SecurityLockScreen = () => {
 
   const closeSetup = () => {
     setSetupVisible(false);
+    refresh();
   };
 
   const handleDisable = () => {
@@ -147,7 +160,7 @@ const SecurityLockScreen = () => {
       '关闭安全锁',
       '关闭后将恢复普通启动入口，并恢复原桌面名称和图标。',
       [
-        { text: '取消', style: 'cancel' },
+        { text: '取消', style: 'cancel', onPress: refresh },
         {
           text: '关闭',
           onPress: async () => {
@@ -217,10 +230,9 @@ const SecurityLockScreen = () => {
               <Ionicons name="lock-closed-outline" size={20} color="#333" />
               <Text style={styles.settingTitle}>安全锁</Text>
             </View>
-            <Switch
+            <DisplaySwitchButton
               value={securitySwitchOn}
-              onValueChange={handleToggle}
-              {...getSwitchColorProps(securitySwitchOn)}
+              onPress={() => handleToggle(!securitySwitchOn)}
             />
           </View>
           <Text style={styles.description}>

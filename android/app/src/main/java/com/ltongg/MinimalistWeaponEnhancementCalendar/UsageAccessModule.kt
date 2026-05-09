@@ -29,6 +29,7 @@ import kotlin.math.min
 class UsageAccessModule(
   private val reactContext: ReactApplicationContext
 ) : ReactContextBaseJavaModule(reactContext) {
+  private val scheduleExactAlarmAppOp = "android:schedule_exact_alarm"
   private val backgroundExecutor = Executors.newSingleThreadExecutor()
 
   override fun getName(): String = "UsageAccessModule"
@@ -237,6 +238,7 @@ class UsageAccessModule(
     map.putBoolean("usageAccessGranted", hasUsageAccess())
     map.putBoolean("ignoringBatteryOptimizations", isIgnoringBatteryOptimizations())
     map.putBoolean("canScheduleExactAlarms", canScheduleExactAlarms())
+    map.putBoolean("exactAlarmPermissionGranted", hasExactAlarmPermission())
     map.putBoolean("canRevokeUsageAccessInApp", false)
     return map
   }
@@ -268,6 +270,25 @@ class UsageAccessModule(
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return true
     val alarmManager = reactContext.getSystemService(Context.ALARM_SERVICE) as AlarmManager
     return alarmManager.canScheduleExactAlarms()
+  }
+
+  private fun hasExactAlarmPermission(): Boolean {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return true
+
+    val appOps = reactContext.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
+    val mode = appOps.unsafeCheckOpNoThrow(
+      scheduleExactAlarmAppOp,
+      android.os.Process.myUid(),
+      reactContext.packageName
+    )
+
+    return when (mode) {
+      AppOpsManager.MODE_ALLOWED -> true
+      AppOpsManager.MODE_IGNORED,
+      AppOpsManager.MODE_ERRORED -> false
+      AppOpsManager.MODE_DEFAULT -> canScheduleExactAlarms() && !isIgnoringBatteryOptimizations()
+      else -> false
+    }
   }
 
   private fun drawableToIconInfo(drawable: Drawable?): IconInfo? {
