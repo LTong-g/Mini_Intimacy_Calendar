@@ -1,32 +1,36 @@
 import { NativeModules, Platform } from 'react-native';
 
-const { SecurityLockModule } = NativeModules;
+const getSecurityLockModule = () => NativeModules.SecurityLockModule;
 
 export const isSecurityLockNativeAvailable = () =>
-  Platform.OS === 'android' && Boolean(SecurityLockModule);
+  Platform.OS === 'android' && Boolean(getSecurityLockModule());
 
-export const setLauncherMode = async (mode) => {
-  if (!isSecurityLockNativeAvailable()) {
+const requireSecurityLockModule = () => {
+  const module = getSecurityLockModule();
+  if (Platform.OS !== 'android' || !module) {
     throw new Error('当前环境不支持安全锁原生能力');
   }
-  return SecurityLockModule.setLauncherMode(mode);
+  return module;
+};
+
+export const setLauncherMode = async (mode) => {
+  return requireSecurityLockModule().setLauncherMode(mode);
 };
 
 export const getLauncherMode = async () => {
-  if (!isSecurityLockNativeAvailable()) return 'normal';
-  return SecurityLockModule.getLauncherMode();
+  const module = getSecurityLockModule();
+  if (Platform.OS !== 'android' || !module) return 'normal';
+  return module.getLauncherMode();
 };
 
 export const createPasswordCredential = async (password) => {
-  if (!isSecurityLockNativeAvailable()) {
-    throw new Error('当前环境不支持安全锁原生能力');
-  }
-  return SecurityLockModule.createPasswordCredential(password);
+  return requireSecurityLockModule().createPasswordCredential(password);
 };
 
 export const verifyPasswordCredential = async (password, credential) => {
-  if (!isSecurityLockNativeAvailable()) return false;
-  return SecurityLockModule.verifyPasswordCredential(
+  const module = getSecurityLockModule();
+  if (Platform.OS !== 'android' || !module) return false;
+  return module.verifyPasswordCredential(
     password,
     credential.passwordSalt,
     credential.passwordHash,
