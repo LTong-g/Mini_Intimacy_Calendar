@@ -1,10 +1,13 @@
 import {
   readBlacklistData,
-  updateBlacklistData,
-  writeBlacklistData,
   normalizeUsageApps,
   normalizeUsageIntervalsPayload,
 } from './appDataStorage';
+import {
+  clearStoredUsageRecords,
+  syncBlacklistMetadata,
+  updateBlacklistApplications,
+} from './usageAccessNative';
 
 const MERGE_GAP_MS = 2 * 60 * 1000;
 
@@ -39,68 +42,6 @@ const getActiveBlacklistApps = (blacklist, time = Date.now()) => {
         installed: false,
       })
   );
-};
-
-const upsertApps = (blacklist, apps, options = {}) => {
-  const now = options.now || Date.now();
-  const installed = options.installed !== false;
-  const nextAppsByPackage = { ...blacklist.appsByPackage };
-
-  normalizeBlacklist(apps).forEach((app) => {
-    const previous = nextAppsByPackage[app.packageName];
-    nextAppsByPackage[app.packageName] = {
-      packageName: app.packageName,
-      label: app.label,
-      icon: app.icon,
-      color: app.color,
-      firstSeenAt: previous?.firstSeenAt ?? now,
-      lastSeenAt: now,
-      installed,
-    };
-  });
-
-  return {
-    ...blacklist,
-    appsByPackage: nextAppsByPackage,
-  };
-};
-
-const getHistoricalPackages = (blacklist) => new Set([
-  ...blacklist.periods.map((period) => period.packageName),
-  ...blacklist.intervals.map((interval) => interval.packageName),
-]);
-
-const closeActivePeriods = (periods, packageNames, endReason, endAt = Date.now()) => {
-  const targetPackages = new Set(packageNames);
-  return periods.map((period) => {
-    if (!targetPackages.has(period.packageName) || !isPeriodActiveAt(period, endAt)) {
-      return period;
-    }
-    return {
-      ...period,
-      endAt,
-      endReason,
-    };
-  });
-};
-
-const openMissingPeriods = (periods, packageNames, startAt = Date.now()) => {
-  const activePackages = new Set(
-    periods
-      .filter((period) => isPeriodActiveAt(period, startAt))
-      .map((period) => period.packageName)
-  );
-  const nextPeriods = [...periods];
-  packageNames.forEach((packageName) => {
-    if (activePackages.has(packageName)) return;
-    nextPeriods.push({
-      packageName,
-      startAt,
-      endAt: null,
-      endReason: null,
-    });
-  });
-  return nextPeriods;
 };
 
 const buildNonOverlappingSegments = (intervals) => {
@@ -193,85 +134,16 @@ export const getExperimentalUsageKnownApps = async () => {
 export const setExperimentalUsageBlacklist = async (apps) => {
   const now = Date.now();
   const desiredApps = normalizeBlacklist(apps);
-  const desiredPackages = new Set(desiredApps.map((app) => app.packageName));
-  const next = await updateBlacklistData((current) => {
-    const withApps = upsertApps(current, desiredApps, { now, installed: true });
-    const activePackages = new Set(
-      withApps.periods
-        .filter((period) => isPeriodActiveAt(period, now))
-        .map((period) => period.packageName)
-    );
-    const packagesToClose = Array.from(activePackages)
-      .filter((packageName) => !desiredPackages.has(packageName));
-
-    return {
-      ...withApps,
-      periods: openMissingPeriods(
-        closeActivePeriods(withApps.periods, packagesToClose, 'manual', now),
-        desiredPackages,
-        now
-      ),
-    };
-  });
-
+  await updateBlacklistApplications(desiredApps);
+  const next = await readBlacklistData();
   return getActiveBlacklistApps(next, now);
 };
 
-export const syncExperimentalUsageBlacklistMetadata = async (blacklist, launchableApps) => {
+export const syncExperimentalUsageBlacklistMetadata = async (launchableApps) => {
   const now = Date.now();
   const launchable = normalizeBlacklist(launchableApps);
-  const launchablePackages = new Set(launchable.map((app) => app.packageName));
-  const launchableByPackage = new Map(launchable.map((app) => [app.packageName, app]));
-  const next = await updateBlacklistData((current) => {
-    const historicalPackages = getHistoricalPackages(current);
-    const appsToRefresh = Array.from(historicalPackages)
-      .map((packageName) => launchableByPackage.get(packageName))
-      .filter(Boolean);
-    const withApps = upsertApps(current, appsToRefresh, { now, installed: true });
-    const nextAppsByPackage = {};
-    historicalPackages.forEach((packageName) => {
-      const existing = withApps.appsByPackage[packageName];
-      if (existing) {
-        nextAppsByPackage[packageName] = existing;
-      } else {
-        nextAppsByPackage[packageName] = {
-          packageName,
-          label: packageName,
-          icon: null,
-          color: null,
-          firstSeenAt: now,
-          lastSeenAt: now,
-          installed: false,
-        };
-      }
-    });
-    Object.keys(nextAppsByPackage).forEach((packageName) => {
-      if (!launchablePackages.has(packageName)) {
-        nextAppsByPackage[packageName] = {
-          ...nextAppsByPackage[packageName],
-          installed: false,
-        };
-      }
-    });
-
-    const activePackages = withApps.periods
-      .filter((period) => isPeriodActiveAt(period, now))
-      .map((period) => period.packageName);
-    const uninstalledActivePackages = activePackages
-      .filter((packageName) => !launchablePackages.has(packageName));
-
-    return {
-      ...withApps,
-      appsByPackage: nextAppsByPackage,
-      periods: closeActivePeriods(
-        withApps.periods,
-        uninstalledActivePackages,
-        'uninstalled',
-        now
-      ),
-    };
-  });
-
+  await syncBlacklistMetadata(launchable);
+  const next = await readBlacklistData();
   return getActiveBlacklistApps(next, now);
 };
 
@@ -281,10 +153,5 @@ export const getExperimentalUsageIntervals = async () => {
 };
 
 export const clearExperimentalUsageIntervals = async () => {
-  const current = await readBlacklistData();
-  await writeBlacklistData({
-    ...current,
-    intervals: [],
-    refreshState: {},
-  });
+  await clearStoredUsageRecords();
 };

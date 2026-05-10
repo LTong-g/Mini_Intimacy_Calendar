@@ -54,6 +54,20 @@ export const clearStoredUsageRecords = async () => {
   return UsageAccessModule.clearStoredUsageRecords();
 };
 
+export const updateBlacklistApplications = async (apps) => {
+  if (!isUsageAccessNativeAvailable()) {
+    throw new Error('当前平台不支持更新黑名单应用');
+  }
+  return UsageAccessModule.updateBlacklistApplications(JSON.stringify(apps));
+};
+
+export const syncBlacklistMetadata = async (launchableApps) => {
+  if (!isUsageAccessNativeAvailable()) {
+    throw new Error('当前平台不支持同步黑名单应用信息');
+  }
+  return UsageAccessModule.syncBlacklistMetadata(JSON.stringify(launchableApps));
+};
+
 export const getLaunchableApplications = async () => {
   if (!isUsageAccessNativeAvailable()) return [];
   return UsageAccessModule.getLaunchableApplications();

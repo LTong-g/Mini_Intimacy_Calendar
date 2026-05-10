@@ -17,7 +17,6 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import {
-  getExperimentalUsageBlacklist,
   setExperimentalUsageBlacklist,
   syncExperimentalUsageBlacklistMetadata,
 } from '../utils/usageStorage';
@@ -160,11 +159,8 @@ const ExperimentalUsageBlacklistScreen = () => {
   const loadState = useCallback(async ({ forceRefresh = false } = {}) => {
     setIsLoading(true);
     try {
-      const [nextApps, nextBlacklist] = await Promise.all([
-        getCachedLaunchableApplications({ forceRefresh }),
-        getExperimentalUsageBlacklist(),
-      ]);
-      const storedBlacklist = await syncExperimentalUsageBlacklistMetadata(nextBlacklist, nextApps);
+      const nextApps = await getCachedLaunchableApplications({ forceRefresh });
+      const storedBlacklist = await syncExperimentalUsageBlacklistMetadata(nextApps);
       setApps(nextApps);
       setBlacklist(storedBlacklist);
       blacklistRef.current = storedBlacklist;

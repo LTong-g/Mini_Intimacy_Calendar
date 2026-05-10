@@ -27,13 +27,14 @@ object UsageAccessScheduler {
   private const val KEY_LAST_REFRESH_SELECTED_COUNT = "last_refresh_selected_count"
   private const val KEY_LAST_REFRESH_ERROR = "last_refresh_error"
   private const val BLACKLIST_DATA_KEY = "app_data_blacklist"
+  private const val BLACKLIST_SCHEMA_VERSION = 3
   private const val LEGACY_BLACKLIST_KEY = "experimental_usage_blacklist"
   private const val LEGACY_INTERVALS_KEY = "experimental_usage_intervals"
   private const val ASYNC_STORAGE_TABLE = "catalystLocalStorage"
   private const val ASYNC_STORAGE_KEY_COLUMN = "key"
   private const val ASYNC_STORAGE_VALUE_COLUMN = "value"
   private const val MERGE_GAP_MS = 2 * 60 * 1000L
-  private val refreshLock = Any()
+  private val blacklistDataLock = Any()
 
   data class RefreshResult(
     val requestBeginTime: Long,
@@ -137,7 +138,7 @@ object UsageAccessScheduler {
     var actualEndTime: Long? = null
     var errorMessage: String? = null
 
-    synchronized(refreshLock) {
+    synchronized(blacklistDataLock) {
       try {
         if (!hasUsageAccess(context)) {
           errorMessage = "Usage access is not granted."
@@ -202,10 +203,13 @@ object UsageAccessScheduler {
   }
 
   fun clearStoredUsageRecords(context: Context) {
-    val data = readBlacklistData(context)
-    data.put("intervals", JSONArray())
-    data.put("refreshState", JSONObject())
-    writeAsyncStorageItem(context, BLACKLIST_DATA_KEY, data.toString())
+    synchronized(blacklistDataLock) {
+      val data = readBlacklistData(context)
+      data.put("schemaVersion", BLACKLIST_SCHEMA_VERSION)
+      data.put("intervals", JSONArray())
+      data.put("refreshState", JSONObject())
+      writeAsyncStorageItem(context, BLACKLIST_DATA_KEY, data.toString())
+    }
     context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
       .edit()
       .remove(KEY_LAST_REFRESH_AT)
@@ -215,6 +219,76 @@ object UsageAccessScheduler {
       .remove(KEY_LAST_REFRESH_SELECTED_COUNT)
       .remove(KEY_LAST_REFRESH_ERROR)
       .apply()
+  }
+
+  fun updateBlacklistApplications(context: Context, appsJson: String) {
+    val now = System.currentTimeMillis()
+    val desiredApps = parseBlacklistApps(appsJson, now)
+    val desiredPackages = desiredApps.map { it.packageName }.toSet()
+
+    synchronized(blacklistDataLock) {
+      val data = readBlacklistData(context)
+      upsertBlacklistApps(data, desiredApps, now, installed = true)
+
+      val periods = data.optJSONArray("periods") ?: JSONArray()
+      val activePackages = activePeriodPackages(periods, now)
+      val packagesToClose = activePackages.filter { packageName -> !desiredPackages.contains(packageName) }
+      val nextPeriods = openMissingPeriods(
+        closeActivePeriods(periods, packagesToClose.toSet(), "manual", now),
+        desiredPackages,
+        now
+      )
+
+      data.put("schemaVersion", BLACKLIST_SCHEMA_VERSION)
+      data.put("periods", nextPeriods)
+      writeAsyncStorageItem(context, BLACKLIST_DATA_KEY, data.toString())
+    }
+  }
+
+  fun syncBlacklistMetadata(context: Context, launchableAppsJson: String) {
+    val now = System.currentTimeMillis()
+    val launchableApps = parseBlacklistApps(launchableAppsJson, now)
+    val launchablePackages = launchableApps.map { it.packageName }.toSet()
+    val launchableByPackage = launchableApps.associateBy { it.packageName }
+
+    synchronized(blacklistDataLock) {
+      val data = readBlacklistData(context)
+      val historicalPackages = historicalBlacklistPackages(data)
+      val appsToRefresh = historicalPackages.mapNotNull { packageName -> launchableByPackage[packageName] }
+      upsertBlacklistApps(data, appsToRefresh, now, installed = true)
+
+      val currentAppsByPackage = data.optJSONObject("appsByPackage") ?: JSONObject()
+      val nextAppsByPackage = JSONObject()
+      historicalPackages.forEach { packageName ->
+        val existing = currentAppsByPackage.optJSONObject(packageName)
+        val app = if (existing != null) {
+          JSONObject(existing.toString())
+        } else {
+          JSONObject()
+            .put("packageName", packageName)
+            .put("label", packageName)
+            .put("icon", JSONObject.NULL)
+            .put("color", JSONObject.NULL)
+            .put("firstSeenAt", now.toDouble())
+            .put("lastSeenAt", now.toDouble())
+            .put("installed", false)
+        }
+        if (!launchablePackages.contains(packageName)) {
+          app.put("installed", false)
+        }
+        nextAppsByPackage.put(packageName, app)
+      }
+
+      val periods = data.optJSONArray("periods") ?: JSONArray()
+      val uninstalledActivePackages = activePeriodPackages(periods, now)
+        .filter { packageName -> !launchablePackages.contains(packageName) }
+        .toSet()
+
+      data.put("schemaVersion", BLACKLIST_SCHEMA_VERSION)
+      data.put("appsByPackage", nextAppsByPackage)
+      data.put("periods", closeActivePeriods(periods, uninstalledActivePackages, "uninstalled", now))
+      writeAsyncStorageItem(context, BLACKLIST_DATA_KEY, data.toString())
+    }
   }
 
   private fun hasUsageAccess(context: Context): Boolean {
@@ -296,11 +370,146 @@ object UsageAccessScheduler {
     }
 
     return JSONObject()
-      .put("schemaVersion", 2)
+      .put("schemaVersion", BLACKLIST_SCHEMA_VERSION)
       .put("appsByPackage", JSONObject())
       .put("periods", legacyPeriods)
       .put("intervals", legacyIntervals)
       .put("refreshState", JSONObject())
+  }
+
+  private fun parseBlacklistApps(appsJson: String, now: Long): List<BlacklistApp> {
+    val apps = try {
+      JSONArray(appsJson)
+    } catch (_: Exception) {
+      JSONArray()
+    }
+    val result = linkedMapOf<String, BlacklistApp>()
+    for (index in 0 until apps.length()) {
+      val item = apps.optJSONObject(index) ?: continue
+      val packageName = item.optString("packageName").trim()
+      if (packageName.isEmpty()) continue
+      val label = item.optString("label").trim().ifEmpty { packageName }
+      result[packageName] = BlacklistApp(
+        packageName = packageName,
+        label = label,
+        icon = optionalString(item, "icon"),
+        color = optionalString(item, "color"),
+        now = now
+      )
+    }
+    return result.values.toList()
+  }
+
+  private fun optionalString(item: JSONObject, key: String): String? {
+    if (!item.has(key) || item.isNull(key)) return null
+    val value = item.optString(key).trim()
+    return value.ifEmpty { null }
+  }
+
+  private fun upsertBlacklistApps(
+    data: JSONObject,
+    apps: List<BlacklistApp>,
+    now: Long,
+    installed: Boolean
+  ) {
+    val appsByPackage = data.optJSONObject("appsByPackage") ?: JSONObject()
+    apps.forEach { app ->
+      val previous = appsByPackage.optJSONObject(app.packageName)
+      val firstSeenAt = previous?.optDouble("firstSeenAt", Double.NaN)
+        ?.takeIf { it.isFinite() }
+        ?: app.now.toDouble()
+      appsByPackage.put(
+        app.packageName,
+        JSONObject()
+          .put("packageName", app.packageName)
+          .put("label", app.label)
+          .put("icon", app.icon ?: JSONObject.NULL)
+          .put("color", app.color ?: JSONObject.NULL)
+          .put("firstSeenAt", firstSeenAt)
+          .put("lastSeenAt", now.toDouble())
+          .put("installed", installed)
+      )
+    }
+    data.put("appsByPackage", appsByPackage)
+  }
+
+  private fun historicalBlacklistPackages(data: JSONObject): Set<String> {
+    val result = linkedSetOf<String>()
+    val periods = data.optJSONArray("periods") ?: JSONArray()
+    for (index in 0 until periods.length()) {
+      val packageName = periods.optJSONObject(index)?.optString("packageName")?.trim().orEmpty()
+      if (packageName.isNotEmpty()) result.add(packageName)
+    }
+    val intervals = data.optJSONArray("intervals") ?: JSONArray()
+    for (index in 0 until intervals.length()) {
+      val packageName = intervals.optJSONObject(index)?.optString("packageName")?.trim().orEmpty()
+      if (packageName.isNotEmpty()) result.add(packageName)
+    }
+    return result
+  }
+
+  private fun activePeriodPackages(periods: JSONArray, time: Long): Set<String> {
+    val result = linkedSetOf<String>()
+    for (index in 0 until periods.length()) {
+      val item = periods.optJSONObject(index) ?: continue
+      if (isPeriodActiveAt(item, time)) {
+        val packageName = item.optString("packageName").trim()
+        if (packageName.isNotEmpty()) result.add(packageName)
+      }
+    }
+    return result
+  }
+
+  private fun closeActivePeriods(
+    periods: JSONArray,
+    packageNames: Set<String>,
+    endReason: String,
+    endAt: Long
+  ): JSONArray {
+    val result = JSONArray()
+    for (index in 0 until periods.length()) {
+      val source = periods.optJSONObject(index) ?: continue
+      val period = JSONObject(source.toString())
+      val packageName = period.optString("packageName").trim()
+      if (packageNames.contains(packageName) && isPeriodActiveAt(period, endAt)) {
+        period.put("endAt", endAt.toDouble())
+        period.put("endReason", endReason)
+      }
+      result.put(period)
+    }
+    return result
+  }
+
+  private fun openMissingPeriods(
+    periods: JSONArray,
+    packageNames: Set<String>,
+    startAt: Long
+  ): JSONArray {
+    val activePackages = activePeriodPackages(periods, startAt)
+    packageNames.forEach { packageName ->
+      if (!activePackages.contains(packageName)) {
+        periods.put(
+          JSONObject()
+            .put("packageName", packageName)
+            .put("startAt", startAt.toDouble())
+            .put("endAt", JSONObject.NULL)
+            .put("endReason", JSONObject.NULL)
+        )
+      }
+    }
+    return periods
+  }
+
+  private fun isPeriodActiveAt(period: JSONObject, time: Long): Boolean {
+    val startAt = period.optDouble("startAt", Double.NaN)
+    if (!startAt.isFinite() || startAt > time) return false
+    val endAtValue = period.opt("endAt")
+    val endAt = when (endAtValue) {
+      null, JSONObject.NULL -> null
+      is Number -> endAtValue.toLong()
+      else -> period.optDouble("endAt", Double.NaN).takeIf { it.isFinite() }?.toLong()
+    }
+    return endAt == null || endAt > time
   }
 
   private fun readBlacklistPeriods(context: Context): List<BlacklistPeriod> {
@@ -359,7 +568,7 @@ object UsageAccessScheduler {
       )
     }
     val data = readBlacklistData(context)
-    data.put("schemaVersion", 2)
+    data.put("schemaVersion", BLACKLIST_SCHEMA_VERSION)
     data.put("intervals", array)
     writeAsyncStorageItem(context, BLACKLIST_DATA_KEY, data.toString())
   }
@@ -643,6 +852,14 @@ object UsageAccessScheduler {
     val packageName: String,
     val startTime: Long,
     val endTime: Long
+  )
+
+  private data class BlacklistApp(
+    val packageName: String,
+    val label: String,
+    val icon: String?,
+    val color: String?,
+    val now: Long
   )
 
   private data class BlacklistPeriod(

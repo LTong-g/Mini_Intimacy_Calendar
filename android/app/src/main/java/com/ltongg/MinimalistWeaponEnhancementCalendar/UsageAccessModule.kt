@@ -153,6 +153,30 @@ class UsageAccessModule(
   }
 
   @ReactMethod
+  fun updateBlacklistApplications(appsJson: String, promise: Promise) {
+    backgroundExecutor.execute {
+      try {
+        UsageAccessScheduler.updateBlacklistApplications(reactContext, appsJson)
+        promise.resolve(true)
+      } catch (error: Exception) {
+        promise.reject("UPDATE_BLACKLIST_APPLICATIONS_FAILED", error)
+      }
+    }
+  }
+
+  @ReactMethod
+  fun syncBlacklistMetadata(launchableAppsJson: String, promise: Promise) {
+    backgroundExecutor.execute {
+      try {
+        UsageAccessScheduler.syncBlacklistMetadata(reactContext, launchableAppsJson)
+        promise.resolve(true)
+      } catch (error: Exception) {
+        promise.reject("SYNC_BLACKLIST_METADATA_FAILED", error)
+      }
+    }
+  }
+
+  @ReactMethod
   fun getLaunchableApplications(promise: Promise) {
     backgroundExecutor.execute {
       try {

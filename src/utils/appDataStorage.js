@@ -499,20 +499,6 @@ export const readBlacklistData = async () => {
   return normalizeBlacklistPayload(await readJson(APP_DATA_KEYS.BLACKLIST, {}));
 };
 
-export const writeBlacklistData = async (blacklist) => {
-  await ensureAppDataMigrated();
-  const payload = normalizeBlacklistPayload(blacklist);
-  await writeJson(APP_DATA_KEYS.BLACKLIST, payload);
-  await touchMeta();
-  return payload;
-};
-
-export const updateBlacklistData = async (updater) => {
-  const current = await readBlacklistData();
-  const next = await updater(current);
-  return writeBlacklistData(next);
-};
-
 export const readSettingsData = async () => {
   await ensureAppDataMigrated();
   return normalizeSettingsPayload(await readJson(APP_DATA_KEYS.SETTINGS, {}));
