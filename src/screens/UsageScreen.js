@@ -24,6 +24,7 @@ import {
   MonthlyUsageLineChart,
   WeeklyUsageBarChart,
 } from '../components/UsageCharts';
+import UsageDateRangeRow from '../components/UsageDateRangeRow';
 import UsageRangeTabs from '../components/UsageRangeTabs';
 import BaseModal from '../components/modals/BaseModal';
 import ModalActionRow from '../components/modals/ModalActionRow';
@@ -523,21 +524,12 @@ const ExperimentalUsageScreen = () => {
         title="读取使用记录"
         titleStyle={styles.modalTitle}
       >
-        <View style={styles.dateRangeRow}>
-          <TouchableOpacity
-            style={styles.dateBox}
-            onPress={() => handlePickDate('start')}
-          >
-            <Text style={styles.dateText}>{rangeStartDate}</Text>
-          </TouchableOpacity>
-          <Text style={styles.dateSeparator}>-</Text>
-          <TouchableOpacity
-            style={styles.dateBox}
-            onPress={() => handlePickDate('end')}
-          >
-            <Text style={styles.dateText}>{rangeEndDate}</Text>
-          </TouchableOpacity>
-        </View>
+        <UsageDateRangeRow
+          startDate={rangeStartDate}
+          endDate={rangeEndDate}
+          onStartPress={() => handlePickDate('start')}
+          onEndPress={() => handlePickDate('end')}
+        />
         <ModalActionRow
           theme={BLACKLIST_MODAL_THEME}
           actions={[
@@ -693,31 +685,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#5F4300',
     marginBottom: 14,
-  },
-  dateRangeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-  dateBox: {
-    width: 120,
-    paddingVertical: 7,
-    borderWidth: 1,
-    borderColor: '#F4D79A',
-    borderRadius: 6,
-    backgroundColor: '#FFF8E1',
-    alignItems: 'center',
-  },
-  dateText: {
-    fontSize: 14,
-    color: '#5F4300',
-  },
-  dateSeparator: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#5F4300',
-    marginHorizontal: 12,
   },
   resultBlock: {
     marginBottom: 12,

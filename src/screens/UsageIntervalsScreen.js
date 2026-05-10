@@ -17,6 +17,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import moment from 'moment';
+import UsageDateRangeRow from '../components/UsageDateRangeRow';
 import UsageRangeTabs from '../components/UsageRangeTabs';
 import BaseModal from '../components/modals/BaseModal';
 import ModalActionRow from '../components/modals/ModalActionRow';
@@ -498,21 +499,12 @@ const ExperimentalUsageIntervalsScreen = () => {
           )}
         </View>
 
-        <View style={styles.dateRangeRow}>
-          <TouchableOpacity
-            style={styles.dateBox}
-            onPress={() => handlePickDate('filterStart')}
-          >
-            <Text style={styles.dateText}>{pendingStartDate}</Text>
-          </TouchableOpacity>
-          <Text style={styles.dateSeparator}>-</Text>
-          <TouchableOpacity
-            style={styles.dateBox}
-            onPress={() => handlePickDate('filterEnd')}
-          >
-            <Text style={styles.dateText}>{pendingEndDate}</Text>
-          </TouchableOpacity>
-        </View>
+        <UsageDateRangeRow
+          startDate={pendingStartDate}
+          endDate={pendingEndDate}
+          onStartPress={() => handlePickDate('filterStart')}
+          onEndPress={() => handlePickDate('filterEnd')}
+        />
 
         <ModalActionRow
           theme={BLACKLIST_MODAL_THEME}
@@ -684,31 +676,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF8E1',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  dateRangeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-  dateBox: {
-    width: 120,
-    paddingVertical: 7,
-    borderWidth: 1,
-    borderColor: '#F4D79A',
-    borderRadius: 6,
-    backgroundColor: '#FFF8E1',
-    alignItems: 'center',
-  },
-  dateText: {
-    fontSize: 14,
-    color: '#5F4300',
-  },
-  dateSeparator: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#5F4300',
-    marginHorizontal: 12,
   },
   appFilterSection: {
     marginBottom: 14,
