@@ -42,7 +42,7 @@ const SoftwareIntroScreen = () => {
         <View style={styles.list}>
           <IntroListItem>日历记录：通过日视图、月视图和年视图查看每天、每月和全年的记录分布。</IntroListItem>
           <IntroListItem>黑名单：授予必要权限后，可以将应用设置为黑名单，查看黑名单应用的使用时长、趋势图和热力图。黑名单应用的使用记录会按规则折算为观看教程自动记录次数。</IntroListItem>
-          <IntroListItem>安全锁：可主动开启极简备忘录入口，开启后桌面名称和图标会切换为极简备忘录，启动时先进入极简备忘录，再通过你设置的密码进入记录应用。</IntroListItem>
+          <IntroListItem>安全锁：可主动开启极简备忘录入口，开启后桌面名称、图标和启动页会切换为极简备忘录，启动时先进入极简备忘录，再通过你设置的密码进入记录应用。</IntroListItem>
           <IntroListItem>统计分析：查看总览、年度和自定义区间统计，并通过图表观察趋势。</IntroListItem>
           <IntroListItem>数据备份：支持导入、导出和分享本地数据，便于迁移和留存。</IntroListItem>
         </View>
