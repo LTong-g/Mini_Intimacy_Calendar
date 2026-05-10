@@ -1744,3 +1744,13 @@
 - developer_guide.md 已补充 Debug 构建与正式 Manifest 的入口差异说明。
 - 已执行 Android Debug 构建，并确认合并后的 Debug Manifest 中 MainActivity 为 exported=true。
 - 已将 Debug APK 安装到当前在线模拟器，并用 ADB 显式启动 .MainActivity，启动命令未再出现 Permission Denial。
+
+### 抽取黑名单专用配色表
+- 新增 usageTheme 黑名单专用配色表，集中保存黑名单主色、文字色、边框色、选中背景、分隔色、图表色和热力图色。
+- 黑名单主页、设置黑名单应用页、使用时间段页、黑名单图表、范围切换按钮组和日期范围输入行改为引用 usageTheme 配色。
+- 本次配色抽取保持原有颜色数值不变，仅将分散色值集中管理。
+
+### 修复配色抽取 JSX 编译错误
+- 配色表抽取过程中批量替换 JSX 颜色属性时产生了缺少花括号的非法 JSX 写法，影响编译。
+- UsageBlacklistScreen 和 UsageIntervalsScreen 中缺少花括号的 BLACKLIST_COLORS JSX 属性已修复为花括号表达式。
+- 相关黑名单页面、图表组件、范围按钮组件、日期范围组件和 usageTheme 已通过 Babel 转换检查。

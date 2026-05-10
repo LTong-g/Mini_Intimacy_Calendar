@@ -19,24 +19,25 @@ import {
   formatUsageDurationCompact,
   getUsageDurationMinutes,
 } from '../utils/usageDurationFormat';
+import { BLACKLIST_COLORS } from '../utils/usageTheme';
 
 const { width: screenWidth } = Dimensions.get('window');
 const chartWidth = screenWidth - 40;
 const chartBlockPadding = 12;
 const chartInnerWidth = chartWidth - chartBlockPadding * 2;
 const chartHeight = 230;
-const tutorialColor = '#F57F17';
-const tutorialLightColor = '#FFE082';
-const tutorialMidColor = '#FFD54F';
-const tutorialDarkColor = '#8A4B00';
-const gridColor = '#F4D79A';
-const axisTextColor = '#A66A00';
-const remainderColor = '#F6E7C4';
-const heatmapEmptyColor = '#FFFFFF';
-const heatmapFutureColor = '#F7F7F7';
-const heatmapNeutralBorderColor = '#E0E0E0';
-const heatmapGradientStartColor = '#FFE082';
-const heatmapGradientEndColor = '#8A4B00';
+const tutorialColor = BLACKLIST_COLORS.primary;
+const tutorialLightColor = BLACKLIST_COLORS.chartLight;
+const tutorialMidColor = BLACKLIST_COLORS.chartMid;
+const tutorialDarkColor = BLACKLIST_COLORS.secondary;
+const gridColor = BLACKLIST_COLORS.secondaryBorder;
+const axisTextColor = BLACKLIST_COLORS.textMuted;
+const remainderColor = BLACKLIST_COLORS.primaryDisabled;
+const heatmapEmptyColor = BLACKLIST_COLORS.heatmapEmpty;
+const heatmapFutureColor = BLACKLIST_COLORS.heatmapFuture;
+const heatmapNeutralBorderColor = BLACKLIST_COLORS.heatmapNeutralBorder;
+const heatmapGradientStartColor = BLACKLIST_COLORS.chartLight;
+const heatmapGradientEndColor = BLACKLIST_COLORS.secondary;
 const monthlyTouchValueLabelOffsetX = 6;
 const monthlyPlotSideInset = 18;
 const yAxisLabelWidth = 0;
@@ -46,7 +47,7 @@ const heatmapLegendGradientWidth = 86;
 const heatmapLegendGradientHeight = 11;
 
 const getUsageSliceColor = (index) => (
-  [tutorialColor, tutorialMidColor, tutorialDarkColor, '#FFB300', '#B76E00'][index % 5]
+  [tutorialColor, tutorialMidColor, tutorialDarkColor, BLACKLIST_COLORS.chartAlt, BLACKLIST_COLORS.chartDeep][index % 5]
 );
 
 const getDailySliceColor = (item, index) => getUsageSliceColor(index);
@@ -155,11 +156,11 @@ export const DailyUsagePieChart = ({ rows }) => {
                   key={arc.data.packageName}
                   d={arcPath(arc)}
                   fill={arc.data.isRemainder ? remainderColor : getDailySliceColor(arc.data, index)}
-                  stroke="#fff"
+                  stroke={BLACKLIST_COLORS.white}
                   strokeWidth={1.4}
                 />
               ))}
-              <Circle r={39} fill="#FFF8E1" />
+              <Circle r={39} fill={BLACKLIST_COLORS.selectedBackground} />
               <SvgText
                 y={1}
                 fontSize={18}
@@ -299,7 +300,7 @@ export const WeeklyUsageBarChart = ({ rows }) => {
                     x={plotStartX - 2}
                     y={y + 4}
                     fontSize={10}
-                    fill="#8A4B00"
+                    fill={BLACKLIST_COLORS.secondary}
                     textAnchor="end"
                   >
                     {formatUsageAxisDurationCompact(maxValue * ratio, maxValue)}
@@ -312,7 +313,7 @@ export const WeeklyUsageBarChart = ({ rows }) => {
               y1={innerHeight}
               x2={plotStartX + plotWidth}
               y2={innerHeight}
-              stroke="#F4D79A"
+              stroke={BLACKLIST_COLORS.secondaryBorder}
               strokeWidth={1}
             />
             {bars.map((bar) => (
@@ -456,7 +457,7 @@ export const MonthlyUsageLineChart = ({ rows }) => {
                 </G>
               );
             })}
-            <Line x1={plotStartX} y1={innerHeight} x2={plotEndX} y2={innerHeight} stroke="#F4D79A" strokeWidth={1} />
+            <Line x1={plotStartX} y1={innerHeight} x2={plotEndX} y2={innerHeight} stroke={BLACKLIST_COLORS.secondaryBorder} strokeWidth={1} />
             {areaPath && <Path d={areaPath} fill="url(#monthlyAreaGradient)" />}
             {linePath && (
               <Path
@@ -470,7 +471,7 @@ export const MonthlyUsageLineChart = ({ rows }) => {
             )}
             {points.filter((_, index) => shouldShowMonthlyPoint(points, index)).map((point) => (
               <G key={point.item.key}>
-                <Circle cx={point.x} cy={point.y} r={4} fill="#fff" stroke={tutorialColor} strokeWidth={2} />
+                <Circle cx={point.x} cy={point.y} r={4} fill={BLACKLIST_COLORS.white} stroke={tutorialColor} strokeWidth={2} />
                 {point.item.durationMs > 0 && (
                   <Circle cx={point.x} cy={point.y} r={2} fill={tutorialColor} />
                 )}
@@ -483,7 +484,7 @@ export const MonthlyUsageLineChart = ({ rows }) => {
                   y1={0}
                   x2={touchPoint.x}
                   y2={innerHeight}
-                  stroke="#B76E00"
+                  stroke={BLACKLIST_COLORS.chartDeep}
                   strokeDasharray={[4, 4]}
                 />
                 <Circle
@@ -491,7 +492,7 @@ export const MonthlyUsageLineChart = ({ rows }) => {
                   cy={touchPoint.y}
                   r={4}
                   fill={tutorialColor}
-                  stroke="#fff"
+                  stroke={BLACKLIST_COLORS.white}
                   strokeWidth={1}
                 />
                 <SvgText
@@ -739,10 +740,10 @@ const styles = StyleSheet.create({
   chartBlock: {
     marginTop: 20,
     borderWidth: 1,
-    borderColor: '#F4D79A',
+    borderColor: BLACKLIST_COLORS.secondaryBorder,
     borderRadius: 8,
     padding: 12,
-    backgroundColor: '#fff',
+    backgroundColor: BLACKLIST_COLORS.surface,
   },
   chartTitleRow: {
     flexDirection: 'row',
@@ -754,7 +755,7 @@ const styles = StyleSheet.create({
   chartTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#5F4300',
+    color: BLACKLIST_COLORS.text,
   },
   chartMeta: {
     fontSize: 12,
@@ -762,7 +763,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 14,
-    color: '#A66A00',
+    color: BLACKLIST_COLORS.textMuted,
     lineHeight: 22,
   },
   legend: {
@@ -781,7 +782,7 @@ const styles = StyleSheet.create({
   },
   legendText: {
     fontSize: 13,
-    color: '#5F4300',
+    color: BLACKLIST_COLORS.text,
     flex: 1,
   },
   heatmapLegend: {

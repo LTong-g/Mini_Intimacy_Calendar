@@ -22,6 +22,7 @@ import {
 } from '../utils/usageStorage';
 import { getCachedLaunchableApplications } from '../utils/launchableAppCache';
 import { showAppAlert } from '../utils/appAlert';
+import { BLACKLIST_COLORS } from '../utils/usageTheme';
 
 const INDEX_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ#'.split('');
 const APP_ROW_HEIGHT = 54;
@@ -314,7 +315,7 @@ const ExperimentalUsageBlacklistScreen = () => {
             <Image source={{ uri: app.icon }} style={styles.appIcon} />
           ) : (
             <View style={styles.appIconFallback}>
-              <Ionicons name="apps-outline" size={18} color="#A66A00" />
+              <Ionicons name="apps-outline" size={18} color={BLACKLIST_COLORS.textMuted} />
             </View>
           )}
         </View>
@@ -325,7 +326,7 @@ const ExperimentalUsageBlacklistScreen = () => {
         <Ionicons
           name={selected ? 'checkbox-outline' : 'square-outline'}
           size={22}
-          color={selected ? '#F57F17' : '#A66A00'}
+          color={selected ? BLACKLIST_COLORS.primary : BLACKLIST_COLORS.textMuted}
         />
       </TouchableOpacity>
     );
@@ -335,7 +336,7 @@ const ExperimentalUsageBlacklistScreen = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#F57F17" />
+          <Ionicons name="arrow-back" size={24} color={BLACKLIST_COLORS.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>黑名单应用</Text>
       </View>
@@ -348,19 +349,19 @@ const ExperimentalUsageBlacklistScreen = () => {
       </View>
 
       <View style={styles.searchWrap}>
-        <Ionicons name="search-outline" size={18} color="#A66A00" />
+        <Ionicons name="search-outline" size={18} color={BLACKLIST_COLORS.textMuted} />
         <TextInput
           value={searchText}
           onChangeText={setSearchText}
           placeholder="搜索应用名称或包名"
-          placeholderTextColor="#B76E00"
+          placeholderTextColor={BLACKLIST_COLORS.textPlaceholder}
           style={styles.searchInput}
           autoCapitalize="none"
           autoCorrect={false}
         />
         {searchText ? (
           <TouchableOpacity onPress={() => setSearchText('')} style={styles.clearSearchButton}>
-            <Ionicons name="close-circle" size={18} color="#B76E00" />
+            <Ionicons name="close-circle" size={18} color={BLACKLIST_COLORS.textPlaceholder} />
           </TouchableOpacity>
         ) : null}
       </View>
@@ -410,7 +411,7 @@ const ExperimentalUsageBlacklistScreen = () => {
             showsVerticalScrollIndicator={false}
             ListEmptyComponent={isLoading ? (
               <View style={styles.loadingBlock}>
-                <ActivityIndicator size="small" color="#F57F17" />
+                <ActivityIndicator size="small" color={BLACKLIST_COLORS.primary} />
                 <Text style={styles.loadingText}>正在读取应用列表...</Text>
               </View>
             ) : (
@@ -466,7 +467,7 @@ const ExperimentalUsageBlacklistScreen = () => {
         disabled={isLoading}
         onPress={handleRefreshApps}
       >
-        <Ionicons name="refresh" size={26} color="#fff" />
+        <Ionicons name="refresh" size={26} color={BLACKLIST_COLORS.white} />
       </TouchableOpacity>
     </View>
   );
@@ -476,7 +477,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: 44,
-    backgroundColor: '#fff',
+    backgroundColor: BLACKLIST_COLORS.surface,
   },
   header: {
     flexDirection: 'row',
@@ -484,7 +485,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#F4D79A',
+    borderBottomColor: BLACKLIST_COLORS.secondaryBorder,
   },
   backButton: {
     marginRight: 12,
@@ -492,46 +493,46 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#5F4300',
+    color: BLACKLIST_COLORS.text,
   },
   summaryCard: {
     borderWidth: 1,
-    borderColor: '#F4D79A',
+    borderColor: BLACKLIST_COLORS.secondaryBorder,
     borderRadius: 8,
     padding: 12,
     marginHorizontal: 20,
     marginTop: 16,
-    backgroundColor: '#fff',
+    backgroundColor: BLACKLIST_COLORS.surface,
   },
   summaryTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#5F4300',
+    color: BLACKLIST_COLORS.text,
     marginBottom: 4,
   },
   summaryText: {
     fontSize: 13,
     lineHeight: 20,
-    color: '#8A4B00',
+    color: BLACKLIST_COLORS.secondary,
   },
   searchWrap: {
     minHeight: 42,
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#F4D79A',
+    borderColor: BLACKLIST_COLORS.secondaryBorder,
     borderRadius: 8,
     paddingHorizontal: 12,
     marginHorizontal: 20,
     marginTop: 10,
-    backgroundColor: '#fff',
+    backgroundColor: BLACKLIST_COLORS.surface,
   },
   searchInput: {
     flex: 1,
     paddingVertical: 8,
     paddingHorizontal: 8,
     fontSize: 14,
-    color: '#5F4300',
+    color: BLACKLIST_COLORS.text,
   },
   clearSearchButton: {
     padding: 2,
@@ -549,10 +550,10 @@ const styles = StyleSheet.create({
   },
   filterTabText: {
     fontSize: 12,
-    color: '#A66A00',
+    color: BLACKLIST_COLORS.textMuted,
   },
   filterTabTextActive: {
-    color: '#F57F17',
+    color: BLACKLIST_COLORS.primary,
     fontWeight: '600',
   },
   listArea: {
@@ -564,7 +565,7 @@ const styles = StyleSheet.create({
     flex: 1,
     marginHorizontal: 20,
     borderWidth: 1,
-    borderColor: '#F4D79A',
+    borderColor: BLACKLIST_COLORS.secondaryBorder,
     borderRadius: 8,
     overflow: 'hidden',
   },
@@ -579,7 +580,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 10,
     fontSize: 13,
-    color: '#8A4B00',
+    color: BLACKLIST_COLORS.secondary,
   },
   emptyBlock: {
     minHeight: 88,
@@ -589,7 +590,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 13,
-    color: '#A66A00',
+    color: BLACKLIST_COLORS.textMuted,
   },
   appRow: {
     height: APP_ROW_HEIGHT,
@@ -597,8 +598,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F6E7C4',
-    backgroundColor: '#fff',
+    borderBottomColor: BLACKLIST_COLORS.divider,
+    backgroundColor: BLACKLIST_COLORS.surface,
   },
   appIconWrap: {
     width: 36,
@@ -616,12 +617,12 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 6,
-    backgroundColor: '#FFF8E1',
+    backgroundColor: BLACKLIST_COLORS.selectedBackground,
     alignItems: 'center',
     justifyContent: 'center',
   },
   appRowSelected: {
-    backgroundColor: '#FFF8E1',
+    backgroundColor: BLACKLIST_COLORS.selectedBackground,
   },
   appTextBlock: {
     flex: 1,
@@ -629,12 +630,12 @@ const styles = StyleSheet.create({
   },
   appLabel: {
     fontSize: 14,
-    color: '#5F4300',
+    color: BLACKLIST_COLORS.text,
     marginBottom: 2,
   },
   packageName: {
     fontSize: 11,
-    color: '#A66A00',
+    color: BLACKLIST_COLORS.textMuted,
   },
   indexBar: {
     position: 'absolute',
@@ -644,7 +645,7 @@ const styles = StyleSheet.create({
     width: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: BLACKLIST_COLORS.surface,
   },
   indexLettersWrap: {
     width: 18,
@@ -658,15 +659,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   indexLetterButtonActive: {
-    backgroundColor: '#F57F17',
+    backgroundColor: BLACKLIST_COLORS.primary,
   },
   indexLetterText: {
     fontSize: 10,
     fontWeight: '600',
-    color: '#F57F17',
+    color: BLACKLIST_COLORS.primary,
   },
   indexLetterTextActive: {
-    color: '#fff',
+    color: BLACKLIST_COLORS.surface,
   },
   refreshButton: {
     position: 'absolute',
@@ -675,17 +676,17 @@ const styles = StyleSheet.create({
     width: 58,
     height: 58,
     borderRadius: 29,
-    backgroundColor: '#F57F17',
+    backgroundColor: BLACKLIST_COLORS.primary,
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 8,
-    shadowColor: '#5F4300',
+    shadowColor: BLACKLIST_COLORS.text,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
   },
   refreshButtonDisabled: {
-    backgroundColor: '#F6E7C4',
+    backgroundColor: BLACKLIST_COLORS.divider,
   },
 });
 

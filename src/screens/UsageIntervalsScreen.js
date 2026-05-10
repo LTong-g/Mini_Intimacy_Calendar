@@ -24,6 +24,10 @@ import ModalActionRow from '../components/modals/ModalActionRow';
 import { showAppAlert } from '../utils/appAlert';
 import { formatUsageDurationChinese } from '../utils/usageDurationFormat';
 import {
+  BLACKLIST_COLORS,
+  BLACKLIST_MODAL_THEME,
+} from '../utils/usageTheme';
+import {
   getExperimentalUsageKnownApps,
   getExperimentalUsageIntervals,
   mergeAdjacentUsageIntervals,
@@ -34,13 +38,6 @@ const RANGE_OPTIONS = [
   { key: '7days', label: '7天', days: 7 },
   { key: '30days', label: '30天', days: 30 },
 ];
-const BLACKLIST_MODAL_THEME = {
-  primary: '#F57F17',
-  primaryDisabled: '#F6E7C4',
-  secondary: '#8A4B00',
-  secondaryBorder: '#F4D79A',
-  secondaryBackground: '#fff',
-};
 const showBlacklistAlert = (title, message, buttons, options = {}) => (
   showAppAlert(title, message, buttons, { ...options, theme: 'blacklist' })
 );
@@ -342,7 +339,7 @@ const ExperimentalUsageIntervalsScreen = () => {
         <Image source={{ uri: app.icon }} style={styles.appIcon} />
       ) : (
         <View style={styles.appIconFallback}>
-          <Ionicons name="apps-outline" size={18} color="#A66A00" />
+          <Ionicons name="apps-outline" size={18} color={BLACKLIST_COLORS.textMuted} />
         </View>
       )}
     </View>
@@ -358,7 +355,7 @@ const ExperimentalUsageIntervalsScreen = () => {
         <Image source={{ uri: app.icon }} style={styles.filterAppIcon} />
       ) : (
         <View style={styles.filterAppIconFallback}>
-          <Ionicons name="apps-outline" size={18} color="#A66A00" />
+          <Ionicons name="apps-outline" size={18} color={BLACKLIST_COLORS.textMuted} />
         </View>
       )}
     </TouchableOpacity>
@@ -368,7 +365,7 @@ const ExperimentalUsageIntervalsScreen = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#F57F17" />
+          <Ionicons name="arrow-back" size={24} color={BLACKLIST_COLORS.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle} numberOfLines={1}>{title}</Text>
       </View>
@@ -394,7 +391,7 @@ const ExperimentalUsageIntervalsScreen = () => {
                 />
               )}
               <TouchableOpacity style={styles.filterButton} onPress={handleOpenFilterModal}>
-                <Ionicons name="filter-outline" size={18} color="#8A4B00" />
+                <Ionicons name="filter-outline" size={18} color={BLACKLIST_COLORS.secondary} />
               </TouchableOpacity>
             </View>
           </View>
@@ -438,7 +435,7 @@ const ExperimentalUsageIntervalsScreen = () => {
             <View style={styles.appList}>
               <TouchableOpacity style={styles.appRow} onPress={() => setSelectedPackageName('__all__')}>
                 <View style={styles.allIcon}>
-                  <Ionicons name="layers-outline" size={20} color="#F57F17" />
+                  <Ionicons name="layers-outline" size={20} color={BLACKLIST_COLORS.primary} />
                 </View>
                 <View style={styles.appTextBlock}>
                   <Text style={styles.appLabel}>全部记录</Text>
@@ -446,7 +443,7 @@ const ExperimentalUsageIntervalsScreen = () => {
                     {visibleIntervals.length} 条，合计 {formatUsageDurationChinese(visibleIntervals.reduce((sum, item) => sum + item.durationMs, 0))}
                   </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={22} color="#A66A00" />
+                <Ionicons name="chevron-forward" size={22} color={BLACKLIST_COLORS.textMuted} />
               </TouchableOpacity>
 
               {apps.map((app) => (
@@ -462,7 +459,7 @@ const ExperimentalUsageIntervalsScreen = () => {
                       {app.count} 条，合计 {formatUsageDurationChinese(app.durationMs)}
                     </Text>
                   </View>
-                  <Ionicons name="chevron-forward" size={22} color="#A66A00" />
+                  <Ionicons name="chevron-forward" size={22} color={BLACKLIST_COLORS.textMuted} />
                 </TouchableOpacity>
               ))}
             </View>
@@ -484,7 +481,7 @@ const ExperimentalUsageIntervalsScreen = () => {
                 style={styles.filterEditButton}
                 onPress={() => setAppFilterModalVisible(true)}
               >
-                <Ionicons name="create-outline" size={20} color="#8A4B00" />
+                <Ionicons name="create-outline" size={20} color={BLACKLIST_COLORS.secondary} />
               </TouchableOpacity>
             </>
           ) : (
@@ -553,7 +550,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: 44,
-    backgroundColor: '#fff',
+    backgroundColor: BLACKLIST_COLORS.surface,
   },
   header: {
     flexDirection: 'row',
@@ -561,7 +558,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#F4D79A',
+    borderBottomColor: BLACKLIST_COLORS.secondaryBorder,
   },
   backButton: {
     marginRight: 12,
@@ -570,7 +567,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#5F4300',
+    color: BLACKLIST_COLORS.text,
   },
   content: {
     paddingHorizontal: 20,
@@ -583,7 +580,7 @@ const styles = StyleSheet.create({
   fixedDetailHeader: {
     paddingHorizontal: 20,
     paddingTop: 20,
-    backgroundColor: '#fff',
+    backgroundColor: BLACKLIST_COLORS.surface,
   },
   recordsScroll: {
     flex: 1,
@@ -594,21 +591,21 @@ const styles = StyleSheet.create({
   },
   summaryCard: {
     borderWidth: 1,
-    borderColor: '#F4D79A',
+    borderColor: BLACKLIST_COLORS.secondaryBorder,
     borderRadius: 8,
     padding: 12,
     marginBottom: 12,
-    backgroundColor: '#FFF8E1',
+    backgroundColor: BLACKLIST_COLORS.selectedBackground,
   },
   summaryTitle: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#8A4B00',
+    color: BLACKLIST_COLORS.secondary,
     marginBottom: 4,
   },
   summaryText: {
     fontSize: 13,
-    color: '#5F4300',
+    color: BLACKLIST_COLORS.text,
   },
   filterBar: {
     minHeight: 28,
@@ -622,7 +619,7 @@ const styles = StyleSheet.create({
     paddingRight: 12,
     fontSize: 13,
     fontWeight: '700',
-    color: '#8A4B00',
+    color: BLACKLIST_COLORS.secondary,
   },
   filterButton: {
     width: 28,
@@ -666,7 +663,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 6,
-    backgroundColor: '#FFF8E1',
+    backgroundColor: BLACKLIST_COLORS.selectedBackground,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -676,7 +673,7 @@ const styles = StyleSheet.create({
   appFilterSectionTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#5F4300',
+    color: BLACKLIST_COLORS.text,
     marginBottom: 8,
   },
   appFilterIconRow: {
@@ -686,7 +683,7 @@ const styles = StyleSheet.create({
   },
   appList: {
     borderWidth: 1,
-    borderColor: '#F4D79A',
+    borderColor: BLACKLIST_COLORS.secondaryBorder,
     borderRadius: 8,
     overflow: 'hidden',
   },
@@ -696,13 +693,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F6E7C4',
+    borderBottomColor: BLACKLIST_COLORS.divider,
   },
   allIcon: {
     width: 36,
     height: 36,
     borderRadius: 8,
-    backgroundColor: '#FFF8E1',
+    backgroundColor: BLACKLIST_COLORS.selectedBackground,
     marginRight: 10,
     alignItems: 'center',
     justifyContent: 'center',
@@ -723,7 +720,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 6,
-    backgroundColor: '#FFF8E1',
+    backgroundColor: BLACKLIST_COLORS.selectedBackground,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -734,16 +731,16 @@ const styles = StyleSheet.create({
   appLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#5F4300',
+    color: BLACKLIST_COLORS.text,
     marginBottom: 2,
   },
   packageName: {
     fontSize: 12,
-    color: '#8A4B00',
+    color: BLACKLIST_COLORS.secondary,
   },
   emptyText: {
     fontSize: 14,
-    color: '#A66A00',
+    color: BLACKLIST_COLORS.textMuted,
     lineHeight: 22,
   },
   dateGroup: {
@@ -753,7 +750,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#FFF8E1',
+    backgroundColor: BLACKLIST_COLORS.selectedBackground,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 6,
@@ -764,17 +761,17 @@ const styles = StyleSheet.create({
     paddingRight: 10,
     fontSize: 13,
     fontWeight: '600',
-    color: '#8A4B00',
+    color: BLACKLIST_COLORS.secondary,
   },
   dateDuration: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#8A4B00',
+    color: BLACKLIST_COLORS.secondary,
   },
   intervalRow: {
     minHeight: 50,
     borderBottomWidth: 1,
-    borderBottomColor: '#F6E7C4',
+    borderBottomColor: BLACKLIST_COLORS.divider,
     paddingVertical: 9,
     flexDirection: 'row',
     alignItems: 'center',
@@ -786,19 +783,19 @@ const styles = StyleSheet.create({
   intervalTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#5F4300',
+    color: BLACKLIST_COLORS.text,
   },
   intervalMeta: {
     alignItems: 'flex-end',
   },
   intervalTime: {
     fontSize: 13,
-    color: '#8A4B00',
+    color: BLACKLIST_COLORS.secondary,
     marginBottom: 2,
   },
   intervalDuration: {
     fontSize: 12,
-    color: '#A66A00',
+    color: BLACKLIST_COLORS.textMuted,
   },
 });
 

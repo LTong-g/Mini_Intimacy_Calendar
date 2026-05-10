@@ -1,5 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { BLACKLIST_COLORS } from '../utils/usageTheme';
 
 const UsageRangeTabs = ({
   options,
@@ -47,9 +48,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 10,
     borderWidth: 1,
-    borderColor: '#F4D79A',
+    borderColor: BLACKLIST_COLORS.secondaryBorder,
     borderLeftWidth: 0,
-    backgroundColor: '#fff',
+    backgroundColor: BLACKLIST_COLORS.surface,
   },
   rangeButtonFirst: {
     borderLeftWidth: 1,
@@ -61,15 +62,15 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 6,
   },
   rangeButtonActive: {
-    backgroundColor: '#FFF8E1',
+    backgroundColor: BLACKLIST_COLORS.selectedBackground,
   },
   rangeText: {
     fontSize: 13,
-    color: '#A66A00',
+    color: BLACKLIST_COLORS.textMuted,
   },
   rangeTextActive: {
     fontWeight: '700',
-    color: '#8A4B00',
+    color: BLACKLIST_COLORS.secondary,
   },
 });
 

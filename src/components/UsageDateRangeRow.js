@@ -1,5 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { BLACKLIST_COLORS } from '../utils/usageTheme';
 
 const UsageDateRangeRow = ({
   startDate,
@@ -29,19 +30,19 @@ const styles = StyleSheet.create({
     width: 120,
     paddingVertical: 7,
     borderWidth: 1,
-    borderColor: '#F4D79A',
+    borderColor: BLACKLIST_COLORS.secondaryBorder,
     borderRadius: 6,
-    backgroundColor: '#FFF8E1',
+    backgroundColor: BLACKLIST_COLORS.selectedBackground,
     alignItems: 'center',
   },
   dateText: {
     fontSize: 14,
-    color: '#5F4300',
+    color: BLACKLIST_COLORS.text,
   },
   dateSeparator: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#5F4300',
+    color: BLACKLIST_COLORS.text,
     marginHorizontal: 12,
   },
 });

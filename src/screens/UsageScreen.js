@@ -31,6 +31,10 @@ import ModalActionRow from '../components/modals/ModalActionRow';
 import { showAppAlert } from '../utils/appAlert';
 import { formatUsageDurationChinese } from '../utils/usageDurationFormat';
 import {
+  BLACKLIST_COLORS,
+  BLACKLIST_MODAL_THEME,
+} from '../utils/usageTheme';
+import {
   getExperimentalUsageBlacklist,
   getExperimentalUsageKnownApps,
   getExperimentalUsageIntervals,
@@ -49,13 +53,6 @@ const CHART_RANGE_OPTIONS = [
   { key: '30days', label: '30天' },
   { key: 'heatmap', label: '热图' },
 ];
-const BLACKLIST_MODAL_THEME = {
-  primary: '#F57F17',
-  primaryDisabled: '#F6E7C4',
-  secondary: '#8A4B00',
-  secondaryBorder: '#F4D79A',
-  secondaryBackground: '#fff',
-};
 const AUTO_RECORD_RULES = [
   '黑名单应用的使用时间段会保存到本地，并用于动态计算观看教程自动记录次数。',
   '同一应用的碎片使用记录会先合并：前后间隔不超过 2 分钟，且中间没有其他黑名单应用使用时，视为同一段。',
@@ -429,7 +426,7 @@ const ExperimentalUsageScreen = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#F57F17" />
+          <Ionicons name="arrow-back" size={24} color={BLACKLIST_COLORS.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>黑名单</Text>
       </View>
@@ -440,8 +437,8 @@ const ExperimentalUsageScreen = () => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRecentRefresh}
-            colors={['#F57F17']}
-            tintColor="#F57F17"
+            colors={[BLACKLIST_COLORS.primary]}
+            tintColor={BLACKLIST_COLORS.primary}
           />
         )}
       >
@@ -455,7 +452,7 @@ const ExperimentalUsageScreen = () => {
               accessibilityRole="button"
               accessibilityLabel="查看观看教程自动记录规则"
             >
-              <Ionicons name="information-circle-outline" size={20} color="#A66A00" />
+              <Ionicons name="information-circle-outline" size={20} color={BLACKLIST_COLORS.textMuted} />
             </TouchableOpacity>
           </View>
           <Text style={styles.noticeText}>
@@ -468,7 +465,7 @@ const ExperimentalUsageScreen = () => {
           disabled={isReading}
           onPress={handleOpenRangeModal}
         >
-          <Ionicons name="calendar-outline" size={18} color="#8A4B00" />
+          <Ionicons name="calendar-outline" size={18} color={BLACKLIST_COLORS.secondary} />
           <Text style={styles.primaryButtonText}>{isReading ? '读取中' : '按日期读取记录'}</Text>
         </TouchableOpacity>
 
@@ -481,14 +478,14 @@ const ExperimentalUsageScreen = () => {
           <View style={styles.blacklistEntryTextBlock}>
             <Text style={styles.blacklistEntryTitle}>设置黑名单应用</Text>
           </View>
-          <Ionicons name="chevron-forward" size={22} color="#A66A00" />
+          <Ionicons name="chevron-forward" size={22} color={BLACKLIST_COLORS.textMuted} />
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.intervalEntry} onPress={handleOpenIntervals}>
           <View style={styles.blacklistEntryTextBlock}>
             <Text style={styles.blacklistEntryTitle}>查看使用时间段</Text>
           </View>
-          <Ionicons name="chevron-forward" size={22} color="#A66A00" />
+          <Ionicons name="chevron-forward" size={22} color={BLACKLIST_COLORS.textMuted} />
         </TouchableOpacity>
 
         <View style={styles.chartRangeBar}>
@@ -598,7 +595,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: 44,
-    backgroundColor: '#fff',
+    backgroundColor: BLACKLIST_COLORS.surface,
   },
   header: {
     flexDirection: 'row',
@@ -606,7 +603,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#F4D79A',
+    borderBottomColor: BLACKLIST_COLORS.secondaryBorder,
   },
   backButton: {
     marginRight: 12,
@@ -614,7 +611,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#5F4300',
+    color: BLACKLIST_COLORS.text,
   },
   content: {
     paddingHorizontal: 20,
@@ -623,10 +620,10 @@ const styles = StyleSheet.create({
   },
   notice: {
     borderWidth: 1,
-    borderColor: '#F57F17',
+    borderColor: BLACKLIST_COLORS.primary,
     borderRadius: 8,
     padding: 12,
-    backgroundColor: '#FFF8E1',
+    backgroundColor: BLACKLIST_COLORS.selectedBackground,
   },
   noticeHeader: {
     minHeight: 24,
@@ -639,7 +636,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     fontWeight: '600',
-    color: '#8A4B00',
+    color: BLACKLIST_COLORS.secondary,
     marginRight: 8,
   },
   noticeInfoButton: {
@@ -651,7 +648,7 @@ const styles = StyleSheet.create({
   noticeText: {
     fontSize: 13,
     lineHeight: 20,
-    color: '#5F4300',
+    color: BLACKLIST_COLORS.text,
   },
   primaryButton: {
     minHeight: 42,
@@ -659,24 +656,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#F4D79A',
+    borderColor: BLACKLIST_COLORS.secondaryBorder,
     borderRadius: 8,
-    backgroundColor: '#FFF8E1',
+    backgroundColor: BLACKLIST_COLORS.selectedBackground,
     marginTop: 16,
   },
   primaryButtonText: {
-    color: '#8A4B00',
+    color: BLACKLIST_COLORS.secondary,
     fontSize: 14,
     fontWeight: '700',
     marginLeft: 6,
   },
   primaryButtonDisabled: {
-    backgroundColor: '#F6E7C4',
+    backgroundColor: BLACKLIST_COLORS.divider,
   },
   modalTitle: {
     fontSize: 17,
     fontWeight: '600',
-    color: '#5F4300',
+    color: BLACKLIST_COLORS.text,
     marginBottom: 14,
   },
   resultBlock: {
@@ -685,18 +682,18 @@ const styles = StyleSheet.create({
   resultLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#8A4B00',
+    color: BLACKLIST_COLORS.secondary,
     marginBottom: 6,
   },
   resultValue: {
     fontSize: 14,
     lineHeight: 22,
-    color: '#5F4300',
+    color: BLACKLIST_COLORS.text,
   },
   resultSummary: {
     fontSize: 14,
     lineHeight: 22,
-    color: '#5F4300',
+    color: BLACKLIST_COLORS.text,
     marginTop: 2,
   },
   ruleList: {
@@ -711,14 +708,14 @@ const styles = StyleSheet.create({
     width: 18,
     fontSize: 14,
     lineHeight: 22,
-    color: '#8A4B00',
+    color: BLACKLIST_COLORS.secondary,
     fontWeight: '600',
   },
   ruleText: {
     flex: 1,
     fontSize: 14,
     lineHeight: 22,
-    color: '#5F4300',
+    color: BLACKLIST_COLORS.text,
   },
   summaryRow: {
     flexDirection: 'row',
@@ -727,14 +724,14 @@ const styles = StyleSheet.create({
   },
   summaryText: {
     fontSize: 13,
-    color: '#5F4300',
+    color: BLACKLIST_COLORS.text,
   },
   blacklistEntry: {
     minHeight: 48,
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#F4D79A',
+    borderColor: BLACKLIST_COLORS.secondaryBorder,
     borderRadius: 8,
     paddingHorizontal: 12,
     marginTop: 14,
@@ -744,7 +741,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#F4D79A',
+    borderColor: BLACKLIST_COLORS.secondaryBorder,
     borderRadius: 8,
     paddingHorizontal: 12,
     marginTop: 8,
@@ -755,11 +752,11 @@ const styles = StyleSheet.create({
   blacklistEntryTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#5F4300',
+    color: BLACKLIST_COLORS.text,
   },
   blacklistEntryText: {
     fontSize: 13,
-    color: '#8A4B00',
+    color: BLACKLIST_COLORS.secondary,
   },
   chartRangeBar: {
     minHeight: 28,
@@ -769,7 +766,7 @@ const styles = StyleSheet.create({
   },
   appList: {
     borderWidth: 1,
-    borderColor: '#F4D79A',
+    borderColor: BLACKLIST_COLORS.secondaryBorder,
     borderRadius: 8,
     overflow: 'hidden',
   },
@@ -779,10 +776,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F6E7C4',
+    borderBottomColor: BLACKLIST_COLORS.divider,
   },
   appRowSelected: {
-    backgroundColor: '#FFF8E1',
+    backgroundColor: BLACKLIST_COLORS.selectedBackground,
   },
   appTextBlock: {
     flex: 1,
@@ -790,12 +787,12 @@ const styles = StyleSheet.create({
   },
   appLabel: {
     fontSize: 14,
-    color: '#5F4300',
+    color: BLACKLIST_COLORS.text,
     marginBottom: 2,
   },
   packageName: {
     fontSize: 11,
-    color: '#A66A00',
+    color: BLACKLIST_COLORS.textMuted,
   },
 });
 
