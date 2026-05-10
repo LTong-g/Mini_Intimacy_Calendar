@@ -1669,3 +1669,6 @@
 - src/screens/PrivacyPolicyScreen.js 已补充正式安装包不申请外部存储读写权限或悬浮窗权限，并说明导入、导出、分享和问题日志查看通过系统文件选择、目录授权、分享面板或应用专属目录处理。
 - src/screens/VersionHistoryScreen.js 已新增 Unreleased 优化项，记录 Android 正式安装包权限声明收敛。
 - developer_guide.md 已补充 Android 正式安装包权限声明收敛及导入导出、问题日志文件处理口径。
+
+### 收窄开发日志验证结果记录规则
+- AGENTS.md 已将开发日志规则收窄为仅记录会影响决策或回溯的验证结果，并禁止记录 验证通过无空白错误无格式错误等无实际意义的通过类检查条目。
