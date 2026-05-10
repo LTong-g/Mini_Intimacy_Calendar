@@ -282,6 +282,7 @@ npm run android
 ### 6.1 Windows 本地构建（临时短路径映射）
 - 目的：避免 React Native native 模块在 Windows 下因工程路径过深导致的 CMake/Ninja 构建失败。
 - 约束：每次构建前检查目标临时盘符是否已存在；若已存在则直接失败，不自动删除。仅在目标盘符不存在时创建本次构建专用 `subst` 映射，每次构建后无论成功失败都取消本次创建的映射，不让 `M:` 长驻。
+- Debug 构建通过 `android/app/src/debug/AndroidManifest.xml` 单独允许 `.MainActivity` 被 Expo CLI 和 ADB 显式启动；正式 Manifest 中 `.MainActivity` 仍为不导出的 React 容器入口，桌面入口由 `OriginalLauncherActivity` 与 `MemoLauncherActivity` 承载。
 
 推荐命令（仓库根目录执行）：
 ```powershell

@@ -1737,3 +1737,10 @@
 ### 恢复黑名单 30 天趋势图触摸标签位置
 - 黑名单 30 天趋势图触摸时长标签已改回显示在触摸点右侧，不再对最右侧标签做向内居中约束。
 - 黑名单 30 天趋势图保留网格线、横轴、点位、折线和触摸命中范围同步内缩。
+
+### 修复 Android Debug 显式启动入口
+- android/app/src/debug/AndroidManifest.xml 已在 Debug 构建中单独将 MainActivity 覆盖为 exported=true，用于兼容 Expo CLI 和 ADB 对 .MainActivity 的显式启动。
+- android/app/src/main/AndroidManifest.xml 中 MainActivity 仍保持不导出，正式桌面入口仍由 OriginalLauncherActivity 和 MemoLauncherActivity 承载。
+- developer_guide.md 已补充 Debug 构建与正式 Manifest 的入口差异说明。
+- 已执行 Android Debug 构建，并确认合并后的 Debug Manifest 中 MainActivity 为 exported=true。
+- 已将 Debug APK 安装到当前在线模拟器，并用 ADB 显式启动 .MainActivity，启动命令未再出现 Permission Denial。
