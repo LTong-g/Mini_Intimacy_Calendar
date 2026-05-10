@@ -69,7 +69,7 @@
 - 用户希望构建流程尽量在项目仓库内产出安装包/发布物，以便后续 release 管理与分发。
 - 当前阶段开发与测试仅考虑 Android，不纳入 iOS。
 - 用户希望在 bare workflow 下保持 `expo.version` 与 `ios/android runtimeVersion` 自动统一，不采用手工分别维护。
-- 在 Windows 本机进行 Android 构建时，采用“构建前临时 `subst` 映射短路径、构建后无论成功失败都取消映射”的流程；每次构建重新映射，避免 `M:` 长驻和与原始长路径混用导致 Kotlin/Gradle 缓存根路径冲突及 native 编译路径过深问题。
+- 在 Windows 本机进行 Android 构建时，采用“构建前临时 `subst` 映射短路径、构建后无论成功失败都取消本次创建映射”的流程；构建前若目标盘符已存在，无论是否映射到当前项目，都直接失败，不自动删除，避免误删用户映射或干扰并发构建。
 - Android 安装包只有准备发布或分发时才需要复制归档并重命名；普通构建不要求每次复制重命名。
 - Android 安装包发布/分发归档命名格式为 `MinimalistWeaponEnhancementCalendar-v<语义版本>-android-<yyyyMMdd>.apk`，归档位置为 `dist/`，归档来源必须是 Release APK。
 - Android Release APK 使用本机私有 release 签名；`android/app/debug.keystore` 仅用于 Debug，Release 构建不得使用 `signingConfigs.debug`。
@@ -140,11 +140,12 @@
   - 构建 Release APK：`npm run android:build:release:tempmap`
   - 构建并安装到模拟器/设备：`npm run android:install:debug:tempmap`
 - 执行语义（必须满足）：
-  - 步骤 1：每次构建前先创建临时映射（默认 `M:`）。
-  - 步骤 2：仅在临时映射路径下的 android 目录内执行 Gradle 任务。
-  - 步骤 3：构建结束后无论成功或失败都执行取消映射（`subst M: /D`）。
-  - 步骤 4：构建结束后校验 `subst` 输出不包含 `M:`。
-  - 步骤 5：下一次构建必须重新映射，不复用旧映射。
+  - 步骤 1：每次构建前先检查目标临时盘符（默认 `M:`）是否已存在；若已存在，无论是否映射到当前项目，都直接失败，不自动删除。
+  - 步骤 2：仅当目标盘符不存在时，创建本次构建专用临时映射。
+  - 步骤 3：仅在临时映射路径下的 android 目录内执行 Gradle 任务。
+  - 步骤 4：构建结束后无论成功或失败都执行取消本次创建的映射（`subst M: /D`）。
+  - 步骤 5：构建结束后校验 `subst` 输出不包含 `M:`。
+  - 步骤 6：下一次构建必须重新创建映射，不复用旧映射；若发现旧映射残留，先人工确认没有并发构建占用后再清理。
 - 实现载体：`scripts/android-build-tempmap.ps1`（`try/finally` 保证清理）。
 - 发布/分发归档：仅在准备发布或分发安装包时，将 `android/app/build/outputs/apk/release/app-release.apk` 复制到 `dist/` 并按 `MinimalistWeaponEnhancementCalendar-v<语义版本>-android-<yyyyMMdd>.apk` 命名；普通构建不执行该归档步骤，禁止将 `debug/app-debug.apk` 作为发布或分发归档来源。
 - Release 签名：Release APK 必须使用 `android/keystore.properties` 指向的本机私有签名；缺少私有签名配置时不得回退为 debug 签名。

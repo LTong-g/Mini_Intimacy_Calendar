@@ -17,9 +17,37 @@ if ($drive -notmatch "^[A-Z]$") {
 $driveRoot = "$drive`:"
 $mapped = $false
 
+function Get-SubstTarget {
+  param([string]$TargetDriveRoot)
+
+  $substOutput = & subst
+  foreach ($line in $substOutput) {
+    if ($line -match "^\s*([A-Z]:)\\?:\s*=>\s*(.+?)\s*$") {
+      $mappedDrive = $matches[1].ToUpperInvariant()
+      if ($mappedDrive -eq $TargetDriveRoot.ToUpperInvariant()) {
+        return $matches[2].Trim()
+      }
+    }
+  }
+
+  return $null
+}
+
 try {
-  # Recreate mapping every build to avoid stale path roots in caches.
-  & subst $driveRoot /D 2>$null | Out-Null
+  $existingSubstTarget = Get-SubstTarget -TargetDriveRoot $driveRoot
+  if ($existingSubstTarget) {
+    $message = "$driveRoot is already mapped to '$existingSubstTarget'."
+    if ($existingSubstTarget.TrimEnd("\") -ieq $projectRoot.TrimEnd("\")) {
+      $message += " Another Android build may be running, or a stale mapping remains."
+    }
+    $message += " Choose another -DriveLetter or remove the mapping manually after confirming it is unused."
+    throw $message
+  }
+
+  if (Test-Path "$driveRoot\") {
+    throw "$driveRoot already exists as a drive. Choose another -DriveLetter."
+  }
+
   & subst $driveRoot $projectRoot
 
   if ($LASTEXITCODE -ne 0) {
@@ -52,6 +80,14 @@ try {
 }
 finally {
   if ($mapped) {
-    & subst $driveRoot /D 2>$null | Out-Null
+    & subst $driveRoot /D
+    if ($LASTEXITCODE -ne 0) {
+      throw "Failed to unmap $driveRoot after build."
+    }
+
+    $remainingSubstTarget = Get-SubstTarget -TargetDriveRoot $driveRoot
+    if ($remainingSubstTarget) {
+      throw "$driveRoot is still mapped to '$remainingSubstTarget' after build cleanup."
+    }
   }
 }

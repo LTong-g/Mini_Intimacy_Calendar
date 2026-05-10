@@ -1672,3 +1672,8 @@
 
 ### 收窄开发日志验证结果记录规则
 - AGENTS.md 已将开发日志规则收窄为仅记录会影响决策或回溯的验证结果，并禁止记录 验证通过无空白错误无格式错误等无实际意义的通过类检查条目。
+
+### 强化 Android 临时映射构建脚本占用保护
+- scripts/android-build-tempmap.ps1 已改为构建前检查目标临时盘符占用状态，目标盘符已存在时直接失败且不自动删除既有映射。
+- scripts/android-build-tempmap.ps1 已改为仅取消本次脚本创建的 subst 映射，并在清理后检测同一临时盘符是否仍残留映射。
+- AGENTS.md 和 developer_guide.md 已同步记录 Windows Android 构建临时盘符占用即失败、不自动删除既有映射的流程。
