@@ -1687,3 +1687,7 @@
 - Android 主入口已由两个 activity-alias 改为 OriginalLauncherActivity 和 MemoLauncherActivity 两个真实启动 Activity，MainActivity 改为不导出的 React 容器入口。
 - 备忘录模式启动页已新增独立 Android splash 资源，复用内置备忘录图标前景并与正常入口使用不同启动主题。
 - 软件介绍、使用帮助、版本记录、开发者文档和本地协作规则已同步安全锁开启后桌面入口和启动页切换为极简备忘录的事实。
+
+### 记录重构方案表达偏好
+- AGENTS.md 已记录用户主要通过页面实际效果验证开发结果，重构方案说明应优先按用户可见页面、入口、弹窗、列表、按钮、图表和验证路径表达。
+
