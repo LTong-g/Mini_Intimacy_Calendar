@@ -16,7 +16,7 @@ import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import BaseModal from '../components/modals/BaseModal';
 import ModalActionRow from '../components/modals/ModalActionRow';
-import MemoColorPicker from '../components/MemoColorPicker';
+import MemoCategoryEditorModal from '../components/MemoCategoryEditorModal';
 import { showAppAlert } from '../utils/appAlert';
 import {
   buildTitleFromBody,
@@ -43,8 +43,6 @@ import { clearDiagnosticLogs } from '../utils/diagnosticLogs';
 const RESET_CONFIRM_TEXT = '清空数据并重置';
 const MEMO_MIME_TYPE = 'application/json';
 const MEMO_EXPORT_FILE_BASENAME = 'MemoData';
-const DEFAULT_CATEGORY_COLORS = ['#007AFF', '#34C759', '#FF9500', '#AF52DE', '#FF3B30', '#8E8E93'];
-
 const buildMemoExportFileName = () => {
   const ts = new Date().toISOString().replace(/[.:]/g, '-');
   return `${MEMO_EXPORT_FILE_BASENAME}_${ts}.json`;
@@ -459,29 +457,15 @@ const MemoShellScreen = ({ onUnlock, onResetComplete }) => {
         />
       </BaseModal>
 
-      <BaseModal
+      <MemoCategoryEditorModal
         visible={categoryEditorVisible}
-        title="新建分类"
-        onRequestClose={() => setCategoryEditorVisible(false)}
-      >
-        <TextInput value={categoryName} onChangeText={setCategoryName} style={styles.input} placeholder="分类名称" />
-        <View style={styles.colorRow}>
-          {DEFAULT_CATEGORY_COLORS.map((color) => (
-            <TouchableOpacity
-              key={color}
-              style={[styles.colorButton, { backgroundColor: color }, categoryColor === color && styles.colorButtonSelected]}
-              onPress={() => setCategoryColor(color)}
-            />
-          ))}
-        </View>
-        <MemoColorPicker value={categoryColor} onChange={setCategoryColor} />
-        <ModalActionRow
-          actions={[
-            { label: '取消', variant: 'secondary', onPress: () => setCategoryEditorVisible(false) },
-            { label: '保存', onPress: handleSaveCategory },
-          ]}
-        />
-      </BaseModal>
+        name={categoryName}
+        color={categoryColor}
+        onNameChange={setCategoryName}
+        onColorChange={setCategoryColor}
+        onCancel={() => setCategoryEditorVisible(false)}
+        onSave={handleSaveCategory}
+      />
     </>
   );
 
@@ -782,9 +766,6 @@ const styles = StyleSheet.create({
   secondaryAction: { minHeight: 42, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 12 },
   secondaryActionText: { marginLeft: 6, color: '#007AFF', fontSize: 14 },
   input: { minHeight: 42, borderWidth: 1, borderColor: '#d8d8d8', borderRadius: 8, paddingHorizontal: 10, fontSize: 15 },
-  colorRow: { flexDirection: 'row', marginTop: 12, marginBottom: 10 },
-  colorButton: { width: 28, height: 28, borderRadius: 14, marginRight: 10 },
-  colorButtonSelected: { borderWidth: 3, borderColor: '#222' },
   settingsContainer: { flex: 1, paddingTop: 44, backgroundColor: '#fff' },
   settingsContent: { padding: 20, paddingBottom: 32 },
   settingCard: { borderWidth: 1, borderColor: '#d8d8d8', borderRadius: 8, padding: 14 },
