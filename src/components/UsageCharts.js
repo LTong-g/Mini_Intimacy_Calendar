@@ -13,6 +13,12 @@ import Svg, {
 } from 'react-native-svg';
 import * as d3Shape from 'd3-shape';
 import moment from 'moment';
+import {
+  formatUsageAxisDurationCompact,
+  formatUsageDurationChinese,
+  formatUsageDurationCompact,
+  getUsageDurationMinutes,
+} from '../utils/usageDurationFormat';
 
 const { width: screenWidth } = Dimensions.get('window');
 const chartWidth = screenWidth - 40;
@@ -31,23 +37,13 @@ const heatmapFutureColor = '#F7F7F7';
 const heatmapNeutralBorderColor = '#E0E0E0';
 const heatmapGradientStartColor = '#FFE082';
 const heatmapGradientEndColor = '#8A4B00';
-const msPerMinute = 1000 * 60;
 const monthlyTouchValueLabelOffsetX = 6;
+const monthlyPlotSideInset = 18;
 const yAxisLabelWidth = 0;
 const horizontalAxisPadding = 10;
 const msPerDay = 24 * 60 * 60 * 1000;
 const heatmapLegendGradientWidth = 86;
 const heatmapLegendGradientHeight = 11;
-
-const formatMinutes = (ms) => `${Math.round(ms / msPerMinute)} 分钟`;
-const minutesValue = (ms) => Math.round(ms / msPerMinute);
-const formatAxisMinutes = (ms, maxMs) => {
-  const minutes = ms / msPerMinute;
-  if (maxMs < 4 * msPerMinute) {
-    return minutes.toFixed(1).replace(/\.0$/, '');
-  }
-  return String(Math.round(minutes));
-};
 
 const getUsageSliceColor = (index) => (
   [tutorialColor, tutorialMidColor, tutorialDarkColor, '#FFB300', '#B76E00'][index % 5]
@@ -88,14 +84,14 @@ const interpolateHexColor = (startHex, endHex, ratio) => {
 };
 
 const getRoundedHeatmapMaxMinutes = (maxDurationMs) => {
-  const maxMinutes = minutesValue(maxDurationMs);
+  const maxMinutes = getUsageDurationMinutes(maxDurationMs);
   if (maxMinutes <= 0) return 0;
   return Math.ceil(maxMinutes / 10) * 10;
 };
 
 const getHeatmapColor = (durationMs, maxMinutes) => {
   if (durationMs <= 0) return heatmapEmptyColor;
-  const durationMinutes = minutesValue(durationMs);
+  const durationMinutes = getUsageDurationMinutes(durationMs);
   const ratio = maxMinutes > 0 ? durationMinutes / maxMinutes : 0;
   return interpolateHexColor(heatmapGradientStartColor, heatmapGradientEndColor, ratio);
 };
@@ -146,7 +142,7 @@ export const DailyUsagePieChart = ({ rows }) => {
     <View style={styles.chartBlock}>
       <View style={styles.chartTitleRow}>
         <Text style={styles.chartTitle}>当日使用占比</Text>
-        <Text style={styles.chartMeta}>已过 {formatMinutes(total)}</Text>
+        <Text style={styles.chartMeta}>已过 {formatUsageDurationChinese(total)}</Text>
       </View>
       {total <= 0 ? (
         <Text style={styles.emptyText}>暂无当日使用时间数据</Text>
@@ -165,16 +161,16 @@ export const DailyUsagePieChart = ({ rows }) => {
               ))}
               <Circle r={39} fill="#FFF8E1" />
               <SvgText
-                y={-5}
+                y={1}
                 fontSize={18}
                 fontWeight="700"
                 fill={tutorialDarkColor}
                 textAnchor="middle"
               >
-                {minutesValue(usageTotal)}
+                {formatUsageDurationCompact(usageTotal)}
               </SvgText>
-              <SvgText y={15} fontSize={11} fill={axisTextColor} textAnchor="middle">
-                黑名单分钟
+              <SvgText y={19} fontSize={9} fill={axisTextColor} textAnchor="middle">
+                黑名单时长
               </SvgText>
             </G>
           </Svg>
@@ -188,7 +184,7 @@ export const DailyUsagePieChart = ({ rows }) => {
                   ]}
                 />
                 <Text style={styles.legendText}>
-                  {item.label}：{formatMinutes(item.durationMs)}
+                  {item.label}：{formatUsageDurationChinese(item.durationMs)}
                 </Text>
               </View>
             ))}
@@ -251,7 +247,7 @@ export const WeeklyUsageBarChart = ({ rows }) => {
     onPanResponderTerminate: () => setTouchIndex(null),
   }), [handleTouch]);
   const touchBar = touchIndex != null ? bars[touchIndex] : null;
-  const touchLabel = touchBar ? formatMinutes(touchBar.item.durationMs) : '';
+  const touchLabel = touchBar ? formatUsageDurationCompact(touchBar.item.durationMs) : '';
   const touchLabelWidth = touchLabel.length * 7;
   const touchLabelX = touchBar
     ? Math.max(
@@ -269,7 +265,7 @@ export const WeeklyUsageBarChart = ({ rows }) => {
     <View style={styles.chartBlock}>
       <View style={styles.chartTitleRow}>
         <Text style={styles.chartTitle}>最近7天使用时长</Text>
-        <Text style={styles.chartMeta}>单位：分钟</Text>
+        <Text style={styles.chartMeta}>时长</Text>
       </View>
       <View {...panResponder.panHandlers}>
         <Svg width={chartInnerWidth} height={chartHeight - 6}>
@@ -306,7 +302,7 @@ export const WeeklyUsageBarChart = ({ rows }) => {
                     fill="#8A4B00"
                     textAnchor="end"
                   >
-                    {formatAxisMinutes(maxValue * ratio, maxValue)}
+                    {formatUsageAxisDurationCompact(maxValue * ratio, maxValue)}
                   </SvgText>
                 </G>
               );
@@ -375,11 +371,13 @@ export const MonthlyUsageLineChart = ({ rows }) => {
   const [touchIndex, setTouchIndex] = useState(null);
   const visibleRows = rows.filter((item) => !item.isFuture);
   const maxValue = Math.max(1, ...visibleRows.map((item) => item.durationMs));
-  const plotStartX = yAxisLabelWidth;
   const innerWidth = chartInnerWidth - 46 - yAxisLabelWidth;
+  const plotStartX = yAxisLabelWidth + monthlyPlotSideInset;
+  const plotWidth = Math.max(1, innerWidth - monthlyPlotSideInset * 2);
+  const plotEndX = plotStartX + plotWidth;
   const innerHeight = chartHeight - 66;
   const xRangeStart = plotStartX + horizontalAxisPadding;
-  const xRangeWidth = Math.max(1, innerWidth - horizontalAxisPadding * 2);
+  const xRangeWidth = Math.max(1, plotWidth - horizontalAxisPadding * 2);
   const step = rows.length > 1 ? xRangeWidth / (rows.length - 1) : xRangeWidth;
   const points = rows
     .map((item, index) => ({
@@ -399,7 +397,7 @@ export const MonthlyUsageLineChart = ({ rows }) => {
     .curve(d3Shape.curveMonotoneX)(points);
   const handleTouch = useCallback((x) => {
     const lx = x - 20;
-    if (lx < plotStartX || lx > plotStartX + innerWidth || points.length === 0) {
+    if (lx < plotStartX || lx > plotEndX || points.length === 0) {
       setTouchIndex(null);
       return;
     }
@@ -414,7 +412,7 @@ export const MonthlyUsageLineChart = ({ rows }) => {
       }
     });
     setTouchIndex(nextIndex);
-  }, [innerWidth, plotStartX, points]);
+  }, [plotEndX, plotStartX, points]);
   const panResponder = useMemo(() => PanResponder.create({
     onStartShouldSetPanResponder: () => true,
     onMoveShouldSetPanResponder: () => true,
@@ -424,12 +422,13 @@ export const MonthlyUsageLineChart = ({ rows }) => {
     onPanResponderTerminate: () => setTouchIndex(null),
   }), [handleTouch]);
   const touchPoint = touchIndex != null ? points[touchIndex] : null;
+  const touchLabel = touchPoint ? formatUsageDurationCompact(touchPoint.item.durationMs) : '';
 
   return (
     <View style={styles.chartBlock}>
       <View style={styles.chartTitleRow}>
         <Text style={styles.chartTitle}>最近30天每日趋势</Text>
-        <Text style={styles.chartMeta}>单位：分钟</Text>
+        <Text style={styles.chartMeta}>时长</Text>
       </View>
       <View {...panResponder.panHandlers}>
         <Svg width={chartInnerWidth} height={chartHeight}>
@@ -444,7 +443,7 @@ export const MonthlyUsageLineChart = ({ rows }) => {
               const y = innerHeight * (1 - ratio);
               return (
                 <G key={ratio}>
-                  <Line x1={plotStartX} y1={y} x2={plotStartX + innerWidth} y2={y} stroke={gridColor} strokeWidth={1} />
+                  <Line x1={plotStartX} y1={y} x2={plotEndX} y2={y} stroke={gridColor} strokeWidth={1} />
                   <SvgText
                     x={plotStartX - 2}
                     y={y + 4}
@@ -452,12 +451,12 @@ export const MonthlyUsageLineChart = ({ rows }) => {
                     fill={axisTextColor}
                     textAnchor="end"
                   >
-                    {formatAxisMinutes(maxValue * ratio, maxValue)}
+                    {formatUsageAxisDurationCompact(maxValue * ratio, maxValue)}
                   </SvgText>
                 </G>
               );
             })}
-            <Line x1={plotStartX} y1={innerHeight} x2={plotStartX + innerWidth} y2={innerHeight} stroke="#F4D79A" strokeWidth={1} />
+            <Line x1={plotStartX} y1={innerHeight} x2={plotEndX} y2={innerHeight} stroke="#F4D79A" strokeWidth={1} />
             {areaPath && <Path d={areaPath} fill="url(#monthlyAreaGradient)" />}
             {linePath && (
               <Path
@@ -496,16 +495,13 @@ export const MonthlyUsageLineChart = ({ rows }) => {
                   strokeWidth={1}
                 />
                 <SvgText
-                  x={Math.min(
-                    plotStartX + innerWidth,
-                    touchPoint.x + monthlyTouchValueLabelOffsetX
-                  )}
+                  x={touchPoint.x + monthlyTouchValueLabelOffsetX}
                   y={Math.max(12, touchPoint.y - 6)}
                   fontSize={12}
                   fontWeight="bold"
                   fill={tutorialColor}
                 >
-                  {minutesValue(touchPoint.item.durationMs)}
+                  {touchLabel}
                 </SvgText>
               </G>
             )}
@@ -655,7 +651,7 @@ export const UsageHeatmapChart = ({ intervals, onVisibleWeeksChange }) => {
   }), [handleTouch]);
   const touchCell = touchKey ? cells.find((cell) => cell.key === touchKey) : null;
   const metaText = touchCell
-    ? `${touchCell.label} ${formatMinutes(touchCell.durationMs)}`
+    ? `${touchCell.label} ${formatUsageDurationChinese(touchCell.durationMs)}`
     : `${columnCount} 周`;
 
   return (

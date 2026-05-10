@@ -29,6 +29,7 @@ import UsageRangeTabs from '../components/UsageRangeTabs';
 import BaseModal from '../components/modals/BaseModal';
 import ModalActionRow from '../components/modals/ModalActionRow';
 import { showAppAlert } from '../utils/appAlert';
+import { formatUsageDurationChinese } from '../utils/usageDurationFormat';
 import {
   getExperimentalUsageBlacklist,
   getExperimentalUsageKnownApps,
@@ -67,14 +68,6 @@ const AUTO_RECORD_RULES = [
 const showBlacklistAlert = (title, message, buttons, options = {}) => (
   showAppAlert(title, message, buttons, { ...options, theme: 'blacklist' })
 );
-
-const formatDuration = (durationMs) => {
-  const totalMinutes = Math.round(durationMs / 60000);
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  if (hours > 0) return `${hours}小时${minutes}分钟`;
-  return `${minutes}分钟`;
-};
 
 const formatModalRange = (beginTime, endTime) => (
   `${moment(beginTime).format('YYYY-MM-DD HH:mm')} -- ${moment(endTime).format('YYYY-MM-DD HH:mm')}`
@@ -481,7 +474,7 @@ const ExperimentalUsageScreen = () => {
 
         <View style={styles.summaryRow}>
           <Text style={styles.summaryText}>黑名单：{blacklist.length} 个应用</Text>
-          <Text style={styles.summaryText}>今日合计：{formatDuration(totalToday)}</Text>
+          <Text style={styles.summaryText}>今日合计：{formatUsageDurationChinese(totalToday)}</Text>
         </View>
 
         <TouchableOpacity style={styles.blacklistEntry} onPress={handleOpenBlacklistSettings}>

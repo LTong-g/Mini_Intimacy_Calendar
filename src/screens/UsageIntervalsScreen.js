@@ -22,19 +22,12 @@ import UsageRangeTabs from '../components/UsageRangeTabs';
 import BaseModal from '../components/modals/BaseModal';
 import ModalActionRow from '../components/modals/ModalActionRow';
 import { showAppAlert } from '../utils/appAlert';
+import { formatUsageDurationChinese } from '../utils/usageDurationFormat';
 import {
   getExperimentalUsageKnownApps,
   getExperimentalUsageIntervals,
   mergeAdjacentUsageIntervals,
 } from '../utils/usageStorage';
-
-const formatDuration = (durationMs) => {
-  const totalMinutes = Math.round(durationMs / 60000);
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  if (hours > 0) return `${hours}小时${minutes}分钟`;
-  return `${minutes}分钟`;
-};
 
 const RANGE_OPTIONS = [
   { key: 'today', label: '今日', days: 1 },
@@ -385,7 +378,7 @@ const ExperimentalUsageIntervalsScreen = () => {
           <View style={styles.fixedDetailHeader}>
             <View style={styles.summaryCard}>
               <Text style={styles.summaryTitle}>{rangedIntervals.length} 条记录</Text>
-              <Text style={styles.summaryText}>合计 {formatDuration(totalDuration)}</Text>
+              <Text style={styles.summaryText}>合计 {formatUsageDurationChinese(totalDuration)}</Text>
             </View>
 
             <View style={styles.filterBar}>
@@ -415,7 +408,7 @@ const ExperimentalUsageIntervalsScreen = () => {
                   <View style={styles.dateHeader}>
                     <Text style={styles.dateTitle} numberOfLines={1}>{group.label}</Text>
                     <Text style={styles.dateDuration} numberOfLines={1}>
-                      {formatDuration(group.durationMs)}
+                      {formatUsageDurationChinese(group.durationMs)}
                     </Text>
                   </View>
                   {group.intervals.map((item) => (
@@ -430,7 +423,7 @@ const ExperimentalUsageIntervalsScreen = () => {
                         <Text style={styles.intervalTime}>
                           {moment(item.startTime).format('HH:mm')} - {moment(item.endTime).format('HH:mm')}
                         </Text>
-                        <Text style={styles.intervalDuration}>{formatDuration(item.durationMs)}</Text>
+                        <Text style={styles.intervalDuration}>{formatUsageDurationChinese(item.durationMs)}</Text>
                       </View>
                     </View>
                   ))}
@@ -450,7 +443,7 @@ const ExperimentalUsageIntervalsScreen = () => {
                 <View style={styles.appTextBlock}>
                   <Text style={styles.appLabel}>全部记录</Text>
                   <Text style={styles.packageName}>
-                    {visibleIntervals.length} 条，合计 {formatDuration(visibleIntervals.reduce((sum, item) => sum + item.durationMs, 0))}
+                    {visibleIntervals.length} 条，合计 {formatUsageDurationChinese(visibleIntervals.reduce((sum, item) => sum + item.durationMs, 0))}
                   </Text>
                 </View>
                 <Ionicons name="chevron-forward" size={22} color="#A66A00" />
@@ -466,7 +459,7 @@ const ExperimentalUsageIntervalsScreen = () => {
                   <View style={styles.appTextBlock}>
                     <Text style={styles.appLabel}>{app.label}</Text>
                     <Text style={styles.packageName}>
-                      {app.count} 条，合计 {formatDuration(app.durationMs)}
+                      {app.count} 条，合计 {formatUsageDurationChinese(app.durationMs)}
                     </Text>
                   </View>
                   <Ionicons name="chevron-forward" size={22} color="#A66A00" />
