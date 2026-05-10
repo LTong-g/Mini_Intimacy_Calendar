@@ -1660,3 +1660,12 @@
 - 已核对软件介绍、使用帮助、隐私政策、版本记录、AGENTS、developer_guide 和 develop_log。
 - 已确认 2.1.0 发布准备对应的安全锁与极简备忘录用户可见说明在软件介绍、使用帮助、隐私政策和版本记录中保持一致。
 - 已执行本地字段校验，package.json、app.json、动态 Expo 配置、Android runtimeVersion 和 iOS runtimeVersion 均显示为 2.1.0。
+
+### 收敛 Android 主包权限声明
+- android/app/src/main/AndroidManifest.xml 已移除 READ_EXTERNAL_STORAGE、WRITE_EXTERNAL_STORAGE 和 SYSTEM_ALERT_WINDOW 三项未使用的主包权限声明。
+- 调试包 android/app/src/debug/AndroidManifest.xml 仍保留 SYSTEM_ALERT_WINDOW 权限声明。
+
+### 同步 Android 权限收敛相关文档
+- src/screens/PrivacyPolicyScreen.js 已补充正式安装包不申请外部存储读写权限或悬浮窗权限，并说明导入、导出、分享和问题日志查看通过系统文件选择、目录授权、分享面板或应用专属目录处理。
+- src/screens/VersionHistoryScreen.js 已新增 Unreleased 优化项，记录 Android 正式安装包权限声明收敛。
+- developer_guide.md 已补充 Android 正式安装包权限声明收敛及导入导出、问题日志文件处理口径。

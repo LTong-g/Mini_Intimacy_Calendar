@@ -9,6 +9,19 @@ import { useNavigation } from '@react-navigation/native';
 
 const versionHistory = [
   {
+    version: 'Unreleased',
+    title: '未发布变更',
+    date: '开发中',
+    sections: [
+      {
+        label: '优化：',
+        notes: [
+          '优化 Android 正式安装包权限声明，移除未使用的外部存储读写和悬浮窗权限。',
+        ],
+      },
+    ],
+  },
+  {
     version: '2.1.0',
     title: '安全锁与极简备忘录',
     date: '2026-05-10',
