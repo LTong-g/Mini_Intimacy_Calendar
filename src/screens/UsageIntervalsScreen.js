@@ -17,6 +17,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import moment from 'moment';
+import UsageRangeTabs from '../components/UsageRangeTabs';
 import BaseModal from '../components/modals/BaseModal';
 import ModalActionRow from '../components/modals/ModalActionRow';
 import { showAppAlert } from '../utils/appAlert';
@@ -392,29 +393,11 @@ const ExperimentalUsageIntervalsScreen = () => {
                   {activeDateRangeLabel}
                 </Text>
               ) : (
-                <View style={styles.rangeGroup}>
-                  {RANGE_OPTIONS.map((option, index) => (
-                    <TouchableOpacity
-                      key={option.key}
-                      style={[
-                        styles.rangeButton,
-                        option.key === currentRange.key && styles.rangeButtonActive,
-                        index === 0 && styles.rangeButtonFirst,
-                        index === RANGE_OPTIONS.length - 1 && styles.rangeButtonLast,
-                      ]}
-                      onPress={() => setRangeIndex(index)}
-                    >
-                      <Text
-                        style={[
-                          styles.rangeText,
-                          option.key === currentRange.key && styles.rangeTextActive,
-                        ]}
-                      >
-                        {option.label}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+                <UsageRangeTabs
+                  options={RANGE_OPTIONS}
+                  selectedKey={currentRange.key}
+                  onSelect={(_option, index) => setRangeIndex(index)}
+                />
               )}
               <TouchableOpacity style={styles.filterButton} onPress={handleOpenFilterModal}>
                 <Ionicons name="filter-outline" size={18} color="#8A4B00" />
@@ -648,41 +631,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 6,
-  },
-  rangeGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  rangeButton: {
-    minHeight: 28,
-    minWidth: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 10,
-    borderWidth: 1,
-    borderColor: '#F4D79A',
-    borderLeftWidth: 0,
-    backgroundColor: '#fff',
-  },
-  rangeButtonFirst: {
-    borderLeftWidth: 1,
-    borderTopLeftRadius: 6,
-    borderBottomLeftRadius: 6,
-  },
-  rangeButtonLast: {
-    borderTopRightRadius: 6,
-    borderBottomRightRadius: 6,
-  },
-  rangeButtonActive: {
-    backgroundColor: '#FFF8E1',
-  },
-  rangeText: {
-    fontSize: 13,
-    color: '#A66A00',
-  },
-  rangeTextActive: {
-    fontWeight: '700',
-    color: '#8A4B00',
   },
   customRangeText: {
     flex: 1,

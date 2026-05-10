@@ -24,6 +24,7 @@ import {
   MonthlyUsageLineChart,
   WeeklyUsageBarChart,
 } from '../components/UsageCharts';
+import UsageRangeTabs from '../components/UsageRangeTabs';
 import BaseModal from '../components/modals/BaseModal';
 import ModalActionRow from '../components/modals/ModalActionRow';
 import { showAppAlert } from '../utils/appAlert';
@@ -497,29 +498,12 @@ const ExperimentalUsageScreen = () => {
         </TouchableOpacity>
 
         <View style={styles.chartRangeBar}>
-          <View style={styles.rangeGroup}>
-            {CHART_RANGE_OPTIONS.map((option, index) => (
-              <TouchableOpacity
-                key={option.key}
-                style={[
-                  styles.rangeButton,
-                  option.key === currentChartRange.key && styles.rangeButtonActive,
-                  index === 0 && styles.rangeButtonFirst,
-                  index === CHART_RANGE_OPTIONS.length - 1 && styles.rangeButtonLast,
-                ]}
-                onPress={() => setChartRangeIndex(index)}
-              >
-                <Text
-                  style={[
-                    styles.rangeText,
-                    option.key === currentChartRange.key && styles.rangeTextActive,
-                  ]}
-                >
-                  {option.key === 'heatmap' ? `${heatmapVisibleWeeks}周` : option.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+          <UsageRangeTabs
+            options={CHART_RANGE_OPTIONS}
+            selectedKey={currentChartRange.key}
+            onSelect={(_option, index) => setChartRangeIndex(index)}
+            getLabel={(option) => (option.key === 'heatmap' ? `${heatmapVisibleWeeks}周` : option.label)}
+          />
         </View>
 
         {currentChartRange.key === 'today' && <DailyUsagePieChart rows={stats.dailyRows} />}
@@ -822,41 +806,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 10,
-  },
-  rangeGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  rangeButton: {
-    minHeight: 28,
-    minWidth: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 10,
-    borderWidth: 1,
-    borderColor: '#F4D79A',
-    borderLeftWidth: 0,
-    backgroundColor: '#fff',
-  },
-  rangeButtonFirst: {
-    borderLeftWidth: 1,
-    borderTopLeftRadius: 6,
-    borderBottomLeftRadius: 6,
-  },
-  rangeButtonLast: {
-    borderTopRightRadius: 6,
-    borderBottomRightRadius: 6,
-  },
-  rangeButtonActive: {
-    backgroundColor: '#FFF8E1',
-  },
-  rangeText: {
-    fontSize: 13,
-    color: '#A66A00',
-  },
-  rangeTextActive: {
-    fontWeight: '700',
-    color: '#8A4B00',
   },
   appList: {
     borderWidth: 1,
