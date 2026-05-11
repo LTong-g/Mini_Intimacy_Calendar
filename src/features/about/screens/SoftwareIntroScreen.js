@@ -45,7 +45,7 @@ const SoftwareIntroScreen = () => {
           <IntroListItem>安全锁：可主动开启极简备忘录入口，开启后桌面名称、图标和启动页会切换为极简备忘录，启动时先进入极简备忘录，再通过你设置的密码进入记录应用。</IntroListItem>
           <IntroListItem>统计分析：查看总览、年度和自定义区间统计，并通过图表观察趋势。</IntroListItem>
           <IntroListItem>数据备份：支持导入、导出和分享本地数据，便于迁移和留存。</IntroListItem>
-          <IntroListItem>关于与更新：可查看版本记录、打开项目主页，并检查、下载和安装新的正式版本。</IntroListItem>
+          <IntroListItem>关于与更新：可查看版本记录、打开项目主页，并检查、下载、安装或删除已下载的新版本安装包。</IntroListItem>
         </View>
 
         <Text style={styles.sectionTitle}>使用特点</Text>

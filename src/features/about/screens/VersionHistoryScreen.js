@@ -10,9 +10,15 @@ import { useNavigation } from '@react-navigation/native';
 const versionHistory = [
   {
     version: 'Unreleased',
-    title: '更新包下载保存修复',
+    title: '更新包下载与管理优化',
     date: '2026-05-11',
     sections: [
+      {
+        label: '优化：',
+        notes: [
+          '优化已下载新版本弹窗，可在不安装的情况下直接删除已下载的安装包。',
+        ],
+      },
       {
         label: '修复：',
         notes: [

@@ -9,6 +9,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { showAppAlert } from '../../../shared/utils/appAlert';
 import { checkForAppUpdate } from '../../../shared/utils/updateChecker';
 import {
+  deleteDownloadedUpdatePackage,
   downloadUpdatePackage,
   getDownloadedUpdatePackage,
   installUpdatePackage,
@@ -72,13 +73,29 @@ const AboutScreen = () => {
     }
   };
 
+  const handleDeleteDownloadedUpdate = async (update) => {
+    if (!update?.fileName) return;
+    try {
+      const deleted = await deleteDownloadedUpdatePackage(update.fileName);
+      setDownloadedUpdate(null);
+      if (!deleted) {
+        showAppAlert('删除失败', '未能删除已下载的安装包，请稍后重试。');
+        return;
+      }
+      showAppAlert('已删除安装包', '已删除下载的新版本安装包，可重新检查更新。');
+    } catch (error) {
+      showAppAlert('删除失败', error.message || '无法删除已下载的安装包');
+    }
+  };
+
   const showDownloadedUpdateAlert = (update) => {
     if (!update) return;
     showAppAlert(
       '已下载新版本',
-      `已下载版本：v${update.versionName}\n点击立即安装将打开系统安装器。`,
+      `已下载版本：v${update.versionName}\n可立即安装，也可删除安装包后重新检查更新。`,
       [
         { text: '稍后', style: 'cancel' },
+        { text: '删除安装包', style: 'destructive', onPress: () => handleDeleteDownloadedUpdate(update) },
         { text: '立即安装', onPress: () => handleInstallUpdate(update) },
       ]
     );
