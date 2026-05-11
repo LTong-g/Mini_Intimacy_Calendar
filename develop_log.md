@@ -1884,3 +1884,7 @@
 ### 补充版本记录页修复记录
 - 用户指出版本记录页白屏修复未记入版本记录。
 - VersionHistoryScreen 已在顶部恢复 Unreleased 节点，并记录版本记录页在显示只有专题介绍的版本时可能白屏且无法返回的修复。
+
+### 版本更新至 2.2.1
+- package.json、package-lock.json、app.json、android/app/build.gradle、android/app/src/main/res/values/strings.xml 和 developer_guide.md 的语义版本相关字段已更新为 2.2.1。
+- 版本记录页顶部节点已从 Unreleased 调整为 2.2.1，并以版本记录页白屏卡死修复作为本版本用户可见变化。
