@@ -35,6 +35,7 @@ import {
   getSecurityLockState,
   synchronizeSecurityLockLauncherMode,
 } from "./src/features/memoLock/utils/securityLockStorage";
+import { getDownloadedUpdatePackage } from "./src/shared/utils/updatePackageNative";
 
 const Stack = createNativeStackNavigator();
 
@@ -153,6 +154,7 @@ export default function App() {
   const [securityUnlocked, setSecurityUnlocked] = useState(false);
 
   useEffect(() => {
+    getDownloadedUpdatePackage().catch(() => {});
     getSecurityLockState()
       .then((state) => {
         setSecurityEnabled(state.enabled);

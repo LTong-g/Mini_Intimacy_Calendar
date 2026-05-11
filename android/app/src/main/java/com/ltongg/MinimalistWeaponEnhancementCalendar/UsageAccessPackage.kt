@@ -10,7 +10,8 @@ class UsageAccessPackage : ReactPackage {
     return listOf(
       UsageAccessModule(reactContext),
       DiagnosticLogModule(reactContext),
-      SecurityLockModule(reactContext)
+      SecurityLockModule(reactContext),
+      UpdatePackageModule(reactContext)
     )
   }
 

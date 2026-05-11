@@ -1,13 +1,18 @@
-﻿/**
+/**
  * 极简武器强化日历 - 关于界面
  */
 
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, Image, Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { showAppAlert } from '../../../shared/utils/appAlert';
 import { checkForAppUpdate } from '../../../shared/utils/updateChecker';
+import {
+  downloadUpdatePackage,
+  getDownloadedUpdatePackage,
+  installUpdatePackage,
+} from '../../../shared/utils/updatePackageNative';
 import pkg from '../../../../package.json';
 
 const appIcon = require('../../../../assets/icon.png');
@@ -16,6 +21,25 @@ const GITHUB_URL = 'https://github.com/LTong-g/Mini_Intimacy_Calendar';
 const AboutScreen = () => {
   const navigation = useNavigation();
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
+  const [isDownloadingUpdate, setIsDownloadingUpdate] = useState(false);
+  const [downloadedUpdate, setDownloadedUpdate] = useState(null);
+
+  const refreshDownloadedUpdate = useCallback(async () => {
+    try {
+      const update = await getDownloadedUpdatePackage();
+      setDownloadedUpdate(update);
+      return update;
+    } catch {
+      setDownloadedUpdate(null);
+      return null;
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      refreshDownloadedUpdate();
+    }, [refreshDownloadedUpdate])
+  );
 
   const handleOpenGitHub = async () => {
     try {
@@ -25,16 +49,76 @@ const AboutScreen = () => {
     }
   };
 
-  const handleOpenRelease = async (releaseUrl) => {
+  const handleOpenDownload = async (downloadUrl) => {
     try {
-      await Linking.openURL(releaseUrl);
+      await Linking.openURL(downloadUrl);
     } catch (error) {
-      showAppAlert('打开失败', error.message || '无法打开版本下载页面');
+      showAppAlert('打开失败', error.message || '无法打开安装包下载链接');
+    }
+  };
+
+  const handleInstallUpdate = async (update) => {
+    if (!update?.fileName) return;
+    try {
+      const result = await installUpdatePackage(update.fileName);
+      if (result?.permissionRequired) {
+        showAppAlert(
+          '允许安装更新',
+          '请在系统设置中允许本应用安装未知应用，返回后再次点击已下载新版本继续安装。'
+        );
+      }
+    } catch (error) {
+      showAppAlert('安装失败', error.message || '无法打开系统安装器');
+    }
+  };
+
+  const showDownloadedUpdateAlert = (update) => {
+    if (!update) return;
+    showAppAlert(
+      '已下载新版本',
+      `已下载版本：v${update.versionName}\n点击立即安装将打开系统安装器。`,
+      [
+        { text: '稍后', style: 'cancel' },
+        { text: '立即安装', onPress: () => handleInstallUpdate(update) },
+      ]
+    );
+  };
+
+  const handleDownloadUpdate = async (updateInfo) => {
+    if (isDownloadingUpdate) return;
+
+    if (!updateInfo.apkUrl) {
+      showAppAlert('无法下载', '该版本未提供 Android 安装包附件。', [
+        { text: '稍后', style: 'cancel' },
+        { text: '打开发布页', onPress: () => handleOpenDownload(updateInfo.releaseUrl) },
+      ]);
+      return;
+    }
+
+    setIsDownloadingUpdate(true);
+    try {
+      const update = await downloadUpdatePackage({
+        downloadUrl: updateInfo.apkUrl,
+        fileName: updateInfo.apkName,
+        expectedVersion: updateInfo.latestVersion,
+      });
+      setDownloadedUpdate(update);
+      showDownloadedUpdateAlert(update);
+    } catch (error) {
+      showAppAlert('下载失败', error.message || '无法下载更新安装包');
+    } finally {
+      setIsDownloadingUpdate(false);
     }
   };
 
   const handleCheckUpdate = async () => {
-    if (isCheckingUpdate) return;
+    if (isCheckingUpdate || isDownloadingUpdate) return;
+
+    const existingUpdate = downloadedUpdate || await refreshDownloadedUpdate();
+    if (existingUpdate) {
+      showDownloadedUpdateAlert(existingUpdate);
+      return;
+    }
 
     setIsCheckingUpdate(true);
     try {
@@ -54,7 +138,7 @@ const AboutScreen = () => {
 
         showAppAlert('发现新版本', messageParts.join('\n'), [
           { text: '稍后', style: 'cancel' },
-          { text: '前往下载', onPress: () => handleOpenRelease(result.releaseUrl) },
+          { text: '立即下载', onPress: () => handleDownloadUpdate(result) },
         ]);
         return;
       }
@@ -119,18 +203,24 @@ const AboutScreen = () => {
             <Text style={styles.buttonText}>版本记录</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.fullWidthButton, styles.lastButton, isCheckingUpdate && styles.disabledButton]}
+            style={[styles.fullWidthButton, styles.lastButton, (isCheckingUpdate || isDownloadingUpdate) && styles.disabledButton]}
             activeOpacity={0.8}
-            disabled={isCheckingUpdate}
+            disabled={isCheckingUpdate || isDownloadingUpdate}
             onPress={handleCheckUpdate}
           >
-            {isCheckingUpdate ? (
+            {isCheckingUpdate || isDownloadingUpdate ? (
               <ActivityIndicator size="small" color="#007AFF" />
             ) : (
               <Ionicons name="cloud-download-outline" size={20} color="#007AFF" />
             )}
             <Text style={styles.buttonText}>
-              {isCheckingUpdate ? '正在检查' : '检查更新'}
+              {isDownloadingUpdate
+                ? '正在下载'
+                : isCheckingUpdate
+                  ? '正在检查'
+                  : downloadedUpdate
+                    ? '已下载新版本'
+                    : '检查更新'}
             </Text>
           </TouchableOpacity>
         </View>

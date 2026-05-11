@@ -9,6 +9,19 @@ import { useNavigation } from '@react-navigation/native';
 
 const versionHistory = [
   {
+    version: 'Unreleased',
+    title: '更新下载优化',
+    date: '开发中',
+    sections: [
+      {
+        label: '优化：',
+        notes: [
+          '优化关于页检查更新后的下载流程，发现新版本后可在应用内下载安装包，下载完成后可立即安装或稍后继续安装。',
+        ],
+      },
+    ],
+  },
+  {
     version: '2.2.1',
     title: '版本记录页修复',
     date: '2026-05-11',

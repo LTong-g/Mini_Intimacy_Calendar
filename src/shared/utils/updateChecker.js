@@ -1,7 +1,9 @@
-﻿import pkg from '../../../package.json';
+import pkg from '../../../package.json';
 
 export const UPDATE_CHECK_RELEASES_URL =
   'https://api.github.com/repos/LTong-g/Mini_Intimacy_Calendar/releases/latest';
+export const UPDATE_FALLBACK_DOWNLOAD_URL =
+  'https://github.com/LTong-g/Mini_Intimacy_Calendar/releases';
 
 export const CURRENT_APP_VERSION = pkg.version;
 
@@ -60,8 +62,9 @@ export const checkForAppUpdate = async () => {
     hasUpdate: compareSemanticVersions(latestVersion, CURRENT_APP_VERSION) > 0,
     releaseTitle: release?.name || `v${latestVersion}`,
     releaseNotes: release?.body || '',
-    releaseUrl: release?.html_url || 'https://github.com/LTong-g/Mini_Intimacy_Calendar/releases',
+    releaseUrl: release?.html_url || UPDATE_FALLBACK_DOWNLOAD_URL,
     apkName: apkAsset?.name || '',
     apkUrl: apkAsset?.browser_download_url || '',
+    downloadUrl: apkAsset?.browser_download_url || release?.html_url || UPDATE_FALLBACK_DOWNLOAD_URL,
   };
 };
