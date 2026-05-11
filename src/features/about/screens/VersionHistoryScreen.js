@@ -19,13 +19,6 @@ const versionHistory = [
           '优化关于页检查更新后的下载流程，发现新版本后可在应用内下载安装包，下载完成后可立即安装或稍后继续安装。',
         ],
       },
-    ],
-  },
-  {
-    version: '2.2.1',
-    title: '版本记录页修复',
-    date: '2026-05-11',
-    sections: [
       {
         label: '修复：',
         notes: [
@@ -33,6 +26,17 @@ const versionHistory = [
         ],
       },
     ],
+  },
+  {
+    version: '2.2.1',
+    title: '该版本存在问题，已撤回。',
+    date: '2026-05-11',
+    featureIntro: {
+      label: '版本状态说明：',
+      notes: [
+        '该版本存在问题，已撤回。',
+      ],
+    },
   },
   {
     version: '2.2.0',
