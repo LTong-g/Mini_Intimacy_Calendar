@@ -113,13 +113,17 @@ class UpdatePackageModule(
           return@execute
         }
 
-        cleanupOtherUpdatePackages(targetName)
-        if (target.exists()) target.delete()
+        if (target.exists() && !target.delete()) {
+          temp.delete()
+          promise.reject("SAVE_UPDATE_APK_FAILED", "安装包保存失败，无法替换旧安装包。")
+          return@execute
+        }
         if (!temp.renameTo(target)) {
           temp.delete()
           promise.reject("SAVE_UPDATE_APK_FAILED", "安装包保存失败。")
           return@execute
         }
+        cleanupOtherUpdatePackages(targetName)
         promise.resolve(buildPackageMap(target, info))
       } catch (error: Exception) {
         promise.reject("DOWNLOAD_UPDATE_FAILED", error)

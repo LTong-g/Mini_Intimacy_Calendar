@@ -1929,3 +1929,9 @@
 - package.json、package-lock.json、app.json、android/app/build.gradle、android/app/src/main/res/values/strings.xml 和 developer_guide.md 的语义版本相关字段已更新为 2.2.2。
 - 版本记录页顶部节点已从 Unreleased 调整为 2.2.2，并记录关于页应用内更新下载优化和版本记录页白屏卡死修复。
 - 版本记录页保留 2.2.1 节点的撤回状态说明。
+
+### 修复更新包保存失败
+- 用户反馈关于页下载新版本时只显示下载失败，错误为安装包保存失败。
+- 已定位原因为 Android 原生更新包模块在重命名前清理旧安装包时误删本次下载生成的 .download 临时文件。
+- UpdatePackageModule 已调整为重命名成功后再清理其他更新包，并在无法替换旧安装包时返回更明确的保存失败原因。
+- 版本记录页 Unreleased 节点已记录关于页下载新版本安装包后可能提示保存失败的修复。
