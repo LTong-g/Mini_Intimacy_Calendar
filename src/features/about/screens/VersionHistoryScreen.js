@@ -1,4 +1,4 @@
-﻿/**
+/**
  * 极简武器强化日历 - 版本记录界面
  */
 
@@ -8,6 +8,19 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
 const versionHistory = [
+  {
+    version: 'Unreleased',
+    title: '版本记录页修复',
+    date: '开发中',
+    sections: [
+      {
+        label: '修复：',
+        notes: [
+          '修复版本记录页白屏卡死的问题。',
+        ],
+      },
+    ],
+  },
   {
     version: '2.2.0',
     title: '关于页更新检测',
@@ -261,7 +274,7 @@ const VersionHistoryScreen = () => {
                   </View>
                 </View>
               )}
-              {item.sections.map((section) => (
+              {(item.sections || []).map((section) => (
                 <View key={section.label || item.version} style={styles.section}>
                   {Boolean(section.label) && (
                     <Text style={styles.sectionTitle}>{section.label}</Text>

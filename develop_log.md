@@ -1,4 +1,4 @@
-﻿> 提示：请使用 UTF-8 编码读取本文件。
+> 提示：请使用 UTF-8 编码读取本文件。
 
 # 开发日志
 撰写规则：
@@ -1863,3 +1863,24 @@
 - package.json、package-lock.json、app.json、android/app/build.gradle、android/app/src/main/res/values/strings.xml 和 developer_guide.md 的语义版本相关字段已更新为 2.2.0。
 - 版本记录页顶部节点已从 Unreleased 改为 2.2.0，并以关于页更新检测作为本版本用户可见变化。
 - 本次版本更新仍沿用 GitHub Releases latest 作为更新检测来源，未新增自建更新服务。
+
+### 修复版本记录页白屏回归
+- 用户反馈 2.2.0 版本记录页打开后白屏、无法返回且未生成异常日志。
+- 已定位白屏原因为版本记录页 2.2.0 节点只有专题介绍而没有 sections 字段，渲染时仍执行 item.sections.map 导致 React 渲染异常。
+- VersionHistoryScreen 已改为在 sections 缺失时按空数组渲染，支持只有专题介绍的版本节点。
+- 新增 AppErrorBoundary 捕获 React 渲染异常并调用诊断日志记录能力，避免同类页面渲染异常直接形成无日志白屏。
+
+### 记录 2.2.0 归档覆盖事故与修复
+- 用户指出 2.2.0 已经发布，任何已经归档的版本都不应覆盖归档，除非先询问并得到同意。
+- 本会话中已发生一次 2.2.0 同名发布归档覆盖，覆盖来源为修复版本记录页白屏后的重新归档操作。
+- AGENTS.md 和 developer_guide.md 已记录已归档版本不得覆盖同名归档的协作规则。
+- scripts/archive-android-release.ps1 已改为默认拒绝覆盖同名发布归档，仅在显式传入覆盖参数时允许覆盖。
+
+### 复核 2.2.0 已发布问题
+- 已按用户要求复核已发布 2.2.0 提交态源码，确认版本记录页 2.2.0 节点缺少 sections 字段会导致 item.sections.map 渲染异常。
+- 已确认 2.2.0 没有 React 渲染错误边界，此类渲染异常不会写入现有诊断日志路径。
+- 当前未提交修复已补充版本记录页 sections 缺省处理，并增强错误边界提供返回上一页和重试入口。
+
+### 补充版本记录页修复记录
+- 用户指出版本记录页白屏修复未记入版本记录。
+- VersionHistoryScreen 已在顶部恢复 Unreleased 节点，并记录版本记录页在显示只有专题介绍的版本时可能白屏且无法返回的修复。

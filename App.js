@@ -28,6 +28,7 @@ import ExperimentalUsageIntervalRecordsScreen from "./src/features/usage/screens
 import SecurityLockScreen from "./src/features/memoLock/screens/SecurityLockScreen";
 import SecurityLockPasswordSetupScreen from "./src/features/memoLock/screens/SecurityLockPasswordSetupScreen";
 import MemoShellScreen from "./src/features/memoLock/screens/MemoShellScreen";
+import AppErrorBoundary from "./src/shared/components/AppErrorBoundary";
 import AppAlertProvider from "./src/shared/components/modals/AppAlertProvider";
 import { getEffectiveCheckInData } from "./src/features/calendar/utils/checkInStorage";
 import {
@@ -36,6 +37,21 @@ import {
 } from "./src/features/memoLock/utils/securityLockStorage";
 
 const Stack = createNativeStackNavigator();
+
+const VersionHistoryRoute = () => {
+  const navigation = useNavigation();
+  const handleBack = useCallback(() => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    }
+  }, [navigation]);
+
+  return (
+    <AppErrorBoundary onBack={handleBack}>
+      <VersionHistoryScreen />
+    </AppErrorBoundary>
+  );
+};
 
 // 日历主页面，管理三种视图状态
 const CalendarScreen = () => {
@@ -168,15 +184,17 @@ export default function App() {
     return (
       <PaperProvider>
         <SafeAreaProvider>
-          <AppAlertProvider>
-            <NavigationContainer>
-              <MemoShellScreen
-                onUnlock={() => setSecurityUnlocked(true)}
-                onResetComplete={handleSecurityResetComplete}
-              />
-              <StatusBar style="auto" />
-            </NavigationContainer>
-          </AppAlertProvider>
+          <AppErrorBoundary>
+            <AppAlertProvider>
+              <NavigationContainer>
+                <MemoShellScreen
+                  onUnlock={() => setSecurityUnlocked(true)}
+                  onResetComplete={handleSecurityResetComplete}
+                />
+                <StatusBar style="auto" />
+              </NavigationContainer>
+            </AppAlertProvider>
+          </AppErrorBoundary>
         </SafeAreaProvider>
       </PaperProvider>
     );
@@ -185,28 +203,30 @@ export default function App() {
   return (
     <PaperProvider>
       <SafeAreaProvider>
-        <AppAlertProvider>
-          <NavigationContainer>
-            <Stack.Navigator screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="Calendar" component={CalendarScreen} />
-              <Stack.Screen name="Settings" component={SettingsScreen} />
-              <Stack.Screen name="SecurityLock" component={SecurityLockScreen} />
-              <Stack.Screen name="SecurityLockPasswordSetup" component={SecurityLockPasswordSetupScreen} />
-              <Stack.Screen name="About" component={AboutScreen} />
-              <Stack.Screen name="SoftwareIntro" component={SoftwareIntroScreen} />
-              <Stack.Screen name="UsageHelp" component={UsageHelpScreen} />
-              <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
-              <Stack.Screen name="VersionHistory" component={VersionHistoryScreen} />
-              <Stack.Screen name="ExperimentalUsage" component={ExperimentalUsageScreen} />
-              <Stack.Screen name="ExperimentalUsageBlacklist" component={ExperimentalUsageBlacklistScreen} />
-              <Stack.Screen name="ExperimentalUsageIntervals" component={ExperimentalUsageIntervalsScreen} />
-              <Stack.Screen name="ExperimentalUsageIntervalRecords" component={ExperimentalUsageIntervalRecordsScreen} />
-              <Stack.Screen name="Statistics" component={StatisticsScreen} />
-              <Stack.Screen name="DatePicker" component={DatePickerScreen} />
-            </Stack.Navigator>
-            <StatusBar style="auto" />
-          </NavigationContainer>
-        </AppAlertProvider>
+        <AppErrorBoundary>
+          <AppAlertProvider>
+            <NavigationContainer>
+              <Stack.Navigator screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="Calendar" component={CalendarScreen} />
+                <Stack.Screen name="Settings" component={SettingsScreen} />
+                <Stack.Screen name="SecurityLock" component={SecurityLockScreen} />
+                <Stack.Screen name="SecurityLockPasswordSetup" component={SecurityLockPasswordSetupScreen} />
+                <Stack.Screen name="About" component={AboutScreen} />
+                <Stack.Screen name="SoftwareIntro" component={SoftwareIntroScreen} />
+                <Stack.Screen name="UsageHelp" component={UsageHelpScreen} />
+                <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
+                <Stack.Screen name="VersionHistory" component={VersionHistoryRoute} />
+                <Stack.Screen name="ExperimentalUsage" component={ExperimentalUsageScreen} />
+                <Stack.Screen name="ExperimentalUsageBlacklist" component={ExperimentalUsageBlacklistScreen} />
+                <Stack.Screen name="ExperimentalUsageIntervals" component={ExperimentalUsageIntervalsScreen} />
+                <Stack.Screen name="ExperimentalUsageIntervalRecords" component={ExperimentalUsageIntervalRecordsScreen} />
+                <Stack.Screen name="Statistics" component={StatisticsScreen} />
+                <Stack.Screen name="DatePicker" component={DatePickerScreen} />
+              </Stack.Navigator>
+              <StatusBar style="auto" />
+            </NavigationContainer>
+          </AppAlertProvider>
+        </AppErrorBoundary>
       </SafeAreaProvider>
     </PaperProvider>
   );

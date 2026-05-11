@@ -318,6 +318,7 @@ npm run android:install:debug:tempmap
 
 复制归档到 `dist/`，并按以下格式重命名：
 - `Mini_Intimacy_Calendar-v<语义版本>-android-<yyyyMMdd>.apk`
+- 已经归档的版本视为已发布产物，不得覆盖同名归档；如确需重新归档同名版本，必须先取得用户明确同意，并使用脚本的显式覆盖参数。
 
 推荐归档命令（仓库根目录执行）：
 ```powershell

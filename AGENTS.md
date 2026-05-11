@@ -73,6 +73,7 @@
 - 在 Windows 本机进行 Android 构建时，采用“构建前临时 `subst` 映射短路径、构建后无论成功失败都取消本次创建映射”的流程；构建前若目标盘符已存在，无论是否映射到当前项目，都直接失败，不自动删除，避免误删用户映射或干扰并发构建。
 - Android 安装包只有准备发布或分发时才需要复制归档并重命名；普通构建不要求每次复制重命名。
 - Android 安装包发布/分发归档命名格式为 `Mini_Intimacy_Calendar-v<语义版本>-android-<yyyyMMdd>.apk`，归档位置为 `dist/`，归档来源必须是 Release APK。
+- 已经归档的版本视为已发布产物，不得覆盖同名归档；除非先询问用户并得到明确同意，否则禁止覆盖任何已归档版本。
 - Android Release APK 使用本机私有 release 签名；`android/app/debug.keystore` 仅用于 Debug，Release 构建不得使用 `signingConfigs.debug`。
 - Android Release 签名配置读取 `android/keystore.properties`，私有签名文件为 `android/app/release.keystore`；两者必须保持 Git 忽略，禁止提交到开源仓库。
 - 正式发布版本之后开发的未发布功能，必须先记录到版本记录页的 `Unreleased` 节点；正式发布时再把该节点版本号改成对应的正式版本号。
@@ -149,7 +150,7 @@
   - 步骤 5：构建结束后校验 `subst` 输出不包含 `M:`。
   - 步骤 6：下一次构建必须重新创建映射，不复用旧映射；若发现旧映射残留，先人工确认没有并发构建占用后再清理。
 - 实现载体：`scripts/android-build-tempmap.ps1`（`try/finally` 保证清理）。
-- 发布/分发归档：仅在准备发布或分发安装包时，将 `android/app/build/outputs/apk/release/app-release.apk` 复制到 `dist/` 并按 `Mini_Intimacy_Calendar-v<语义版本>-android-<yyyyMMdd>.apk` 命名；普通构建不执行该归档步骤，禁止将 `debug/app-debug.apk` 作为发布或分发归档来源。
+- 发布/分发归档：仅在准备发布或分发安装包时，将 `android/app/build/outputs/apk/release/app-release.apk` 复制到 `dist/` 并按 `Mini_Intimacy_Calendar-v<语义版本>-android-<yyyyMMdd>.apk` 命名；普通构建不执行该归档步骤，禁止将 `debug/app-debug.apk` 作为发布或分发归档来源；已经归档的版本不得覆盖同名归档，除非先询问用户并得到明确同意。
 - Release 签名：Release APK 必须使用 `android/keystore.properties` 指向的本机私有签名；缺少私有签名配置时不得回退为 debug 签名。
 
 - 当前 AVD 尺寸语义约定：`AVD_2640x1200` 为手机尺寸默认机型，`AVD_2560x1600` 为平板尺寸机型。

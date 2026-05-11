@@ -1,7 +1,8 @@
 param(
   [string]$ApkPath = ".\android\app\build\outputs\apk\release\app-release.apk",
   [string]$DistDir = ".\dist",
-  [string]$AppName = "Mini_Intimacy_Calendar"
+  [string]$AppName = "Mini_Intimacy_Calendar",
+  [switch]$AllowOverwrite
 )
 
 $ErrorActionPreference = "Stop"
@@ -31,7 +32,11 @@ $dateStamp = Get-Date -Format "yyyyMMdd"
 $archiveName = "$AppName-v$version-android-$dateStamp.apk"
 $archivePath = Join-Path $distFullPath $archiveName
 
-Copy-Item -LiteralPath $apkFullPath -Destination $archivePath -Force
+if ((Test-Path -LiteralPath $archivePath) -and -not $AllowOverwrite) {
+  throw "Release archive already exists: $archivePath. Archived versions must not be overwritten without explicit approval."
+}
+
+Copy-Item -LiteralPath $apkFullPath -Destination $archivePath -Force:$AllowOverwrite
 
 $archive = Get-Item -LiteralPath $archivePath
 Write-Output "Archived release APK: $($archive.FullName)"
