@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import BlacklistPageHeader from '../components/BlacklistPageHeader';
 import {
   setExperimentalUsageBlacklist,
   syncExperimentalUsageBlacklistMetadata,
@@ -334,12 +335,7 @@ const ExperimentalUsageBlacklistScreen = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={BLACKLIST_COLORS.primary} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>黑名单应用</Text>
-      </View>
+      <BlacklistPageHeader title="黑名单应用" onBack={handleBack} />
 
       <View style={styles.summaryCard}>
         <Text style={styles.summaryTitle}>已选择 {blacklist.length} 个应用</Text>
@@ -478,22 +474,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 44,
     backgroundColor: BLACKLIST_COLORS.surface,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: BLACKLIST_COLORS.secondaryBorder,
-  },
-  backButton: {
-    marginRight: 12,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: BLACKLIST_COLORS.text,
   },
   summaryCard: {
     borderWidth: 1,

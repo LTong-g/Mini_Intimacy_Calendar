@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import BlacklistPageHeader from '../components/BlacklistPageHeader';
 import { showAppAlert } from '../utils/appAlert';
 import { formatUsageDurationChinese } from '../utils/usageDurationFormat';
 import { BLACKLIST_COLORS } from '../utils/usageTheme';
@@ -94,12 +95,7 @@ const ExperimentalUsageIntervalsScreen = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={BLACKLIST_COLORS.primary} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle} numberOfLines={1}>使用时间段</Text>
-      </View>
+      <BlacklistPageHeader title="使用时间段" onBack={() => navigation.goBack()} />
 
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.appList}>
@@ -143,23 +139,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 44,
     backgroundColor: BLACKLIST_COLORS.surface,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: BLACKLIST_COLORS.secondaryBorder,
-  },
-  backButton: {
-    marginRight: 12,
-  },
-  headerTitle: {
-    flex: 1,
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: BLACKLIST_COLORS.text,
   },
   content: {
     paddingHorizontal: 20,

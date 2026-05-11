@@ -1805,3 +1805,8 @@
 - 查看使用记录入口点击全部记录或具体应用时改为导航进入 UsageIntervalRecordsScreen。
 - 日视图自动记录提示中的查看记录入口改为直接导航到 UsageIntervalRecordsScreen 并传入全部记录和当前日期筛选。
 - 查看使用记录详情从 UsageIntervalsScreen 内部状态切换迁移为独立导航 Screen 后，UsageIntervalsScreen 中的 beforeRemove 返回拦截已移除。
+
+### 抽取黑名单页面顶部栏
+- 新增 BlacklistPageHeader 统一承载黑名单相关页面顶部返回按钮、标题和底部分割线。
+- UsageScreen、UsageBlacklistScreen、UsageIntervalsScreen、UsageIntervalRecordsScreen 改为使用 BlacklistPageHeader。
+- 上述四个页面中重复的 header、backButton、headerTitle 样式已移除。

@@ -17,6 +17,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import moment from 'moment';
+import BlacklistPageHeader from '../components/BlacklistPageHeader';
 import UsageDateRangeRow from '../components/UsageDateRangeRow';
 import UsageRangeTabs from '../components/UsageRangeTabs';
 import BaseModal from '../components/modals/BaseModal';
@@ -306,12 +307,7 @@ const ExperimentalUsageIntervalRecordsScreen = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={BLACKLIST_COLORS.primary} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle} numberOfLines={1}>{title}</Text>
-      </View>
+      <BlacklistPageHeader title={title} onBack={() => navigation.goBack()} />
 
       <View style={styles.detailContent}>
         <View style={styles.fixedDetailHeader}>
@@ -456,23 +452,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 44,
     backgroundColor: BLACKLIST_COLORS.surface,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: BLACKLIST_COLORS.secondaryBorder,
-  },
-  backButton: {
-    marginRight: 12,
-  },
-  headerTitle: {
-    flex: 1,
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: BLACKLIST_COLORS.text,
   },
   detailContent: {
     flex: 1,

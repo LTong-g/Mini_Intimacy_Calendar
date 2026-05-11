@@ -24,6 +24,7 @@ import {
   MonthlyUsageLineChart,
   WeeklyUsageBarChart,
 } from '../components/UsageCharts';
+import BlacklistPageHeader from '../components/BlacklistPageHeader';
 import UsageDateRangeRow from '../components/UsageDateRangeRow';
 import UsageRangeTabs from '../components/UsageRangeTabs';
 import BaseModal from '../components/modals/BaseModal';
@@ -424,12 +425,7 @@ const ExperimentalUsageScreen = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={BLACKLIST_COLORS.primary} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>黑名单</Text>
-      </View>
+      <BlacklistPageHeader title="黑名单" onBack={() => navigation.goBack()} />
 
       <ScrollView
         contentContainerStyle={styles.content}
@@ -596,22 +592,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 44,
     backgroundColor: BLACKLIST_COLORS.surface,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: BLACKLIST_COLORS.secondaryBorder,
-  },
-  backButton: {
-    marginRight: 12,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: BLACKLIST_COLORS.text,
   },
   content: {
     paddingHorizontal: 20,
