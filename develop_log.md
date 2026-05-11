@@ -1940,3 +1940,8 @@
 - 用户要求已下载新版本时允许删除安装包，避免用户只能安装已下载的安装包。
 - AboutScreen 已在已下载新版本弹窗中新增红色删除安装包操作，删除成功后清空已下载状态并回到检查更新流程。
 - 版本记录、使用帮助、隐私政策、软件介绍、developer_guide.md 和 AGENTS.md 已同步记录已下载更新包可删除的用户可见行为。
+
+### 版本更新至 2.2.3
+- package.json、package-lock.json、app.json、android/app/build.gradle、android/app/src/main/res/values/strings.xml 和 developer_guide.md 的语义版本相关字段已更新为 2.2.3。
+- 版本记录页顶部节点已从 Unreleased 调整为 2.2.3，并记录关于页更新包下载与管理优化。
+- 本次发布准备未执行 Android 发布包归档，未覆盖任何已归档版本产物。

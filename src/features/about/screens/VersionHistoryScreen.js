@@ -9,7 +9,7 @@ import { useNavigation } from '@react-navigation/native';
 
 const versionHistory = [
   {
-    version: 'Unreleased',
+    version: '2.2.3',
     title: '更新包下载与管理优化',
     date: '2026-05-11',
     sections: [
