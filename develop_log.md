@@ -1924,3 +1924,8 @@
 - VersionHistoryScreen 已将 2.2.1 节点从修复分组调整为版本状态说明专题。
 - 2.2.1 节点已说明该版本发布后确认版本记录页修复不完整，修复结论已撤回。
 - 当前 Unreleased 节点已承接版本记录页白屏卡死修复记录。
+
+### 版本更新至 2.2.2
+- package.json、package-lock.json、app.json、android/app/build.gradle、android/app/src/main/res/values/strings.xml 和 developer_guide.md 的语义版本相关字段已更新为 2.2.2。
+- 版本记录页顶部节点已从 Unreleased 调整为 2.2.2，并记录关于页应用内更新下载优化和版本记录页白屏卡死修复。
+- 版本记录页保留 2.2.1 节点的撤回状态说明。
