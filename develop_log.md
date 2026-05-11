@@ -1770,3 +1770,8 @@
 - 新增 MemoCategoryEditorModal 组件承载极简备忘录分类编辑弹窗的标题、分类名称输入、预设颜色、MemoColorPicker 和取消保存按钮。
 - MemoShellScreen 改为引用 MemoCategoryEditorModal，并继续保留分类名称、分类颜色、弹窗开关和保存分类逻辑。
 - MemoShellScreen 保留 reset 确认输入框使用的 input 样式，避免拆分分类编辑弹窗时影响重置弹窗。
+
+### 抽取备忘录重置应用弹窗
+- 新增 MemoResetApplicationModal 组件承载极简备忘录重置应用确认弹窗的说明、确认短语、输入框和取消确认按钮。
+- MemoShellScreen 改为引用 MemoResetApplicationModal，并继续保留重置输入状态、权限检查、实际重置和错误提示逻辑。
+- MemoShellScreen 移除了重置弹窗专用 modalText、input 和 confirmPhrase 样式。

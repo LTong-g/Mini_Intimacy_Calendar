@@ -17,6 +17,7 @@ import * as Sharing from 'expo-sharing';
 import BaseModal from '../components/modals/BaseModal';
 import ModalActionRow from '../components/modals/ModalActionRow';
 import MemoCategoryEditorModal from '../components/MemoCategoryEditorModal';
+import MemoResetApplicationModal from '../components/MemoResetApplicationModal';
 import { showAppAlert } from '../utils/appAlert';
 import {
   buildTitleFromBody,
@@ -552,24 +553,14 @@ const MemoShellScreen = ({ onUnlock, onResetComplete }) => {
             <Text style={styles.resetButtonText}>重置应用</Text>
           </TouchableOpacity>
         </ScrollView>
-        <BaseModal
+        <MemoResetApplicationModal
           visible={resetVisible}
-          title="重置应用"
-          onRequestClose={() => setResetVisible(false)}
-        >
-          <Text style={styles.modalText}>
-            重置会清空本应用保存在本机的数据、问题日志和缓存，并恢复初始入口。此操作无法撤销。
-          </Text>
-          <Text style={styles.modalText}>请输入以下内容确认：</Text>
-          <Text style={styles.confirmPhrase}>{RESET_CONFIRM_TEXT}</Text>
-          <TextInput value={resetText} onChangeText={setResetText} style={styles.input} placeholder="输入确认内容" />
-          <ModalActionRow
-            actions={[
-              { label: '取消', variant: 'secondary', onPress: () => setResetVisible(false) },
-              { label: '确认', variant: 'danger', onPress: handleResetApplication },
-            ]}
-          />
-        </BaseModal>
+          confirmText={RESET_CONFIRM_TEXT}
+          value={resetText}
+          onChangeText={setResetText}
+          onCancel={() => setResetVisible(false)}
+          onConfirm={handleResetApplication}
+        />
       </View>
     );
   }
@@ -759,13 +750,11 @@ const styles = StyleSheet.create({
   deleteButton: { minHeight: 42, borderWidth: 1, borderColor: '#C62828', borderRadius: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 20 },
   deleteButtonText: { marginLeft: 6, color: '#C62828', fontSize: 14 },
   largeCategoryPanel: { maxHeight: '78%' },
-  modalText: { fontSize: 14, lineHeight: 22, color: '#444', marginBottom: 8 },
   categoryList: { maxHeight: 360 },
   categoryRow: { minHeight: 42, flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: '#eee' },
   categoryName: { marginLeft: 8, fontSize: 15, color: '#333' },
   secondaryAction: { minHeight: 42, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 12 },
   secondaryActionText: { marginLeft: 6, color: '#007AFF', fontSize: 14 },
-  input: { minHeight: 42, borderWidth: 1, borderColor: '#d8d8d8', borderRadius: 8, paddingHorizontal: 10, fontSize: 15 },
   settingsContainer: { flex: 1, paddingTop: 44, backgroundColor: '#fff' },
   settingsContent: { padding: 20, paddingBottom: 32 },
   settingCard: { borderWidth: 1, borderColor: '#d8d8d8', borderRadius: 8, padding: 14 },
@@ -776,7 +765,6 @@ const styles = StyleSheet.create({
   optionText: { marginLeft: 6, color: '#007AFF', fontSize: 14 },
   resetButton: { minHeight: 44, borderWidth: 1, borderColor: '#C62828', borderRadius: 8, marginTop: 18, alignItems: 'center', justifyContent: 'center', flexDirection: 'row' },
   resetButtonText: { marginLeft: 6, color: '#C62828', fontSize: 14 },
-  confirmPhrase: { fontSize: 14, color: '#333', fontWeight: '600', marginBottom: 8 },
 });
 
 export default MemoShellScreen;
