@@ -153,3 +153,4 @@
 
 - 当前 AVD 尺寸语义约定：`AVD_2640x1200` 为手机尺寸默认机型，`AVD_2560x1600` 为平板尺寸机型。
 - 视觉上占满整页、用户会理解为独立页面的界面，默认应实现为 Screen 文件并注册到导航；仅顶部栏、弹窗、滑条、列表项等可复用局部界面放在 components。
+- 源码按功能域组织：日历打卡放 `src/features/calendar`，统计放 `src/features/statistics`，黑名单与使用记录放 `src/features/usage`，极简备忘录与安全锁放 `src/features/memoLock`，设置放 `src/features/settings`，关于与文档页放 `src/features/about`；跨功能实际复用的公共能力放 `src/shared`。

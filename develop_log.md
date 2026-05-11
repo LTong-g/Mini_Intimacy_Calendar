@@ -1810,3 +1810,19 @@
 - 新增 BlacklistPageHeader 统一承载黑名单相关页面顶部返回按钮、标题和底部分割线。
 - UsageScreen、UsageBlacklistScreen、UsageIntervalsScreen、UsageIntervalRecordsScreen 改为使用 BlacklistPageHeader。
 - 上述四个页面中重复的 header、backButton、headerTitle 样式已移除。
+
+### 源码目录按功能域重组织
+- 源码目录从按 screens、components、utils、hooks 分类调整为按功能域组织。
+- 日历相关页面、组件和打卡存储迁移到 src/features/calendar。
+- 统计相关页面、组件、hooks 和统计工具迁移到 src/features/statistics。
+- 黑名单与使用记录相关页面、组件和工具迁移到 src/features/usage。
+- 极简备忘录与安全锁相关页面、组件和工具迁移到 src/features/memoLock。
+- 设置页迁移到 src/features/settings，关于、软件介绍、使用帮助、隐私政策和版本记录页面迁移到 src/features/about。
+- 跨功能复用的弹窗、日期快速选择、图表底层组件、全局提示、完整应用数据存储和问题日志能力迁移到 src/shared。
+- App.js 和源码内相对 import 已按新目录结构更新，旧的空 screens、components、utils、hooks 目录已清理。
+- developer_guide.md 和 AGENTS.md 已记录新的源码组织规则。
+
+### 修复入口文件旧路径引用
+- 源码目录重组织后的入口检查发现 index.js 仍引用旧的 diagnosticLogs 路径。
+- index.js 已改为从 src/shared/utils/diagnosticLogs 引入问题日志处理。
+- index.js、App.js 和 src 下 63 个 JS 文件的相对 import 解析检查通过。

@@ -9,31 +9,31 @@ import moment from "moment";
 import { Provider as PaperProvider } from "react-native-paper";
 
 // 你的视图和组件
-import DayView from "./src/screens/DayView";
-import MonthView from "./src/screens/MonthView";
-import YearView from "./src/screens/YearView";
-import CustomTabBar from "./src/components/CustomTabBar";
-import SettingsScreen from "./src/screens/SettingsScreen"; // ⬅️ 确保存在
-import StatisticsScreen from "./src/screens/StatisticsScreen";
-import DatePickerScreen from "./src/screens/DatePickerScreen";
-import AboutScreen from "./src/screens/AboutScreen";
-import SoftwareIntroScreen from "./src/screens/SoftwareIntroScreen";
-import UsageHelpScreen from "./src/screens/UsageHelpScreen";
-import PrivacyPolicyScreen from "./src/screens/PrivacyPolicyScreen";
-import VersionHistoryScreen from "./src/screens/VersionHistoryScreen";
-import ExperimentalUsageScreen from "./src/screens/UsageScreen";
-import ExperimentalUsageBlacklistScreen from "./src/screens/UsageBlacklistScreen";
-import ExperimentalUsageIntervalsScreen from "./src/screens/UsageIntervalsScreen";
-import ExperimentalUsageIntervalRecordsScreen from "./src/screens/UsageIntervalRecordsScreen";
-import SecurityLockScreen from "./src/screens/SecurityLockScreen";
-import SecurityLockPasswordSetupScreen from "./src/screens/SecurityLockPasswordSetupScreen";
-import MemoShellScreen from "./src/screens/MemoShellScreen";
-import AppAlertProvider from "./src/components/modals/AppAlertProvider";
-import { getEffectiveCheckInData } from "./src/utils/checkInStorage";
+import DayView from "./src/features/calendar/screens/DayView";
+import MonthView from "./src/features/calendar/screens/MonthView";
+import YearView from "./src/features/calendar/screens/YearView";
+import CustomTabBar from "./src/features/calendar/components/CustomTabBar";
+import SettingsScreen from "./src/features/settings/screens/SettingsScreen"; // ⬅️ 确保存在
+import StatisticsScreen from "./src/features/statistics/screens/StatisticsScreen";
+import DatePickerScreen from "./src/features/calendar/screens/DatePickerScreen";
+import AboutScreen from "./src/features/about/screens/AboutScreen";
+import SoftwareIntroScreen from "./src/features/about/screens/SoftwareIntroScreen";
+import UsageHelpScreen from "./src/features/about/screens/UsageHelpScreen";
+import PrivacyPolicyScreen from "./src/features/about/screens/PrivacyPolicyScreen";
+import VersionHistoryScreen from "./src/features/about/screens/VersionHistoryScreen";
+import ExperimentalUsageScreen from "./src/features/usage/screens/UsageScreen";
+import ExperimentalUsageBlacklistScreen from "./src/features/usage/screens/UsageBlacklistScreen";
+import ExperimentalUsageIntervalsScreen from "./src/features/usage/screens/UsageIntervalsScreen";
+import ExperimentalUsageIntervalRecordsScreen from "./src/features/usage/screens/UsageIntervalRecordsScreen";
+import SecurityLockScreen from "./src/features/memoLock/screens/SecurityLockScreen";
+import SecurityLockPasswordSetupScreen from "./src/features/memoLock/screens/SecurityLockPasswordSetupScreen";
+import MemoShellScreen from "./src/features/memoLock/screens/MemoShellScreen";
+import AppAlertProvider from "./src/shared/components/modals/AppAlertProvider";
+import { getEffectiveCheckInData } from "./src/features/calendar/utils/checkInStorage";
 import {
   getSecurityLockState,
   synchronizeSecurityLockLauncherMode,
-} from "./src/utils/securityLockStorage";
+} from "./src/features/memoLock/utils/securityLockStorage";
 
 const Stack = createNativeStackNavigator();
 

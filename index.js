@@ -11,7 +11,7 @@
 
 import { registerRootComponent } from 'expo';
 import App from './App';
-import { installDiagnosticLogHandlers } from './src/utils/diagnosticLogs';
+import { installDiagnosticLogHandlers } from './src/shared/utils/diagnosticLogs';
 
 installDiagnosticLogHandlers();
 
