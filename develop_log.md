@@ -1826,3 +1826,6 @@
 - 源码目录重组织后的入口检查发现 index.js 仍引用旧的 diagnosticLogs 路径。
 - index.js 已改为从 src/shared/utils/diagnosticLogs 引入问题日志处理。
 - index.js、App.js 和 src 下 63 个 JS 文件的相对 import 解析检查通过。
+
+### 版本记录补充黑名单时长显示优化
+- src/features/about/screens/VersionHistoryScreen.js 已在 Unreleased 优化项补充黑名单使用时长和图表标注统一按时长格式展示的用户可见变化。
