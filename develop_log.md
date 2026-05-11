@@ -1,4 +1,4 @@
-> 提示：请使用 UTF-8 编码读取本文件。
+﻿> 提示：请使用 UTF-8 编码读取本文件。
 
 # 开发日志
 撰写规则：
@@ -1858,3 +1858,8 @@
 - 关于页新增检查更新按钮，检查期间显示正在检查状态，发现新版本时显示当前版本、最新版本、Release 说明和下载入口。
 - 软件介绍、使用帮助、隐私政策、版本记录和 developer_guide.md 已同步记录关于页检查更新这一用户可见变化。
 - 本次修改文件已统一为 CRLF；git diff --check 和 updateChecker.js 的 Node 语法检查已通过。
+
+### 版本更新至 2.2.0
+- package.json、package-lock.json、app.json、android/app/build.gradle、android/app/src/main/res/values/strings.xml 和 developer_guide.md 的语义版本相关字段已更新为 2.2.0。
+- 版本记录页顶部节点已从 Unreleased 改为 2.2.0，并以关于页更新检测作为本版本用户可见变化。
+- 本次版本更新仍沿用 GitHub Releases latest 作为更新检测来源，未新增自建更新服务。

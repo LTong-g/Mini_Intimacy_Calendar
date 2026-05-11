@@ -9,17 +9,15 @@ import { useNavigation } from '@react-navigation/native';
 
 const versionHistory = [
   {
-    version: 'Unreleased',
+    version: '2.2.0',
     title: '关于页更新检测',
-    date: '开发中',
-    sections: [
-      {
-        label: '新增：',
-        notes: [
-          '新增关于页检查更新入口，可联网读取 GitHub 最新正式版本并在发现新版时打开下载页面。',
-        ],
-      },
-    ],
+    date: '2026-05-11',
+    featureIntro: {
+      label: '关于页更新检测：',
+      notes: [
+        '关于页可以读取 GitHub 最新正式版本并在发现新版时提示下载。',
+      ],
+    },
   },
   {
     version: '2.1.1',
