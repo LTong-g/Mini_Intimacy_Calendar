@@ -13,11 +13,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import BaseModal from '../components/modals/BaseModal';
 import ModalActionRow from '../components/modals/ModalActionRow';
-import SecurityLockPasswordSetupPage from '../components/SecurityLockPasswordSetupPage';
 import { showAppAlert } from '../utils/appAlert';
 import {
   disableSecurityLock,
-  enableSecurityLock,
   getSecurityLockState,
   synchronizeSecurityLockLauncherMode,
 } from '../utils/securityLockStorage';
@@ -58,10 +56,6 @@ const SecurityLockScreen = () => {
   const [securityState, setSecurityState] = useState({ enabled: false });
   const [confirmVisible, setConfirmVisible] = useState(false);
   const [confirmText, setConfirmText] = useState('');
-  const [setupVisible, setSetupVisible] = useState(false);
-  const [setupMode, setSetupMode] = useState('enable');
-  const [password, setPassword] = useState('');
-  const [saving, setSaving] = useState(false);
   const securitySwitchOn = securityState.enabled;
 
   const refresh = useCallback(async () => {
@@ -108,9 +102,7 @@ const SecurityLockScreen = () => {
         {
           text: '继续',
           onPress: () => {
-            setPassword('');
-            setSetupMode('modify');
-            setSetupVisible(true);
+            navigation.navigate('SecurityLockPasswordSetup', { mode: 'modify' });
           },
         },
       ]
@@ -123,37 +115,7 @@ const SecurityLockScreen = () => {
       return;
     }
     setConfirmVisible(false);
-    setPassword('');
-    setSetupMode('enable');
-    setSetupVisible(true);
-  };
-
-  const handleSavePassword = async () => {
-    if (!password) {
-      showAppAlert('无法保存', '密码不能为空');
-      return;
-    }
-    try {
-      setSaving(true);
-      await enableSecurityLock(password);
-      setSetupVisible(false);
-      setPassword('');
-      await refresh();
-      if (setupMode === 'modify') {
-        showAppAlert('密码已更新', '新的密码已生效');
-      } else {
-        showAppAlert('安全锁已开启', '下次启动应用时会先进入极简备忘录');
-      }
-    } catch (error) {
-      showAppAlert('开启失败', error.message || '无法开启安全锁');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const closeSetup = () => {
-    setSetupVisible(false);
-    refresh();
+    navigation.navigate('SecurityLockPasswordSetup', { mode: 'enable' });
   };
 
   const handleDisable = () => {
@@ -185,18 +147,6 @@ const SecurityLockScreen = () => {
       handleDisable();
     }
   };
-
-  if (setupVisible) {
-    return (
-      <SecurityLockPasswordSetupPage
-        password={password}
-        saving={saving}
-        onPasswordChange={setPassword}
-        onClose={closeSetup}
-        onSave={handleSavePassword}
-      />
-    );
-  }
 
   return (
     <View style={styles.container}>

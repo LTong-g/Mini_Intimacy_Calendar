@@ -152,3 +152,4 @@
 - Release 签名：Release APK 必须使用 `android/keystore.properties` 指向的本机私有签名；缺少私有签名配置时不得回退为 debug 签名。
 
 - 当前 AVD 尺寸语义约定：`AVD_2640x1200` 为手机尺寸默认机型，`AVD_2560x1600` 为平板尺寸机型。
+- 视觉上占满整页、用户会理解为独立页面的界面，默认应实现为 Screen 文件并注册到导航；仅顶部栏、弹窗、滑条、列表项等可复用局部界面放在 components。

@@ -11,15 +11,17 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import BaseModal from '../components/modals/BaseModal';
 import ModalActionRow from '../components/modals/ModalActionRow';
 import MemoCategoryEditorModal from '../components/MemoCategoryEditorModal';
-import MemoEditorPage from '../components/MemoEditorPage';
-import MemoPageHeader from '../components/MemoPageHeader';
-import MemoResetApplicationModal from '../components/MemoResetApplicationModal';
+import { MemoShellContext } from './MemoShellContext';
+import MemoEditorScreen from './MemoEditorScreen';
+import MemoSettingsScreen from './MemoSettingsScreen';
 import { showAppAlert } from '../utils/appAlert';
 import {
   buildTitleFromBody,
@@ -46,6 +48,7 @@ import { clearDiagnosticLogs } from '../utils/diagnosticLogs';
 const RESET_CONFIRM_TEXT = '清空数据并重置';
 const MEMO_MIME_TYPE = 'application/json';
 const MEMO_EXPORT_FILE_BASENAME = 'MemoData';
+const MemoStack = createNativeStackNavigator();
 const buildMemoExportFileName = () => {
   const ts = new Date().toISOString().replace(/[.:]/g, '-');
   return `${MEMO_EXPORT_FILE_BASENAME}_${ts}.json`;
@@ -89,7 +92,105 @@ const createTempMemoExportFileForSharing = async (content) => {
   return uri;
 };
 
-const MemoShellScreen = ({ onUnlock, onResetComplete }) => {
+const MemoHomeScreen = () => {
+  const navigation = useNavigation();
+  const {
+    searchText,
+    setSearchText,
+    selectedCategoryId,
+    setSelectedCategoryId,
+    categoriesById,
+    visibleNotes,
+    openNewMemo,
+    openEditMemo,
+    openCategoryPicker,
+    renderCategoryModals,
+  } = React.useContext(MemoShellContext);
+  const selectedCategory = selectedCategoryId ? categoriesById.get(selectedCategoryId) : null;
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <View style={styles.headerIcon}>
+          <Ionicons name="document-text-outline" size={22} color="#007AFF" />
+        </View>
+        <Text style={styles.headerTitle}>极简备忘录</Text>
+      </View>
+
+      <View style={styles.searchWrap}>
+        <Ionicons name="search-outline" size={18} color="#777" />
+        <TextInput
+          value={searchText}
+          onChangeText={setSearchText}
+          style={styles.searchInput}
+          placeholder="搜索笔记"
+        />
+      </View>
+
+      {selectedCategory && (
+        <TouchableOpacity style={styles.filterPill} onPress={() => setSelectedCategoryId(null)}>
+          <View style={[styles.categoryDot, { backgroundColor: selectedCategory.color }]} />
+          <Text style={styles.filterText}>{selectedCategory.name}</Text>
+          <Ionicons name="close" size={16} color="#555" />
+        </TouchableOpacity>
+      )}
+
+      <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
+        {visibleNotes.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Ionicons name="document-text-outline" size={42} color="#b0b0b0" />
+            <Text style={styles.emptyText}>暂无笔记</Text>
+          </View>
+        ) : (
+          visibleNotes.map((note) => {
+            const category = note.categoryId ? categoriesById.get(note.categoryId) : null;
+            return (
+              <TouchableOpacity
+                key={note.id}
+                style={styles.noteCard}
+                onPress={() => {
+                  openEditMemo(note);
+                  navigation.navigate('MemoEditor');
+                }}
+              >
+                <View style={styles.noteHeader}>
+                  <Text style={styles.noteTitle} numberOfLines={1}>{note.title}</Text>
+                  {category && <View style={[styles.categoryDot, { backgroundColor: category.color }]} />}
+                </View>
+                <Text style={styles.noteBody} numberOfLines={3}>{note.body || '无正文'}</Text>
+                <Text style={styles.noteTime}>{new Date(note.updatedAt).toLocaleString()}</Text>
+              </TouchableOpacity>
+            );
+          })
+        )}
+      </ScrollView>
+
+      <View style={styles.bottomBar}>
+        <TouchableOpacity style={[styles.bottomButton, styles.bottomButtonLeft]} onPress={openCategoryPicker}>
+          <Ionicons name="albums-outline" size={22} color="#007AFF" />
+          <Text style={styles.bottomText}>查看分类</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => {
+            openNewMemo();
+            navigation.navigate('MemoEditor');
+          }}
+        >
+          <Ionicons name="add" size={32} color="#fff" />
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.bottomButton, styles.bottomButtonRight]} onPress={() => navigation.navigate('MemoSettings')}>
+          <Ionicons name="settings-outline" size={22} color="#007AFF" />
+          <Text style={styles.bottomText}>设置</Text>
+        </TouchableOpacity>
+      </View>
+
+      {renderCategoryModals()}
+    </View>
+  );
+};
+
+const MemoShellContent = ({ onUnlock, onResetComplete }) => {
   const [memos, setMemos] = useState({ categories: [], notes: [] });
   const [searchText, setSearchText] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
@@ -97,14 +198,13 @@ const MemoShellScreen = ({ onUnlock, onResetComplete }) => {
   const [categoryEditorVisible, setCategoryEditorVisible] = useState(false);
   const [categoryName, setCategoryName] = useState('');
   const [categoryColor, setCategoryColor] = useState('#007AFF');
-  const [editorVisible, setEditorVisible] = useState(false);
   const [editingNote, setEditingNote] = useState(null);
   const [noteTitle, setNoteTitle] = useState('');
   const [noteBody, setNoteBody] = useState('');
   const [noteCategoryId, setNoteCategoryId] = useState(null);
-  const [settingsVisible, setSettingsVisible] = useState(false);
   const [resetVisible, setResetVisible] = useState(false);
   const [resetText, setResetText] = useState('');
+  const [currentMemoRouteName, setCurrentMemoRouteName] = useState('MemoHome');
 
   const refresh = useCallback(async () => {
     setMemos(await getMemosState());
@@ -135,20 +235,12 @@ const MemoShellScreen = ({ onUnlock, onResetComplete }) => {
         setCategoryModalVisible(false);
         return true;
       }
-      if (editorVisible) {
-        setEditorVisible(false);
-        return true;
-      }
-      if (settingsVisible) {
-        setSettingsVisible(false);
-        return true;
-      }
       return false;
     };
 
     const subscription = BackHandler.addEventListener('hardwareBackPress', onHardwareBackPress);
     return () => subscription.remove();
-  }, [categoryEditorVisible, categoryModalVisible, editorVisible, resetVisible, settingsVisible]);
+  }, [categoryEditorVisible, categoryModalVisible, resetVisible]);
 
   const categoriesById = useMemo(
     () => new Map(memos.categories.map((item) => [item.id, item])),
@@ -169,7 +261,6 @@ const MemoShellScreen = ({ onUnlock, onResetComplete }) => {
     setNoteTitle('');
     setNoteBody('');
     setNoteCategoryId(selectedCategoryId || null);
-    setEditorVisible(true);
   };
 
   const openEditMemo = (note) => {
@@ -177,7 +268,6 @@ const MemoShellScreen = ({ onUnlock, onResetComplete }) => {
     setNoteTitle(note.title);
     setNoteBody(note.body);
     setNoteCategoryId(note.categoryId || null);
-    setEditorVisible(true);
   };
 
   const handleSaveMemo = async () => {
@@ -189,10 +279,9 @@ const MemoShellScreen = ({ onUnlock, onResetComplete }) => {
     }
 
     if (!editingNote && await verifyPassword(body)) {
-      setEditorVisible(false);
       setNoteBody('');
       onUnlock();
-      return;
+      return false;
     }
 
     try {
@@ -202,14 +291,15 @@ const MemoShellScreen = ({ onUnlock, onResetComplete }) => {
         body,
         categoryId: noteCategoryId,
       });
-      setEditorVisible(false);
       await refresh();
+      return true;
     } catch (error) {
       showAppAlert('保存失败', error.message || '无法保存笔记');
+      return false;
     }
   };
 
-  const handleDeleteMemo = () => {
+  const handleDeleteMemo = (onDeleted) => {
     if (!editingNote) return;
     showAppAlert('删除笔记', '删除后无法从应用内恢复。', [
       { text: '取消', style: 'cancel' },
@@ -218,8 +308,8 @@ const MemoShellScreen = ({ onUnlock, onResetComplete }) => {
         style: 'destructive',
         onPress: async () => {
           await deleteMemoNote(editingNote.id);
-          setEditorVisible(false);
           await refresh();
+          onDeleted?.();
         },
       },
     ]);
@@ -408,6 +498,8 @@ const MemoShellScreen = ({ onUnlock, onResetComplete }) => {
 
   const selectedCategory = selectedCategoryId ? categoriesById.get(selectedCategoryId) : null;
 
+  const openCategoryPicker = () => setCategoryModalVisible(true);
+
   const renderCategoryModals = () => (
     <>
       <BaseModal
@@ -432,7 +524,7 @@ const MemoShellScreen = ({ onUnlock, onResetComplete }) => {
               key={category.id}
               style={styles.categoryRow}
               onPress={() => {
-                if (editorVisible) setNoteCategoryId(category.id);
+                if (currentMemoRouteName === 'MemoEditor') setNoteCategoryId(category.id);
                 else setSelectedCategoryId(category.id);
                 setCategoryModalVisible(false);
               }}
@@ -472,141 +564,64 @@ const MemoShellScreen = ({ onUnlock, onResetComplete }) => {
     </>
   );
 
-  if (editorVisible) {
-    return (
-      <MemoEditorPage
-        editingNote={editingNote}
-        title={noteTitle}
-        body={noteBody}
-        categoryLabel={noteCategoryId ? categoriesById.get(noteCategoryId)?.name || '选择分类' : '未分类'}
-        onTitleChange={setNoteTitle}
-        onBodyChange={setNoteBody}
-        onOpenCategoryPicker={() => setCategoryModalVisible(true)}
-        onDelete={handleDeleteMemo}
-        onClose={() => setEditorVisible(false)}
-        onSave={handleSaveMemo}
-        categoryModals={renderCategoryModals()}
-      />
-    );
-  }
-
-  if (settingsVisible) {
-    return (
-      <View style={styles.settingsContainer}>
-        <MemoPageHeader
-          title="设置"
-          leftIconName="arrow-back"
-          onLeftPress={() => setSettingsVisible(false)}
-        />
-        <ScrollView contentContainerStyle={styles.settingsContent}>
-          <View style={styles.settingCard}>
-            <Text style={styles.sectionTitle}>数据管理</Text>
-            <View style={styles.optionRow}>
-              <TouchableOpacity style={styles.option} onPress={handleImportMemos}>
-                <Ionicons name="cloud-download-outline" size={20} color="#007AFF" />
-                <Text style={styles.optionText}>导入</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.option, styles.optionMiddle]} onPress={handleExportMemos}>
-                <Ionicons name="cloud-upload-outline" size={20} color="#007AFF" />
-                <Text style={styles.optionText}>导出</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.option} onPress={handleShareMemos}>
-                <Ionicons name="share-social-outline" size={20} color="#007AFF" />
-                <Text style={styles.optionText}>分享</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-          <TouchableOpacity
-            style={styles.resetButton}
-            onPress={() => {
-              setResetText('');
-              setResetVisible(true);
-            }}
-          >
-            <Ionicons name="warning-outline" size={18} color="#C62828" />
-            <Text style={styles.resetButtonText}>重置应用</Text>
-          </TouchableOpacity>
-        </ScrollView>
-        <MemoResetApplicationModal
-          visible={resetVisible}
-          confirmText={RESET_CONFIRM_TEXT}
-          value={resetText}
-          onChangeText={setResetText}
-          onCancel={() => setResetVisible(false)}
-          onConfirm={handleResetApplication}
-        />
-      </View>
-    );
-  }
+  const contextValue = {
+    memos,
+    searchText,
+    setSearchText,
+    selectedCategoryId,
+    setSelectedCategoryId,
+    categoriesById,
+    visibleNotes,
+    editingNote,
+    noteTitle,
+    noteBody,
+    noteCategoryId,
+    setNoteTitle,
+    setNoteBody,
+    openNewMemo,
+    openEditMemo,
+    openCategoryPicker,
+    handleDeleteMemo,
+    handleSaveMemo,
+    handleImportMemos,
+    handleExportMemos,
+    handleShareMemos,
+    resetVisible,
+    setResetVisible,
+    resetText,
+    setResetText,
+    resetConfirmText: RESET_CONFIRM_TEXT,
+    handleResetApplication,
+    renderCategoryModals,
+  };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerIcon}>
-          <Ionicons name="document-text-outline" size={22} color="#007AFF" />
-        </View>
-        <Text style={styles.headerTitle}>极简备忘录</Text>
-      </View>
-
-      <View style={styles.searchWrap}>
-        <Ionicons name="search-outline" size={18} color="#777" />
-        <TextInput
-          value={searchText}
-          onChangeText={setSearchText}
-          style={styles.searchInput}
-          placeholder="搜索笔记"
-        />
-      </View>
-
-      {selectedCategory && (
-        <TouchableOpacity style={styles.filterPill} onPress={() => setSelectedCategoryId(null)}>
-          <View style={[styles.categoryDot, { backgroundColor: selectedCategory.color }]} />
-          <Text style={styles.filterText}>{selectedCategory.name}</Text>
-          <Ionicons name="close" size={16} color="#555" />
-        </TouchableOpacity>
-      )}
-
-      <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
-        {visibleNotes.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Ionicons name="document-text-outline" size={42} color="#b0b0b0" />
-            <Text style={styles.emptyText}>暂无笔记</Text>
-          </View>
-        ) : (
-          visibleNotes.map((note) => {
-            const category = note.categoryId ? categoriesById.get(note.categoryId) : null;
-            return (
-              <TouchableOpacity key={note.id} style={styles.noteCard} onPress={() => openEditMemo(note)}>
-                <View style={styles.noteHeader}>
-                  <Text style={styles.noteTitle} numberOfLines={1}>{note.title}</Text>
-                  {category && <View style={[styles.categoryDot, { backgroundColor: category.color }]} />}
-                </View>
-                <Text style={styles.noteBody} numberOfLines={3}>{note.body || '无正文'}</Text>
-                <Text style={styles.noteTime}>{new Date(note.updatedAt).toLocaleString()}</Text>
-              </TouchableOpacity>
-            );
-          })
-        )}
-      </ScrollView>
-
-      <View style={styles.bottomBar}>
-        <TouchableOpacity style={[styles.bottomButton, styles.bottomButtonLeft]} onPress={() => setCategoryModalVisible(true)}>
-          <Ionicons name="albums-outline" size={22} color="#007AFF" />
-          <Text style={styles.bottomText}>查看分类</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.addButton} onPress={openNewMemo}>
-          <Ionicons name="add" size={32} color="#fff" />
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.bottomButton, styles.bottomButtonRight]} onPress={() => setSettingsVisible(true)}>
-          <Ionicons name="settings-outline" size={22} color="#007AFF" />
-          <Text style={styles.bottomText}>设置</Text>
-        </TouchableOpacity>
-      </View>
-
-      {renderCategoryModals()}
-    </View>
+    <MemoShellContext.Provider value={contextValue}>
+      <MemoStack.Navigator
+        initialRouteName="MemoHome"
+        screenOptions={{ headerShown: false }}
+        screenListeners={{
+          state: (event) => {
+            const state = event.data.state;
+            const route = state.routes[state.index];
+            setCurrentMemoRouteName(route.name);
+          },
+        }}
+      >
+        <MemoStack.Screen name="MemoHome" component={MemoHomeScreen} />
+        <MemoStack.Screen name="MemoEditor" component={MemoEditorScreen} />
+        <MemoStack.Screen name="MemoSettings" component={MemoSettingsScreen} />
+      </MemoStack.Navigator>
+    </MemoShellContext.Provider>
   );
 };
+
+const MemoShellScreen = ({ onUnlock, onResetComplete }) => (
+  <MemoShellContent
+    onUnlock={onUnlock}
+    onResetComplete={onResetComplete}
+  />
+);
 
 const styles = StyleSheet.create({
   container: { flex: 1, paddingTop: 44, backgroundColor: '#fff' },
@@ -708,16 +723,6 @@ const styles = StyleSheet.create({
   categoryName: { marginLeft: 8, fontSize: 15, color: '#333' },
   secondaryAction: { minHeight: 42, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 12 },
   secondaryActionText: { marginLeft: 6, color: '#007AFF', fontSize: 14 },
-  settingsContainer: { flex: 1, paddingTop: 44, backgroundColor: '#fff' },
-  settingsContent: { padding: 20, paddingBottom: 32 },
-  settingCard: { borderWidth: 1, borderColor: '#d8d8d8', borderRadius: 8, padding: 14 },
-  sectionTitle: { fontSize: 16, fontWeight: '600', color: '#333', marginBottom: 12 },
-  optionRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  option: { flex: 1, minHeight: 42, borderWidth: 1, borderColor: '#007AFF', borderRadius: 8, alignItems: 'center', justifyContent: 'center', flexDirection: 'row' },
-  optionMiddle: { marginHorizontal: 8 },
-  optionText: { marginLeft: 6, color: '#007AFF', fontSize: 14 },
-  resetButton: { minHeight: 44, borderWidth: 1, borderColor: '#C62828', borderRadius: 8, marginTop: 18, alignItems: 'center', justifyContent: 'center', flexDirection: 'row' },
-  resetButtonText: { marginLeft: 6, color: '#C62828', fontSize: 14 },
 });
 
 export default MemoShellScreen;

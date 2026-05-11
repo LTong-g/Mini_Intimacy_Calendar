@@ -1791,3 +1791,10 @@
 - 新增 MemoPageHeader 统一承载备忘录相关页面顶部栏的左侧按钮、居中标题、右侧操作或占位。
 - MemoTextEditorLayout 改为使用 MemoPageHeader，继续服务新建笔记、编辑笔记和安全锁设置密码页面。
 - MemoShellScreen 的备忘录设置页改为使用 MemoPageHeader，保留返回按钮、设置标题和右侧占位布局。
+
+### 整页界面迁移为导航 Screen
+- 用户明确要求视觉上占满整页的界面应实现为 Screen 文件并注册到导航，协作说明已记录该规则。
+- 备忘录首页、编辑笔记页、备忘录设置页改为 MemoShellScreen 内部导航栈中的 Screen。
+- 备忘录编辑页代码迁移到 MemoEditorScreen，备忘录设置页代码迁移到 MemoSettingsScreen，旧 MemoEditorPage 组件已移除。
+- 安全锁设置密码页迁移为 SecurityLockPasswordSetupScreen，并注册到主导航。
+- SecurityLockScreen 开启或修改密码时改为导航进入 SecurityLockPasswordSetupScreen，旧 SecurityLockPasswordSetupPage 组件已移除。

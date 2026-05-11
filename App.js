@@ -25,6 +25,7 @@ import ExperimentalUsageScreen from "./src/screens/UsageScreen";
 import ExperimentalUsageBlacklistScreen from "./src/screens/UsageBlacklistScreen";
 import ExperimentalUsageIntervalsScreen from "./src/screens/UsageIntervalsScreen";
 import SecurityLockScreen from "./src/screens/SecurityLockScreen";
+import SecurityLockPasswordSetupScreen from "./src/screens/SecurityLockPasswordSetupScreen";
 import MemoShellScreen from "./src/screens/MemoShellScreen";
 import AppAlertProvider from "./src/components/modals/AppAlertProvider";
 import { getEffectiveCheckInData } from "./src/utils/checkInStorage";
@@ -167,11 +168,13 @@ export default function App() {
       <PaperProvider>
         <SafeAreaProvider>
           <AppAlertProvider>
-            <MemoShellScreen
-              onUnlock={() => setSecurityUnlocked(true)}
-              onResetComplete={handleSecurityResetComplete}
-            />
-            <StatusBar style="auto" />
+            <NavigationContainer>
+              <MemoShellScreen
+                onUnlock={() => setSecurityUnlocked(true)}
+                onResetComplete={handleSecurityResetComplete}
+              />
+              <StatusBar style="auto" />
+            </NavigationContainer>
           </AppAlertProvider>
         </SafeAreaProvider>
       </PaperProvider>
@@ -187,6 +190,7 @@ export default function App() {
               <Stack.Screen name="Calendar" component={CalendarScreen} />
               <Stack.Screen name="Settings" component={SettingsScreen} />
               <Stack.Screen name="SecurityLock" component={SecurityLockScreen} />
+              <Stack.Screen name="SecurityLockPasswordSetup" component={SecurityLockPasswordSetupScreen} />
               <Stack.Screen name="About" component={AboutScreen} />
               <Stack.Screen name="SoftwareIntro" component={SoftwareIntroScreen} />
               <Stack.Screen name="UsageHelp" component={UsageHelpScreen} />
