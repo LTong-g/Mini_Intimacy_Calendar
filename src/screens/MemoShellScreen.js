@@ -17,6 +17,8 @@ import * as Sharing from 'expo-sharing';
 import BaseModal from '../components/modals/BaseModal';
 import ModalActionRow from '../components/modals/ModalActionRow';
 import MemoCategoryEditorModal from '../components/MemoCategoryEditorModal';
+import MemoEditorPage from '../components/MemoEditorPage';
+import MemoPageHeader from '../components/MemoPageHeader';
 import MemoResetApplicationModal from '../components/MemoResetApplicationModal';
 import { showAppAlert } from '../utils/appAlert';
 import {
@@ -472,58 +474,30 @@ const MemoShellScreen = ({ onUnlock, onResetComplete }) => {
 
   if (editorVisible) {
     return (
-      <View style={styles.editorContainer}>
-        <View style={styles.editorHeader}>
-          <TouchableOpacity onPress={() => setEditorVisible(false)} style={styles.editorHeaderButton}>
-            <Ionicons name="close" size={24} color="#007AFF" />
-          </TouchableOpacity>
-          <Text style={styles.editorTitle}>{editingNote ? '编辑笔记' : '新建笔记'}</Text>
-          <TouchableOpacity onPress={handleSaveMemo} style={styles.editorHeaderButton}>
-            <Text style={styles.saveText}>保存</Text>
-          </TouchableOpacity>
-        </View>
-        <ScrollView contentContainerStyle={styles.editorContent}>
-          <TextInput
-            value={noteTitle}
-            onChangeText={setNoteTitle}
-            style={styles.titleInput}
-            placeholder="标题"
-          />
-          <TouchableOpacity style={styles.categorySelector} onPress={() => setCategoryModalVisible(true)}>
-            <Text style={styles.categorySelectorText}>
-              {noteCategoryId ? categoriesById.get(noteCategoryId)?.name || '选择分类' : '未分类'}
-            </Text>
-          </TouchableOpacity>
-          <TextInput
-            value={noteBody}
-            onChangeText={setNoteBody}
-            style={styles.bodyInput}
-            multiline
-            textAlignVertical="top"
-            placeholder="输入笔记内容"
-          />
-          {editingNote && (
-            <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteMemo}>
-              <Ionicons name="trash-outline" size={18} color="#C62828" />
-              <Text style={styles.deleteButtonText}>删除笔记</Text>
-            </TouchableOpacity>
-          )}
-        </ScrollView>
-        {renderCategoryModals()}
-      </View>
+      <MemoEditorPage
+        editingNote={editingNote}
+        title={noteTitle}
+        body={noteBody}
+        categoryLabel={noteCategoryId ? categoriesById.get(noteCategoryId)?.name || '选择分类' : '未分类'}
+        onTitleChange={setNoteTitle}
+        onBodyChange={setNoteBody}
+        onOpenCategoryPicker={() => setCategoryModalVisible(true)}
+        onDelete={handleDeleteMemo}
+        onClose={() => setEditorVisible(false)}
+        onSave={handleSaveMemo}
+        categoryModals={renderCategoryModals()}
+      />
     );
   }
 
   if (settingsVisible) {
     return (
       <View style={styles.settingsContainer}>
-        <View style={styles.editorHeader}>
-          <TouchableOpacity onPress={() => setSettingsVisible(false)} style={styles.editorHeaderButton}>
-            <Ionicons name="arrow-back" size={24} color="#007AFF" />
-          </TouchableOpacity>
-          <Text style={styles.editorTitle}>设置</Text>
-          <View style={styles.editorHeaderSpacer} />
-        </View>
+        <MemoPageHeader
+          title="设置"
+          leftIconName="arrow-back"
+          onLeftPress={() => setSettingsVisible(false)}
+        />
         <ScrollView contentContainerStyle={styles.settingsContent}>
           <View style={styles.settingCard}>
             <Text style={styles.sectionTitle}>数据管理</Text>
@@ -728,27 +702,6 @@ const styles = StyleSheet.create({
     borderColor: '#fff',
     zIndex: 10,
   },
-  editorContainer: { flex: 1, paddingTop: 44, backgroundColor: '#fff' },
-  editorHeader: {
-    minHeight: 44,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
-  },
-  editorHeaderButton: { minWidth: 52 },
-  editorTitle: { flex: 1, fontSize: 18, fontWeight: '600', color: '#333', textAlign: 'center' },
-  editorHeaderSpacer: { width: 52 },
-  saveText: { color: '#007AFF', fontSize: 15, fontWeight: '600', textAlign: 'right' },
-  editorContent: { padding: 18, paddingBottom: 32 },
-  titleInput: { minHeight: 46, fontSize: 20, fontWeight: '600', color: '#333', borderBottomWidth: 1, borderBottomColor: '#eee' },
-  categorySelector: { alignSelf: 'flex-start', marginTop: 12, marginBottom: 12, borderWidth: 1, borderColor: '#d8d8d8', borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6 },
-  categorySelectorText: { fontSize: 13, color: '#555' },
-  bodyInput: { minHeight: 280, fontSize: 16, lineHeight: 24, color: '#333' },
-  deleteButton: { minHeight: 42, borderWidth: 1, borderColor: '#C62828', borderRadius: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 20 },
-  deleteButtonText: { marginLeft: 6, color: '#C62828', fontSize: 14 },
   largeCategoryPanel: { maxHeight: '78%' },
   categoryList: { maxHeight: 360 },
   categoryRow: { minHeight: 42, flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderBottomColor: '#eee' },

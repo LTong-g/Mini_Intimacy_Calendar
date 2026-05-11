@@ -1775,3 +1775,19 @@
 - 新增 MemoResetApplicationModal 组件承载极简备忘录重置应用确认弹窗的说明、确认短语、输入框和取消确认按钮。
 - MemoShellScreen 改为引用 MemoResetApplicationModal，并继续保留重置输入状态、权限检查、实际重置和错误提示逻辑。
 - MemoShellScreen 移除了重置弹窗专用 modalText、input 和 confirmPhrase 样式。
+
+### 抽取备忘录编辑页与安全锁设置密码页
+- 新增 MemoTextEditorLayout 组件承载备忘录风格编辑页面的顶部关闭、标题、保存按钮和内容区域外壳。
+- 新增 MemoEditorPage 组件承载极简备忘录的新建编辑笔记页面，并复用 MemoTextEditorLayout。
+- 新增 SecurityLockPasswordSetupPage 组件承载安全锁设置密码页面，并复用 MemoTextEditorLayout。
+- MemoShellScreen 改为引用 MemoEditorPage，继续保留笔记标题、正文、分类、删除和保存逻辑。
+- SecurityLockScreen 改为引用 SecurityLockPasswordSetupPage，继续保留密码输入状态、保存密码和安全锁启用逻辑。
+
+### 修复备忘录设置页顶部布局回归
+- MemoShellScreen 设置页仍使用 editorHeader 样式，抽取备忘录编辑页后该样式缺失导致设置页顶部布局变化。
+- MemoShellScreen 已恢复设置页顶部栏使用的 editorHeader 样式。
+
+### 抽取备忘录页面顶部栏
+- 新增 MemoPageHeader 统一承载备忘录相关页面顶部栏的左侧按钮、居中标题、右侧操作或占位。
+- MemoTextEditorLayout 改为使用 MemoPageHeader，继续服务新建笔记、编辑笔记和安全锁设置密码页面。
+- MemoShellScreen 的备忘录设置页改为使用 MemoPageHeader，保留返回按钮、设置标题和右侧占位布局。

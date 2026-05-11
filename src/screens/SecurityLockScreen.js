@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import BaseModal from '../components/modals/BaseModal';
 import ModalActionRow from '../components/modals/ModalActionRow';
+import SecurityLockPasswordSetupPage from '../components/SecurityLockPasswordSetupPage';
 import { showAppAlert } from '../utils/appAlert';
 import {
   disableSecurityLock,
@@ -187,30 +188,13 @@ const SecurityLockScreen = () => {
 
   if (setupVisible) {
     return (
-      <View style={styles.editorContainer}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={closeSetup} style={styles.backButton}>
-            <Ionicons name="close" size={24} color="#007AFF" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>设置密码</Text>
-          <TouchableOpacity disabled={saving} onPress={handleSavePassword}>
-            <Text style={styles.saveText}>保存</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.editorContent}>
-          <Text style={styles.editorGuide}>
-            这里使用笔记新建界面设置密码。以后在极简备忘录中新建笔记，正文完全等于密码并点击保存，就会进入实际应用；不匹配时会按普通笔记保存。
-          </Text>
-          <TextInput
-            value={password}
-            onChangeText={setPassword}
-            style={styles.memoBodyInput}
-            multiline
-            textAlignVertical="top"
-            placeholder="输入密码"
-          />
-        </View>
-      </View>
+      <SecurityLockPasswordSetupPage
+        password={password}
+        saving={saving}
+        onPasswordChange={setPassword}
+        onClose={closeSetup}
+        onSave={handleSavePassword}
+      />
     );
   }
 
@@ -308,11 +292,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
   },
-  saveText: {
-    color: '#007AFF',
-    fontSize: 15,
-    fontWeight: '600',
-  },
   content: {
     padding: 20,
     paddingBottom: 32,
@@ -389,27 +368,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 10,
     fontSize: 15,
-  },
-  editorContainer: {
-    flex: 1,
-    paddingTop: 44,
-    backgroundColor: '#fff',
-  },
-  editorContent: {
-    flex: 1,
-    padding: 18,
-  },
-  editorGuide: {
-    fontSize: 13,
-    lineHeight: 21,
-    color: '#666',
-    marginBottom: 16,
-  },
-  memoBodyInput: {
-    flex: 1,
-    fontSize: 16,
-    lineHeight: 24,
-    color: '#333',
   },
 });
 
