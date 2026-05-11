@@ -9,9 +9,9 @@ import { useNavigation } from '@react-navigation/native';
 
 const versionHistory = [
   {
-    version: 'Unreleased',
-    title: '未发布变更',
-    date: '开发中',
+    version: '2.1.1',
+    title: '权限、启动与时长显示优化',
+    date: '2026-05-11',
     sections: [
       {
         label: '优化：',

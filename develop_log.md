@@ -1829,3 +1829,9 @@
 
 ### 版本记录补充黑名单时长显示优化
 - src/features/about/screens/VersionHistoryScreen.js 已在 Unreleased 优化项补充黑名单使用时长和图表标注统一按时长格式展示的用户可见变化。
+
+### 版本更新至 2.1.1
+- package.json、package-lock.json 和 app.json 的版本号已更新为 2.1.1。
+- android/app/build.gradle 的 versionName 和 android/app/src/main/res/values/strings.xml 的 expo_runtime_version 已同步为 2.1.1。
+- src/features/about/screens/VersionHistoryScreen.js 顶部记录已从 Unreleased 调整为 2.1.1，并将日期更新为 2026-05-11。
+- developer_guide.md 中当前语义版本、归档示例和发布流程示例已同步为 2.1.1。
