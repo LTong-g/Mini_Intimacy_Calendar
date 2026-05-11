@@ -72,7 +72,7 @@
 - 用户希望在 bare workflow 下保持 `expo.version` 与 `ios/android runtimeVersion` 自动统一，不采用手工分别维护。
 - 在 Windows 本机进行 Android 构建时，采用“构建前临时 `subst` 映射短路径、构建后无论成功失败都取消本次创建映射”的流程；构建前若目标盘符已存在，无论是否映射到当前项目，都直接失败，不自动删除，避免误删用户映射或干扰并发构建。
 - Android 安装包只有准备发布或分发时才需要复制归档并重命名；普通构建不要求每次复制重命名。
-- Android 安装包发布/分发归档命名格式为 `MinimalistWeaponEnhancementCalendar-v<语义版本>-android-<yyyyMMdd>.apk`，归档位置为 `dist/`，归档来源必须是 Release APK。
+- Android 安装包发布/分发归档命名格式为 `Mini_Intimacy_Calendar-v<语义版本>-android-<yyyyMMdd>.apk`，归档位置为 `dist/`，归档来源必须是 Release APK。
 - Android Release APK 使用本机私有 release 签名；`android/app/debug.keystore` 仅用于 Debug，Release 构建不得使用 `signingConfigs.debug`。
 - Android Release 签名配置读取 `android/keystore.properties`，私有签名文件为 `android/app/release.keystore`；两者必须保持 Git 忽略，禁止提交到开源仓库。
 - 正式发布版本之后开发的未发布功能，必须先记录到版本记录页的 `Unreleased` 节点；正式发布时再把该节点版本号改成对应的正式版本号。
@@ -132,6 +132,7 @@
 - 进入内部应用后关闭安全锁不需要再次验证密码，只需弹窗二次确认；安全锁开启强告知强校验，关闭保持易关闭。
 - 安全锁不设计免密恢复真实应用入口；极简备忘录设置页提供重置应用按钮，忘记密码时可重置应用。重置会清空打卡数据、黑名单数据、用户配置、笔记内容、问题日志和应用可控缓存，关闭安全锁并恢复崭新安装状态。
 - 重置应用前仅引导关闭当前已开启的黑名单使用记录权限和电池优化权限；当前未开启的权限不引导关闭；不专门引导关闭精确定时权限，重置后应用内相关功能和本地状态恢复为未启用。
+- 项目对外仓库名、发布归档名前缀和应用内 GitHub 入口使用 `Mini_Intimacy_Calendar`；Android `applicationId`、原生包名、Expo slug 和 npm 包名暂时保留旧名，避免影响安装升级链路。
 
 ## Windows Android 构建执行流程（强约束）
 - 适用范围：所有本机 Android Gradle 构建与安装流程。
@@ -148,7 +149,7 @@
   - 步骤 5：构建结束后校验 `subst` 输出不包含 `M:`。
   - 步骤 6：下一次构建必须重新创建映射，不复用旧映射；若发现旧映射残留，先人工确认没有并发构建占用后再清理。
 - 实现载体：`scripts/android-build-tempmap.ps1`（`try/finally` 保证清理）。
-- 发布/分发归档：仅在准备发布或分发安装包时，将 `android/app/build/outputs/apk/release/app-release.apk` 复制到 `dist/` 并按 `MinimalistWeaponEnhancementCalendar-v<语义版本>-android-<yyyyMMdd>.apk` 命名；普通构建不执行该归档步骤，禁止将 `debug/app-debug.apk` 作为发布或分发归档来源。
+- 发布/分发归档：仅在准备发布或分发安装包时，将 `android/app/build/outputs/apk/release/app-release.apk` 复制到 `dist/` 并按 `Mini_Intimacy_Calendar-v<语义版本>-android-<yyyyMMdd>.apk` 命名；普通构建不执行该归档步骤，禁止将 `debug/app-debug.apk` 作为发布或分发归档来源。
 - Release 签名：Release APK 必须使用 `android/keystore.properties` 指向的本机私有签名；缺少私有签名配置时不得回退为 debug 签名。
 
 - 当前 AVD 尺寸语义约定：`AVD_2640x1200` 为手机尺寸默认机型，`AVD_2560x1600` 为平板尺寸机型。

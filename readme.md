@@ -1,11 +1,11 @@
 > 提示：请使用 UTF-8 编码读取本文件。
 
-# MinimalistWeaponEnhancementCalendar
+# Mini Intimacy Calendar
 
 一个专注于“记录失控时刻、长期复盘频率”的极简日历应用。
 
 ## 这是什么
-`MinimalistWeaponEnhancementCalendar` 是一个移动端行为记录工具。
+`Mini Intimacy Calendar` 是一个移动端行为记录工具。
 它记录的是三类需要自律、需要降低频率并合理控制的行为，而不是用于坚持完成某项正向习惯。
 你可以按日期记录这些行为发生的次数，并在日历与统计图中查看频率变化。
 

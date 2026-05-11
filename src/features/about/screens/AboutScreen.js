@@ -10,7 +10,7 @@ import { showAppAlert } from '../../../shared/utils/appAlert';
 import pkg from '../../../../package.json';
 
 const appIcon = require('../../../../assets/icon.png');
-const GITHUB_URL = 'https://github.com/LTong-g/MinimalistWeaponEnhancementCalendar';
+const GITHUB_URL = 'https://github.com/LTong-g/Mini_Intimacy_Calendar';
 
 const AboutScreen = () => {
   const navigation = useNavigation();

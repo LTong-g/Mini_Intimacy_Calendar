@@ -10,7 +10,7 @@
 - 上述 `build` 和 `.cxx` 目录属于可再生成构建产物，清理后下次 Android 构建会重新生成；`dist` 中的 Release APK 和导出资产属于发布/分发归档，是否保留取决于发布管理需要。
 
 ## 1. 项目定位
-`MinimalistWeaponEnhancementCalendar` 是一个基于 Expo + React Native 的移动端打卡应用。  
+`Mini_Intimacy_Calendar` 是一个基于 Expo + React Native 的移动端打卡应用。
 它围绕“按日期记录三类行为”这个核心目标，提供日历视图、数据统计和数据导入导出能力。
 三类行为均为代称，实际意义是三种应当自律，合理控制频率的行为。即软件功能为记录没有自律的时候，并提供一些统计分析。
 
@@ -130,7 +130,7 @@
 - `使用帮助`：展示日视图、月视图、年视图、统计页、设置页和关于页的基础操作方式。
 - `隐私政策`：说明基础记录数据、使用记录辅助权限、本地存储、导入导出分享和用户控制方式；应用不提供账号、云同步或主动上传记录数据的能力。
 - `版本记录`：根据 Git 历史中的版本字段变化展示版本节点记录；正式发布后新开发但尚未发布的功能记录在 `Unreleased` 节点，发布时再改成对应正式版本号。`Unreleased` 显示时不加 `v`。`Unreleased` 本身不天然作为特殊版本；只有当前正在开发的版本有明确主功能时，才可先用与“新增、修复、优化”同级的标题单独介绍该功能，再显示“新增、修复、优化”分组；专题功能介绍应围绕该功能本身描述能力和使用结果，不在每条说明中重复使用“新增……”句式。版本记录只描述相对上一版本的最终变化，不记录同一版本开发过程中的中间调整。`Unreleased` 与正式版本节点遵循同一口径，只记录相对上一正式版本的最终用户可感知变化，不记录开发记录、调试记录、临时方案、回滚、反复修正或内部实现调整。同一版本内同一功能若属于“新增”，不得再把该功能开发过程中的完善、优化、修复拆成同版本的“优化”或“修复”条目，应合并为新增功能最终态描述；只有相对上一版本已经存在的功能发生变化时，才写入“优化”或“修复”。版本记录不是开发日志，开发过程、验证过程、事故处理和实现细节必须记录到 `develop_log.md`。每个版本节点内按“新增、修复、优化”分组展示，某类无内容时不显示该分类，初始版本不显示“新增”分类标题，并在每类内部按“视图、统计、设置”及对应子顺序排列。
-- `GitHub`：关于页页面底部入口，使用 GitHub 图标，打开项目主页 `https://github.com/LTong-g/MinimalistWeaponEnhancementCalendar`。
+- `GitHub`：关于页页面底部入口，使用 GitHub 图标，打开项目主页 `https://github.com/LTong-g/Mini_Intimacy_Calendar`。
 
 ## 3. 数据模型与规则
 ### 3.1 存储结构
@@ -316,7 +316,7 @@ npm run android:install:debug:tempmap
 - `android/app/build/outputs/apk/release/app-release.apk`
 
 复制归档到 `dist/`，并按以下格式重命名：
-- `MinimalistWeaponEnhancementCalendar-v<语义版本>-android-<yyyyMMdd>.apk`
+- `Mini_Intimacy_Calendar-v<语义版本>-android-<yyyyMMdd>.apk`
 
 推荐归档命令（仓库根目录执行）：
 ```powershell
@@ -324,7 +324,7 @@ npm run android:archive:release
 ```
 
 示例：
-- `dist/MinimalistWeaponEnhancementCalendar-v2.1.1-android-20260511.apk`
+- `dist/Mini_Intimacy_Calendar-v2.1.1-android-20260511.apk`
 
 Debug APK 仅用于开发调试，不能作为发布或分发归档来源。普通本机构建不要求执行复制归档和重命名步骤。
 
@@ -378,7 +378,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\android-build-tempmap.ps1 -Dr
 1. 修改语义版本（示例：`2.1.0 -> 2.1.1`）。
 2. 执行 `npm run release:sync-version`。
 3. 执行 `eas build --platform android --profile production`。
-4. 归档产物时带上语义版本与构建号（示例：`MinimalistWeaponEnhancementCalendar-v2.1.1+42-android.apk`）。
+4. 归档产物时带上语义版本与构建号（示例：`Mini_Intimacy_Calendar-v2.1.1+42-android.apk`）。
 
 ### 8.5 约束说明
 - `expo run:android` 用于开发调试，不作为发布产物来源。

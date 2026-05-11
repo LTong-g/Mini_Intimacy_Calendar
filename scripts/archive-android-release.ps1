@@ -1,7 +1,7 @@
 param(
   [string]$ApkPath = ".\android\app\build\outputs\apk\release\app-release.apk",
   [string]$DistDir = ".\dist",
-  [string]$AppName = "MinimalistWeaponEnhancementCalendar"
+  [string]$AppName = "Mini_Intimacy_Calendar"
 )
 
 $ErrorActionPreference = "Stop"

@@ -1835,3 +1835,10 @@
 - android/app/build.gradle 的 versionName 和 android/app/src/main/res/values/strings.xml 的 expo_runtime_version 已同步为 2.1.1。
 - src/features/about/screens/VersionHistoryScreen.js 顶部记录已从 Unreleased 调整为 2.1.1，并将日期更新为 2026-05-11。
 - developer_guide.md 中当前语义版本、归档示例和发布流程示例已同步为 2.1.1。
+
+### 项目外部名称更新
+- AGENTS.md 已将 Android 发布归档命名规则更新为 Mini_Intimacy_Calendar 前缀，并记录软件代码旧名暂时保留的边界。
+- developer_guide.md 已将项目对外名称、GitHub 项目主页和发布归档命名示例更新为 Mini_Intimacy_Calendar。
+- scripts/archive-android-release.ps1 已将默认发布归档名前缀更新为 Mini_Intimacy_Calendar。
+- AboutScreen.js 已将应用内 GitHub 入口更新为 https://github.com/LTong-g/Mini_Intimacy_Calendar。
+- readme.md 在最新提交中已将标题和项目描述展示名从 MinimalistWeaponEnhancementCalendar 更新为 Mini Intimacy Calendar，软件名和代码内名称未改变。
