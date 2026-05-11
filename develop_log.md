@@ -1798,3 +1798,10 @@
 - 备忘录编辑页代码迁移到 MemoEditorScreen，备忘录设置页代码迁移到 MemoSettingsScreen，旧 MemoEditorPage 组件已移除。
 - 安全锁设置密码页迁移为 SecurityLockPasswordSetupScreen，并注册到主导航。
 - SecurityLockScreen 开启或修改密码时改为导航进入 SecurityLockPasswordSetupScreen，旧 SecurityLockPasswordSetupPage 组件已移除。
+
+### 抽取使用记录详情为导航 Screen
+- UsageIntervalsScreen 改为只承载查看使用记录入口列表，保留全部记录和各应用入口。
+- 新增 UsageIntervalRecordsScreen 统一承载全部记录详情和单个应用记录详情。
+- 查看使用记录入口点击全部记录或具体应用时改为导航进入 UsageIntervalRecordsScreen。
+- 日视图自动记录提示中的查看记录入口改为直接导航到 UsageIntervalRecordsScreen 并传入全部记录和当前日期筛选。
+- 查看使用记录详情从 UsageIntervalsScreen 内部状态切换迁移为独立导航 Screen 后，UsageIntervalsScreen 中的 beforeRemove 返回拦截已移除。

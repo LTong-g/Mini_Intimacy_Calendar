@@ -24,6 +24,7 @@ import VersionHistoryScreen from "./src/screens/VersionHistoryScreen";
 import ExperimentalUsageScreen from "./src/screens/UsageScreen";
 import ExperimentalUsageBlacklistScreen from "./src/screens/UsageBlacklistScreen";
 import ExperimentalUsageIntervalsScreen from "./src/screens/UsageIntervalsScreen";
+import ExperimentalUsageIntervalRecordsScreen from "./src/screens/UsageIntervalRecordsScreen";
 import SecurityLockScreen from "./src/screens/SecurityLockScreen";
 import SecurityLockPasswordSetupScreen from "./src/screens/SecurityLockPasswordSetupScreen";
 import MemoShellScreen from "./src/screens/MemoShellScreen";
@@ -199,6 +200,7 @@ export default function App() {
               <Stack.Screen name="ExperimentalUsage" component={ExperimentalUsageScreen} />
               <Stack.Screen name="ExperimentalUsageBlacklist" component={ExperimentalUsageBlacklistScreen} />
               <Stack.Screen name="ExperimentalUsageIntervals" component={ExperimentalUsageIntervalsScreen} />
+              <Stack.Screen name="ExperimentalUsageIntervalRecords" component={ExperimentalUsageIntervalRecordsScreen} />
               <Stack.Screen name="Statistics" component={StatisticsScreen} />
               <Stack.Screen name="DatePicker" component={DatePickerScreen} />
             </Stack.Navigator>

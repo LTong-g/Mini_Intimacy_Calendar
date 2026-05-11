@@ -199,7 +199,7 @@ const DayView = ({ selectedDate, onDateChange, refreshKey = 0 }) => {
         {
           text: '查看记录',
           onPress: () => {
-            navigation.navigate('ExperimentalUsageIntervals', {
+            navigation.navigate('ExperimentalUsageIntervalRecords', {
               packageName: '__all__',
               filterDate: selectedDateStr,
             });
