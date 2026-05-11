@@ -1842,3 +1842,19 @@
 - scripts/archive-android-release.ps1 已将默认发布归档名前缀更新为 Mini_Intimacy_Calendar。
 - AboutScreen.js 已将应用内 GitHub 入口更新为 https://github.com/LTong-g/Mini_Intimacy_Calendar。
 - readme.md 在最新提交中已将标题和项目描述展示名从 MinimalistWeaponEnhancementCalendar 更新为 Mini Intimacy Calendar，软件名和代码内名称未改变。
+
+### 分析 GitHub Releases 新版本检测方案
+- 用户询问不自建服务器的新版本检测方式后，进一步要求详细解释 GitHub Releases 方案。
+- 已确认该方案以 GitHub Releases latest API 作为版本来源，应用通过比较本地语义版本与最新 Release tag 判断是否提示更新。
+- 该方案依赖公开 GitHub Release 与 APK 附件，不引入自建服务；草稿和预发布版本不进入正式更新检测结果。
+
+### 确认 GitHub Release 命名现状
+- 已通过本地 Git 远端确认项目公开仓库为 https://github.com/LTong-g/Mini_Intimacy_Calendar.git。
+- 已通过 GitHub Releases API 确认当前正式 Release tag 使用纯语义版本号格式，例如 2.1.1；Release 标题使用 Release v2.1.1 格式。
+- 已通过 GitHub latest API 确认当前最新正式版本返回 tag_name 为 2.1.1，name 为 Release v2.1.1，附件仍为历史 MinimalistWeaponEnhancementCalendar 前缀 APK。
+
+### 实现 GitHub Release 更新检测入口
+- 新增 updateChecker 工具，请求 GitHub Releases latest 接口并用 tag_name 与本地版本执行语义版本比较。
+- 关于页新增检查更新按钮，检查期间显示正在检查状态，发现新版本时显示当前版本、最新版本、Release 说明和下载入口。
+- 软件介绍、使用帮助、隐私政策、版本记录和 developer_guide.md 已同步记录关于页检查更新这一用户可见变化。
+- 本次修改文件已统一为 CRLF；git diff --check 和 updateChecker.js 的 Node 语法检查已通过。

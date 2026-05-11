@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 极简武器强化日历 - 版本记录界面
  */
 
@@ -8,6 +8,19 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
 const versionHistory = [
+  {
+    version: 'Unreleased',
+    title: '关于页更新检测',
+    date: '开发中',
+    sections: [
+      {
+        label: '新增：',
+        notes: [
+          '新增关于页检查更新入口，可联网读取 GitHub 最新正式版本并在发现新版时打开下载页面。',
+        ],
+      },
+    ],
+  },
   {
     version: '2.1.1',
     title: '权限、启动与时长显示优化',
