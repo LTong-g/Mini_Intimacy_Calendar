@@ -16,7 +16,6 @@ import org.json.JSONObject
 import java.util.Calendar
 
 object UsageAccessScheduler {
-  private const val ACTION_REFRESH = "com.ltongg.MinimalistWeaponEnhancementCalendar.USAGE_ACCESS_REFRESH"
   private const val REQUEST_CODE_BASE = 235500
   private const val PREF_NAME = "usage_access_feature"
   private const val KEY_ENABLED = "enabled"
@@ -827,7 +826,7 @@ object UsageAccessScheduler {
     flags: Int
   ): PendingIntent? {
     val intent = Intent(context, UsageAccessRefreshReceiver::class.java).apply {
-      action = ACTION_REFRESH
+      action = "${context.packageName}.USAGE_ACCESS_REFRESH"
       putExtra("minute", minute)
     }
     val immutableFlag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {

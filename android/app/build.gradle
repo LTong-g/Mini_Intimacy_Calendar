@@ -124,6 +124,7 @@ android {
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
+            applicationIdSuffix ".dev"
         }
         release {
             if (hasReleaseKeystoreConfig) {

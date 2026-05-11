@@ -97,10 +97,10 @@ class SecurityLockModule(
   }
 
   private fun originalAlias(): ComponentName =
-    ComponentName(reactContext.packageName, "${reactContext.packageName}.OriginalLauncherActivity")
+    ComponentName(reactContext, OriginalLauncherActivity::class.java)
 
   private fun memoAlias(): ComponentName =
-    ComponentName(reactContext.packageName, "${reactContext.packageName}.MemoLauncherActivity")
+    ComponentName(reactContext, MemoLauncherActivity::class.java)
 
   private fun derivePasswordHash(password: String, salt: ByteArray, iterations: Int): ByteArray {
     val spec = PBEKeySpec(password.toCharArray(), salt, iterations, HASH_BITS)

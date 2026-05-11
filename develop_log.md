@@ -1945,3 +1945,14 @@
 - package.json、package-lock.json、app.json、android/app/build.gradle、android/app/src/main/res/values/strings.xml 和 developer_guide.md 的语义版本相关字段已更新为 2.2.3。
 - 版本记录页顶部节点已从 Unreleased 调整为 2.2.3，并记录关于页更新包下载与管理优化。
 - 本次发布准备未执行 Android 发布包归档，未覆盖任何已归档版本产物。
+
+### Android 开发包与发布包并存配置
+- Debug 构建在原 Android applicationId 后追加 .dev 后缀，Release 构建保持原 applicationId。,Debug 资源覆盖桌面名称为带 Dev 后缀的应用名称和备忘录名称。,安全锁桌面入口切换改为引用真实 Activity 类，兼容 Debug applicationId 后缀。,使用记录定时刷新广播 action 改为按当前包名生成，开发包和发布包的定时刷新 PendingIntent 相互隔离。,开发文档和协作说明记录了开发包与发布包并存的构建约定。
+
+### Android 开发包构建验证
+- Debug 临时映射构建生成了开发 APK，产物元数据中的 applicationId 为原包名追加 .dev。,APK manifest 检查显示开发包桌面名称为带 Dev 后缀的应用名称，备忘录入口名称为带 Dev 后缀的备忘录名称。,构建结束后临时映射盘符未残留。,首次构建因本机 Gradle 缓存锁文件访问受限失败，授权使用本机 Gradle 缓存后完成构建。,Gradle 输出包含临时映射路径与既有 Kotlin 增量缓存路径根不一致的堆栈信息，但命令返回成功并生成 APK。
+
+### Android 开发包并存日志记录修正
+- Android 开发包与发布包并存配置和构建验证已通过脚本追加到开发日志。
+- 前两条开发日志的 Facts 参数被 PowerShell 解析为逗号分隔的单条文本。
+- 本条记录补充说明前两条日志的格式问题，未改写既有开发日志内容。
